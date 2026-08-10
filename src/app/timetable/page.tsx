@@ -4,40 +4,135 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
 import Link from "next/link";
 import { db, WEEKDAYS, type Course, type Weekday } from "@/lib/db";
+import { adjacentSemester, saveSemester, semesterLabel } from "@/lib/semester";
+import { useCurrentSemester } from "@/lib/useSemester";
 import CourseFormModal from "@/components/CourseFormModal";
+import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 
 const PERIODS = [1, 2, 3, 4, 5, 6];
 
+function currentWeekDates(): Date[] {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset);
+  return Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
 export default function TimetablePage() {
-  const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
+  const semester = useCurrentSemester();
   const [modalTarget, setModalTarget] = useState<
     { weekday: Weekday; period: number; course?: Course } | null
   >(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const weekDates = currentWeekDates();
+  const todayIdx = (new Date().getDay() + 6) % 7; // 0=Mon
+
+  const courses =
+    useLiveQuery(
+      () =>
+        db.courses
+          .where({ year: semester.year, semester: semester.semester })
+          .toArray(),
+      [semester.year, semester.semester]
+    ) ?? [];
+
+  function changeSemester(dir: 1 | -1) {
+    const next = adjacentSemester(semester, dir);
+    saveSemester(next);
+  }
 
   function findCourse(w: Weekday, p: number) {
     return courses.find((c) => c.weekday === w && c.period === p);
   }
 
-  return (
-    <main className="flex-1 p-3">
-      <h1 className="text-lg font-semibold mb-3">時間割</h1>
+  async function handleImportFile(file: File) {
+    const text = await file.text();
+    const result = await importTimetableCsv(text, semester);
+    alert(`${result.imported}件の授業を読み込みました。${result.skipped ? `(${result.skipped}件はスキップ)` : ""}`);
+    setMenuOpen(false);
+  }
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-xs sm:text-sm min-w-[560px]">
-          <thead>
-            <tr>
-              <th className="w-8"></th>
-              {WEEKDAYS.slice(0, 6).map((w) => (
-                <th key={w} className="p-1 font-medium text-gray-500">
-                  {w}
-                </th>
-              ))}
-            </tr>
-          </thead>
+  return (
+    <main className="flex-1 pb-4">
+      <div className="flex items-center justify-between px-4 pt-4">
+        <h1 className="text-xl font-bold">時間割</h1>
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="text-gray-400 text-xl px-2"
+          >
+            ···
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 mt-1 w-48 rounded-xl border border-gray-200 bg-white shadow-lg z-20 overflow-hidden text-sm">
+              <button
+                onClick={() => exportTimetableCsv(courses)}
+                className="w-full text-left px-4 py-2.5 hover:bg-gray-50"
+              >
+                CSVエクスポート
+              </button>
+              <label className="block w-full text-left px-4 py-2.5 hover:bg-gray-50 cursor-pointer">
+                CSVインポート
+                <input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleImportFile(f);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <Link
+                href="/simulator"
+                onClick={() => setMenuOpen(false)}
+                className="block w-full text-left px-4 py-2.5 hover:bg-gray-50"
+              >
+                履修シミュレーター
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1 px-4 mt-1 text-sm text-gray-500">
+        <button onClick={() => changeSemester(-1)} className="px-1">
+          ‹
+        </button>
+        <span className="font-medium text-gray-700">{semesterLabel(semester)}</span>
+        <button onClick={() => changeSemester(1)} className="px-1">
+          ›
+        </button>
+      </div>
+
+      <div className="grid grid-cols-6 text-center text-[11px] text-gray-400 px-4 mt-3">
+        {weekDates.map((d, i) => (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <span>{WEEKDAYS[i]}</span>
+            <span
+              className={`w-6 h-6 flex items-center justify-center rounded-full ${
+                i === todayIdx ? "bg-gray-900 text-white" : ""
+              }`}
+            >
+              {d.getMonth() + 1}/{d.getDate()}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="px-2 mt-2">
+        <table className="w-full border-collapse text-xs">
           <tbody>
             {PERIODS.map((p) => (
               <tr key={p}>
-                <td className="text-center text-gray-400 pr-1">{p}</td>
+                <td className="w-5 text-center text-gray-400 align-top pt-2">{p}</td>
                 {WEEKDAYS.slice(0, 6).map((w) => {
                   const course = findCourse(w, p);
                   return (
@@ -46,27 +141,23 @@ export default function TimetablePage() {
                         onClick={() =>
                           setModalTarget({ weekday: w, period: p, course })
                         }
-                        className="w-full h-16 rounded-lg border border-dashed border-gray-300 dark:border-white/15 flex flex-col items-center justify-center overflow-hidden p-1"
+                        className="w-full h-16 rounded-xl flex flex-col items-center justify-center overflow-hidden p-1"
                         style={
                           course
-                            ? {
-                                backgroundColor: course.color + "22",
-                                borderColor: course.color,
-                                borderStyle: "solid",
-                              }
-                            : undefined
+                            ? { backgroundColor: course.color }
+                            : { backgroundColor: "#f8fafc", border: "1px dashed #e2e8f0" }
                         }
                       >
                         {course ? (
                           <>
                             <span
-                              className="font-medium leading-tight text-center break-words"
-                              style={{ color: course.color }}
+                              className="font-semibold leading-tight text-center break-words text-[11px]"
+                              style={{ color: course.textColor }}
                             >
                               {course.name}
                             </span>
                             {course.room && (
-                              <span className="text-[10px] text-gray-500">
+                              <span className="text-[10px]" style={{ color: course.textColor, opacity: 0.75 }}>
                                 {course.room}
                               </span>
                             )}
@@ -84,9 +175,9 @@ export default function TimetablePage() {
         </table>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 px-4">
         <h2 className="text-sm font-medium text-gray-500 mb-2">登録済み授業一覧</h2>
-        <ul className="space-y-1">
+        <ul className="space-y-1.5">
           {courses
             .slice()
             .sort(
@@ -98,12 +189,12 @@ export default function TimetablePage() {
               <li key={c.id}>
                 <Link
                   href={`/courses/${c.id}`}
-                  className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2"
+                  className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2.5"
                 >
-                  <span>
+                  <span className="flex items-center gap-2">
                     <span
-                      className="inline-block w-2 h-2 rounded-full mr-2"
-                      style={{ backgroundColor: c.color }}
+                      className="inline-block w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: c.textColor }}
                     />
                     {c.name}
                   </span>
@@ -126,6 +217,7 @@ export default function TimetablePage() {
           weekday={modalTarget.weekday}
           period={modalTarget.period}
           course={modalTarget.course}
+          semester={semester}
           onClose={() => setModalTarget(null)}
         />
       )}

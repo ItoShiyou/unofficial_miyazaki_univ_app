@@ -1,0 +1,105 @@
+import { db, newId, COURSE_COLORS, WEEKDAYS, type Course, type Weekday } from "@/lib/db";
+import type { SemesterKey } from "@/lib/semester";
+
+const HEADER = ["授業名", "曜日", "時限", "教員", "教室", "欠席上限"];
+
+function csvEscape(v: string): string {
+  if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+  return v;
+}
+
+export function exportTimetableCsv(courses: Course[]) {
+  const rows = [
+    HEADER,
+    ...courses.map((c) => [
+      c.name,
+      c.weekday,
+      String(c.period),
+      c.teacher ?? "",
+      c.room ?? "",
+      String(c.absenceLimit),
+    ]),
+  ];
+  const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "timetable.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        cur += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ",") {
+      result.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+export async function importTimetableCsv(
+  text: string,
+  semester: SemesterKey
+): Promise<{ imported: number; skipped: number }> {
+  const lines = text.replace(/^﻿/, "").split(/\r?\n/).filter((l) => l.trim());
+  let imported = 0;
+  let skipped = 0;
+
+  for (const line of lines.slice(1)) {
+    const cols = parseCsvLine(line);
+    const [name, weekdayRaw, periodRaw, teacher, room, limitRaw] = cols;
+    if (!name || !weekdayRaw || !periodRaw) {
+      skipped++;
+      continue;
+    }
+    const weekday = weekdayRaw.trim() as Weekday;
+    if (!WEEKDAYS.includes(weekday)) {
+      skipped++;
+      continue;
+    }
+    const period = Number(periodRaw);
+    if (!period || period < 1 || period > 6) {
+      skipped++;
+      continue;
+    }
+    const palette = COURSE_COLORS[Math.floor(Math.random() * COURSE_COLORS.length)];
+    await db.courses.add({
+      id: newId(),
+      name: name.trim(),
+      teacher: teacher?.trim() || undefined,
+      room: room?.trim() || undefined,
+      weekday,
+      period,
+      year: semester.year,
+      semester: semester.semester,
+      absenceLimit: Number(limitRaw) || 5,
+      color: palette.bg,
+      textColor: palette.text,
+      createdAt: Date.now(),
+    });
+    imported++;
+  }
+
+  return { imported, skipped };
+}

@@ -13,7 +13,9 @@ export interface Course {
   year: number;
   semester: "前期" | "後期" | "通年";
   absenceLimit: number; // 欠席上限回数
-  color: string;
+  color: string; // 背景色(pastel)
+  textColor: string; // 文字色
+  syllabusCourseId?: string; // カルテ機能用: サーバー側シラバスカタログとの紐付け
   createdAt: number;
 }
 
@@ -35,10 +37,20 @@ export interface CourseNote {
   updatedAt: number;
 }
 
+export interface CourseTask {
+  id: string;
+  courseId: string;
+  title: string;
+  dueDate?: string; // ISO date
+  done: boolean;
+  createdAt: number;
+}
+
 class MiyadaiDB extends Dexie {
   courses!: EntityTable<Course, "id">;
   attendances!: EntityTable<AttendanceRecord, "id">;
   notes!: EntityTable<CourseNote, "id">;
+  tasks!: EntityTable<CourseTask, "id">;
 
   constructor() {
     super("miyadai-app");
@@ -46,6 +58,12 @@ class MiyadaiDB extends Dexie {
       courses: "id, weekday, period, year, semester",
       attendances: "id, courseId, date",
       notes: "id, courseId, date",
+    });
+    this.version(2).stores({
+      courses: "id, weekday, period, year, semester",
+      attendances: "id, courseId, date",
+      notes: "id, courseId, date",
+      tasks: "id, courseId, dueDate",
     });
   }
 }
@@ -56,13 +74,18 @@ export function newId(): string {
   return crypto.randomUUID();
 }
 
-export const COURSE_COLORS = [
-  "#2563eb",
-  "#16a34a",
-  "#d97706",
-  "#dc2626",
-  "#7c3aed",
-  "#0891b2",
-  "#db2777",
-  "#65a30d",
+export interface PastelColor {
+  bg: string;
+  text: string;
+}
+
+export const COURSE_COLORS: PastelColor[] = [
+  { bg: "#dbeafe", text: "#1d4ed8" }, // blue
+  { bg: "#dcfce7", text: "#15803d" }, // green
+  { bg: "#fee2e2", text: "#b91c1c" }, // red
+  { bg: "#ede9fe", text: "#6d28d9" }, // purple
+  { bg: "#fef3c7", text: "#b45309" }, // amber
+  { bg: "#cffafe", text: "#0e7490" }, // cyan
+  { bg: "#fce7f3", text: "#be185d" }, // pink
+  { bg: "#e2e8f0", text: "#334155" }, // slate
 ];

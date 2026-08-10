@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 学外公開シラバスから取得した授業カタログ（学期ごと）
+model SyllabusCourse {
+  id          String   @id @default(uuid())
+  year        Int
+  semester    String // "前期" | "後期" | "通年"
+  name        String
+  teacher     String?
+  room        String?
+  weekday     String? // 月〜日
+  period      Int?
+  syllabusUrl String?
+  rawHash     String? // 差分検知用の内容ハッシュ
+  fetchedAt   DateTime @default(now())
+
+  kartes CourseKarte[]
+
+  @@index([year, semester, name])
+}
+
+// シラバス差分（教員変更等）の検知ログ
+model SyllabusChange {
+  id            String   @id @default(uuid())
+  courseName    String
+  year          Int
+  semester      String
+  field         String // 例: "teacher", "room"
+  oldValue      String?
+  newValue      String?
+  detectedAt    DateTime @default(now())
+}
+
+// 授業カルテ（匿名の一次情報）
+model CourseKarte {
+  id                 String   @id @default(uuid())
+  syllabusCourseId   String
+  syllabusCourse     SyllabusCourse @relation(fields: [syllabusCourseId], references: [id])
+  year               Int
+  semester           String
+  attendanceMethod   String? // 出席確認方法
+  attendanceStrictness Int?  // 1-5 出席の厳しさ
+  assignmentVolume   Int?    // 1-5 課題の多さ
+  examFormat         String? // 試験形式
+  examDifficulty     Int?    // 1-5 試験の難易度
+  clarity            Int?    // 1-5 授業の分かりやすさ
+  atmosphere         String? // 授業の雰囲気
+  pace               String? // 授業の進行速度
+  advice             String? // 受講生へのアドバイス
+  comment            String? // 自由コメント（実際に受けてみてどうだったか）
+  createdAt          DateTime @default(now())
+
+  @@index([syllabusCourseId])
+}
+
+// 友達連携（匿名デバイスID同士を招待コードで接続）
+model Friend {
+  id          String   @id @default(uuid())
+  deviceId    String
+  friendDeviceId String
+  friendName  String
+  createdAt   DateTime @default(now())
+
+  @@unique([deviceId, friendDeviceId])
+}
+
+// 招待コード（デバイスが発行し、相手が入力して友達登録）
+model InviteCode {
+  code        String   @id
+  deviceId    String
+  displayName String
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+}
+
+// 友達と共有する時間割スナップショット（デバイスごとに最新を保持）
+model SharedTimetable {
+  deviceId    String   @id
+  displayName String
+  data        String // JSON文字列 [{weekday, period, name}]
+  updatedAt   DateTime @updatedAt
+}
