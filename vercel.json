@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/sync-syllabus", "schedule": "0 0 1 4 *" },
+    { "path": "/api/cron/sync-syllabus", "schedule": "0 0 1 10 *" }
+  ]
+}

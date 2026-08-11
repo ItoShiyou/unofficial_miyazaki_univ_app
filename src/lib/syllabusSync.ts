@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { fetchFullSyllabusCatalog } from "@/lib/syllabusSource";
+import type { SemesterName } from "@/lib/semester";
 
 /**
  * 指定した学期の授業を大学の公開シラバスから全件取得し、サーバー側DBに丸ごと保管する。
  * 誰がどの授業を検索・登録したかに関わらず、その学期の全学部・全学科分をキャッシュする。
  *
- * 全件取得は1学期あたり数百〜千件規模のリクエストになるため、明示的な「同期」操作
- * （マイページのボタン）からのみ呼び出す。学期の変わり目（年2回程度）を想定した頻度。
+ * サーバー側（cronジョブ）からのみ呼び出す想定。クライアントから直接この処理を
+ * 起動する経路は存在しない（学期ごとに年2回、サーバー側の判断でのみ実行する）。
  */
 function hashOf(c: { name: string; teacher: string | null; weekday: string | null; period: number | null }) {
   return createHash("sha256")
@@ -16,37 +16,34 @@ function hashOf(c: { name: string; teacher: string | null; weekday: string | nul
     .digest("hex");
 }
 
-export async function POST(req: NextRequest) {
-  const { year, semester } = await req.json();
-  if (!year || !semester) {
-    return NextResponse.json({ error: "year and semester are required" }, { status: 400 });
-  }
-  if (semester !== "前期" && semester !== "後期") {
-    return NextResponse.json({ error: "semester must be 前期 or 後期" }, { status: 400 });
-  }
-
-  const existingRows = await prisma.syllabusCourse.findMany({
-    where: { year, semester },
-  });
-  const existingByCode = new Map(existingRows.map((c) => [c.code, c]));
-
-  let liveRows;
-  try {
-    liveRows = await fetchFullSyllabusCatalog(year, semester);
-  } catch (e) {
-    return NextResponse.json(
-      { error: `シラバスの取得に失敗しました: ${e instanceof Error ? e.message : String(e)}` },
-      { status: 502 }
-    );
-  }
-
-  const changes: Array<{
+export interface SyllabusSyncResult {
+  year: number;
+  semester: SemesterName;
+  checked: number;
+  created: number;
+  updated: number;
+  removed: number;
+  changes: Array<{
     syllabusCourseId: string | null;
     courseName: string;
     field: string;
     oldValue: string | null;
     newValue: string | null;
-  }> = [];
+  }>;
+}
+
+export async function runFullSemesterSync(
+  year: number,
+  semester: SemesterName
+): Promise<SyllabusSyncResult> {
+  const existingRows = await prisma.syllabusCourse.findMany({
+    where: { year, semester },
+  });
+  const existingByCode = new Map(existingRows.map((c) => [c.code, c]));
+
+  const liveRows = await fetchFullSyllabusCatalog(year, semester);
+
+  const changes: SyllabusSyncResult["changes"] = [];
   let created = 0;
   let updated = 0;
   const seenCodes = new Set<string>();
@@ -132,25 +129,13 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({
+  return {
+    year,
+    semester,
     checked: liveRows.length,
     created,
     updated,
     removed: removed.length,
     changes,
-  });
-}
-
-export async function GET(req: NextRequest) {
-  const year = Number(req.nextUrl.searchParams.get("year")) || new Date().getFullYear();
-  const semester = req.nextUrl.searchParams.get("semester") ?? "後期";
-
-  const changes = await prisma.syllabusChange.findMany({
-    where: { year, semester },
-    orderBy: { detectedAt: "desc" },
-    take: 50,
-  });
-  const total = await prisma.syllabusCourse.count({ where: { year, semester } });
-
-  return NextResponse.json({ changes, total });
+  };
 }

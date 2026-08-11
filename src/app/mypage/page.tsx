@@ -26,14 +26,18 @@ const FIELD_LABEL: Record<string, string> = {
   removed: "掲載状況",
 };
 
+interface SyllabusStatus {
+  total: number;
+  lastFetchedAt: string | null;
+}
+
 export default function MyPage() {
   const savedName = useDisplayName();
   const [draftName, setDraftName] = useState(savedName);
   const [editingName, setEditingName] = useState(false);
   const semester = useCurrentSemester();
-  const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<string | null>(null);
   const [changes, setChanges] = useState<SyllabusChangeEntry[]>([]);
+  const [status, setStatus] = useState<SyllabusStatus | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -45,10 +49,18 @@ export default function MyPage() {
       .catch(() => {
         if (!ignore) setChanges([]);
       });
+    fetch(`/api/syllabus/status?year=${semester.year}&semester=${semester.semester}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!ignore) setStatus(d);
+      })
+      .catch(() => {
+        if (!ignore) setStatus(null);
+      });
     return () => {
       ignore = true;
     };
-  }, [semester.year, semester.semester, syncResult]);
+  }, [semester.year, semester.semester]);
 
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
   const currentCourses = courses.filter(
@@ -70,30 +82,6 @@ export default function MyPage() {
     const text = await file.text();
     const result = await importTimetableCsv(text, semester);
     alert(`${result.imported}件の授業を読み込みました。${result.skipped ? `(${result.skipped}件はスキップ)` : ""}`);
-  }
-
-  async function runSyllabusSync() {
-    setSyncing(true);
-    setSyncResult(null);
-    try {
-      const res = await fetch("/api/syllabus/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(semester),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setSyncResult(data.error ?? "同期に失敗しました");
-        return;
-      }
-      const parts = [`${data.checked}件を取得`];
-      if (data.created) parts.push(`新規${data.created}件`);
-      if (data.updated) parts.push(`更新${data.updated}件`);
-      if (data.removed) parts.push(`掲載終了${data.removed}件`);
-      setSyncResult(parts.join(" / "));
-    } finally {
-      setSyncing(false);
-    }
   }
 
   return (
@@ -185,16 +173,26 @@ export default function MyPage() {
         <Card>
           <p className="text-sm font-medium mb-1">シラバス連携</p>
           <p className="text-xs text-gray-400 mb-3">
-            {semesterLabel(semester)}の全授業を大学の公開シラバスから取得し、サーバーに保管します。数百〜千件規模のため数十秒かかることがあります。
+            {semesterLabel(semester)}の全授業を大学の公開シラバスから学期に1回、サーバー側で自動的に取得・保管しています（手動での再取得はできません）。
           </p>
-          <button
-            onClick={runSyllabusSync}
-            disabled={syncing}
-            className="w-full rounded-lg border border-gray-300 text-sm py-2 disabled:opacity-50"
-          >
-            {syncing ? "同期中...（しばらくお待ちください）" : "この学期のシラバスを全件同期"}
-          </button>
-          {syncResult && <p className="text-xs text-gray-500 mt-2">{syncResult}</p>}
+          {status ? (
+            <div className="text-sm text-gray-600 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-xs">保管件数</span>
+                <span>{status.total}件</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-xs">最終更新</span>
+                <span>
+                  {status.lastFetchedAt
+                    ? new Date(status.lastFetchedAt).toLocaleDateString("ja-JP")
+                    : "未取得"}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400">読み込み中...</p>
+          )}
         </Card>
 
         {changes.length > 0 && (
