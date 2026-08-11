@@ -12,11 +12,13 @@ model SyllabusCourse {
   id          String   @id @default(uuid())
   year        Int
   semester    String // "前期" | "後期" | "通年"
+  code        String? // 講義コード（宮崎大学シラバス検索の講義コード。差分検知の同一性判定に使用）
   name        String
   teacher     String?
   room        String?
   weekday     String? // 月〜日
   period      Int?
+  division    String? // 講義分類（学部・学科・プログラム等）
   syllabusUrl String?
   rawHash     String? // 差分検知用の内容ハッシュ
   fetchedAt   DateTime @default(now())
@@ -24,6 +26,7 @@ model SyllabusCourse {
   kartes CourseKarte[]
 
   @@index([year, semester, name])
+  @@index([year, semester, code])
 }
 
 // シラバス差分（教員変更等）の検知ログ
