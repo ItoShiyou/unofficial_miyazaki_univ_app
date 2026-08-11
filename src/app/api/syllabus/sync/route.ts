@@ -40,7 +40,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const changes: Array<{ courseName: string; field: string; oldValue: string | null; newValue: string | null }> = [];
+  const changes: Array<{
+    syllabusCourseId: string | null;
+    courseName: string;
+    field: string;
+    oldValue: string | null;
+    newValue: string | null;
+  }> = [];
   let created = 0;
   let updated = 0;
   const seenCodes = new Set<string>();
@@ -75,10 +81,17 @@ export async function POST(req: NextRequest) {
 
     if (existing.rawHash !== newHash) {
       if (existing.teacher !== row.teacher) {
-        changes.push({ courseName: row.name, field: "teacher", oldValue: existing.teacher, newValue: row.teacher });
+        changes.push({
+          syllabusCourseId: existing.id,
+          courseName: row.name,
+          field: "teacher",
+          oldValue: existing.teacher,
+          newValue: row.teacher,
+        });
       }
       if (existing.weekday !== row.weekday || existing.period !== row.period) {
         changes.push({
+          syllabusCourseId: existing.id,
           courseName: row.name,
           field: "schedule",
           oldValue: `${existing.weekday ?? ""}${existing.period ?? ""}`,
@@ -104,7 +117,13 @@ export async function POST(req: NextRequest) {
   // 今回の取得結果に含まれなくなった授業（閉講・コード変更等）を検知
   const removed = existingRows.filter((c) => c.code && !seenCodes.has(c.code));
   for (const r of removed) {
-    changes.push({ courseName: r.name, field: "removed", oldValue: "掲載あり", newValue: "掲載なし" });
+    changes.push({
+      syllabusCourseId: r.id,
+      courseName: r.name,
+      field: "removed",
+      oldValue: "掲載あり",
+      newValue: "掲載なし",
+    });
   }
 
   if (changes.length > 0) {

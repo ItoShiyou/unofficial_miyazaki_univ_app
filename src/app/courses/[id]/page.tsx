@@ -3,11 +3,25 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { db, newId } from "@/lib/db";
 import { todayLocalDate } from "@/lib/date";
 import CourseFormModal from "@/components/CourseFormModal";
 import { ProgressBar } from "@/components/ui";
+
+interface SyllabusChangeEntry {
+  id: string;
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+  detectedAt: string;
+}
+
+const FIELD_LABEL: Record<string, string> = {
+  teacher: "担当教員",
+  schedule: "曜日・時限",
+  removed: "掲載状況",
+};
 
 export default function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,8 +32,26 @@ export default function CourseDetailPage() {
   const [nextPreview, setNextPreview] = useState("");
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDue, setTaskDue] = useState("");
+  const [rawSyllabusChanges, setRawSyllabusChanges] = useState<SyllabusChangeEntry[]>([]);
 
   const course = useLiveQuery(() => db.courses.get(id), [id]);
+  const syllabusChanges = course?.syllabusCourseId ? rawSyllabusChanges : [];
+
+  useEffect(() => {
+    if (!course?.syllabusCourseId) return;
+    let ignore = false;
+    fetch(`/api/syllabus/changes?syllabusCourseId=${course.syllabusCourseId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!ignore) setRawSyllabusChanges(d.changes ?? []);
+      })
+      .catch(() => {
+        if (!ignore) setRawSyllabusChanges([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [course?.syllabusCourseId]);
   const attendances =
     useLiveQuery(
       () => db.attendances.where("courseId").equals(id).reverse().sortBy("date"),
@@ -127,6 +159,33 @@ export default function CourseDetailPage() {
           </Link>
         )}
       </div>
+
+      {syllabusChanges.length > 0 && (
+        <div className="px-4 mb-4">
+          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4">
+            <p className="text-sm font-medium text-amber-700 mb-2">
+              シラバスの変更が検知されました
+            </p>
+            <ul className="space-y-1.5">
+              {syllabusChanges.map((c) => (
+                <li key={c.id} className="text-xs text-amber-700">
+                  {c.field === "removed" ? (
+                    <>この授業はシラバスから掲載終了になっています</>
+                  ) : (
+                    <>
+                      {FIELD_LABEL[c.field] ?? c.field}：{c.oldValue || "（空）"} →{" "}
+                      <span className="font-semibold">{c.newValue || "（空）"}</span>
+                    </>
+                  )}
+                  <span className="text-amber-500">
+                    （{new Date(c.detectedAt).toLocaleDateString("ja-JP")}検知）
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <section className="px-4 mb-5">
         <div

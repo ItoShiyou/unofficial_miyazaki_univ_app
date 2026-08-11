@@ -23,7 +23,8 @@ model SyllabusCourse {
   rawHash     String? // 差分検知用の内容ハッシュ
   fetchedAt   DateTime @default(now())
 
-  kartes CourseKarte[]
+  kartes  CourseKarte[]
+  changes SyllabusChange[]
 
   @@index([year, semester, name])
   @@index([year, semester, code])
@@ -31,14 +32,19 @@ model SyllabusCourse {
 
 // シラバス差分（教員変更等）の検知ログ
 model SyllabusChange {
-  id            String   @id @default(uuid())
-  courseName    String
-  year          Int
-  semester      String
-  field         String // 例: "teacher", "room"
-  oldValue      String?
-  newValue      String?
-  detectedAt    DateTime @default(now())
+  id               String   @id @default(uuid())
+  syllabusCourseId String?
+  syllabusCourse   SyllabusCourse? @relation(fields: [syllabusCourseId], references: [id])
+  courseName       String
+  year             Int
+  semester         String
+  field            String // 例: "teacher", "schedule", "removed"
+  oldValue         String?
+  newValue         String?
+  detectedAt       DateTime @default(now())
+
+  @@index([syllabusCourseId])
+  @@index([year, semester])
 }
 
 // 授業カルテ（匿名の一次情報）

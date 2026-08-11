@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
@@ -10,6 +10,22 @@ import { useDisplayName, setDisplayName } from "@/lib/device";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 import { PageHeader, Card } from "@/components/ui";
 
+interface SyllabusChangeEntry {
+  id: string;
+  syllabusCourseId: string | null;
+  courseName: string;
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+  detectedAt: string;
+}
+
+const FIELD_LABEL: Record<string, string> = {
+  teacher: "担当教員",
+  schedule: "曜日・時限",
+  removed: "掲載状況",
+};
+
 export default function MyPage() {
   const savedName = useDisplayName();
   const [draftName, setDraftName] = useState(savedName);
@@ -17,6 +33,22 @@ export default function MyPage() {
   const semester = useCurrentSemester();
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [changes, setChanges] = useState<SyllabusChangeEntry[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+    fetch(`/api/syllabus/changes?year=${semester.year}&semester=${semester.semester}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!ignore) setChanges(d.changes ?? []);
+      })
+      .catch(() => {
+        if (!ignore) setChanges([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [semester.year, semester.semester, syncResult]);
 
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
   const currentCourses = courses.filter(
@@ -164,6 +196,46 @@ export default function MyPage() {
           </button>
           {syncResult && <p className="text-xs text-gray-500 mt-2">{syncResult}</p>}
         </Card>
+
+        {changes.length > 0 && (
+          <Card>
+            <p className="text-sm font-medium mb-1">シラバスの変更履歴</p>
+            <p className="text-xs text-gray-400 mb-3">
+              {semesterLabel(semester)}で検知された変更（新しい順・最大50件）
+            </p>
+            <ul className="space-y-2">
+              {changes.map((c) => {
+                const inner = (
+                  <>
+                    <p className="text-sm font-medium">{c.courseName}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {c.field === "removed" ? (
+                        "シラバスから掲載終了になりました"
+                      ) : (
+                        <>
+                          {FIELD_LABEL[c.field] ?? c.field}：{c.oldValue || "（空）"} →{" "}
+                          {c.newValue || "（空）"}
+                        </>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-gray-300 mt-0.5">
+                      {new Date(c.detectedAt).toLocaleDateString("ja-JP")}
+                    </p>
+                  </>
+                );
+                return (
+                  <li key={c.id} className="rounded-xl border border-gray-200 p-3">
+                    {c.syllabusCourseId ? (
+                      <Link href={`/karte/${c.syllabusCourseId}`}>{inner}</Link>
+                    ) : (
+                      inner
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        )}
 
         <p className="text-[11px] text-gray-300 text-center pt-2">宮大非公式アプリ（開発版）</p>
       </div>
