@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { searchLiveSyllabus } from "@/lib/syllabusSource";
+import { fetchFullSyllabusCatalog } from "@/lib/syllabusSource";
 
 /**
- * これまでにキャッシュ済み（＝実際に誰かが検索・登録した）授業だけを対象に、
- * 大学の公開シラバスを再取得して差分（担当教員・曜日時限の変更等）を検知する。
+ * 指定した学期の授業を大学の公開シラバスから全件取得し、サーバー側DBに丸ごと保管する。
+ * 誰がどの授業を検索・登録したかに関わらず、その学期の全学部・全学科分をキャッシュする。
  *
- * 全学の授業を総なめにするクロールは行わない。ユーザーが実際に触れた
- * 授業だけを対象にすることで、大学サーバーへのアクセス量を必要最小限に抑える。
+ * 全件取得は1学期あたり数百〜千件規模のリクエストになるため、明示的な「同期」操作
+ * （マイページのボタン）からのみ呼び出す。学期の変わり目（年2回程度）を想定した頻度。
  */
 function hashOf(c: { name: string; teacher: string | null; weekday: string | null; period: number | null }) {
   return createHash("sha256")
     .update(`${c.name}|${c.teacher}|${c.weekday}|${c.period}`)
     .digest("hex");
 }
-
-const MAX_COURSES_PER_SYNC = 50;
 
 export async function POST(req: NextRequest) {
   const { year, semester } = await req.json();
@@ -27,62 +25,86 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "semester must be 前期 or 後期" }, { status: 400 });
   }
 
-  const cached = await prisma.syllabusCourse.findMany({
+  const existingRows = await prisma.syllabusCourse.findMany({
     where: { year, semester },
-    take: MAX_COURSES_PER_SYNC,
   });
+  const existingByCode = new Map(existingRows.map((c) => [c.code, c]));
+
+  let liveRows;
+  try {
+    liveRows = await fetchFullSyllabusCatalog(year, semester);
+  } catch (e) {
+    return NextResponse.json(
+      { error: `シラバスの取得に失敗しました: ${e instanceof Error ? e.message : String(e)}` },
+      { status: 502 }
+    );
+  }
 
   const changes: Array<{ courseName: string; field: string; oldValue: string | null; newValue: string | null }> = [];
-  let checked = 0;
+  let created = 0;
+  let updated = 0;
+  const seenCodes = new Set<string>();
 
-  // 授業名ごとに再検索（同名科目はまとめて1回のリクエストで済ませる）
-  const uniqueNames = Array.from(new Set(cached.map((c) => c.name)));
+  for (const row of liveRows) {
+    seenCodes.add(row.code);
+    const newHash = hashOf({
+      name: row.name,
+      teacher: row.teacher,
+      weekday: row.weekday,
+      period: row.period,
+    });
+    const existing = existingByCode.get(row.code);
 
-  for (const name of uniqueNames) {
-    let liveRows;
-    try {
-      liveRows = await searchLiveSyllabus(year, semester, name);
-    } catch {
-      continue; // 大学側が一時的に取得できない場合はスキップし、次の授業へ
-    }
-    checked += liveRows.length;
-
-    for (const local of cached.filter((c) => c.name === name)) {
-      const match = liveRows.find((r) => r.code === local.code) ?? liveRows.find((r) => r.name === local.name);
-      if (!match) continue;
-
-      const newHash = hashOf({
-        name: match.name,
-        teacher: match.teacher,
-        weekday: match.weekday,
-        period: match.period,
+    if (!existing) {
+      await prisma.syllabusCourse.create({
+        data: {
+          year,
+          semester,
+          code: row.code,
+          name: row.name,
+          teacher: row.teacher,
+          weekday: row.weekday,
+          period: row.period,
+          division: row.division,
+          rawHash: newHash,
+        },
       });
+      created++;
+      continue;
+    }
 
-      if (local.rawHash !== newHash) {
-        if (local.teacher !== match.teacher) {
-          changes.push({ courseName: local.name, field: "teacher", oldValue: local.teacher, newValue: match.teacher });
-        }
-        if (local.weekday !== match.weekday || local.period !== match.period) {
-          changes.push({
-            courseName: local.name,
-            field: "schedule",
-            oldValue: `${local.weekday ?? ""}${local.period ?? ""}`,
-            newValue: `${match.weekday ?? ""}${match.period ?? ""}`,
-          });
-        }
-        await prisma.syllabusCourse.update({
-          where: { id: local.id },
-          data: {
-            teacher: match.teacher,
-            weekday: match.weekday,
-            period: match.period,
-            division: match.division,
-            rawHash: newHash,
-            fetchedAt: new Date(),
-          },
+    if (existing.rawHash !== newHash) {
+      if (existing.teacher !== row.teacher) {
+        changes.push({ courseName: row.name, field: "teacher", oldValue: existing.teacher, newValue: row.teacher });
+      }
+      if (existing.weekday !== row.weekday || existing.period !== row.period) {
+        changes.push({
+          courseName: row.name,
+          field: "schedule",
+          oldValue: `${existing.weekday ?? ""}${existing.period ?? ""}`,
+          newValue: `${row.weekday ?? ""}${row.period ?? ""}`,
         });
       }
+      await prisma.syllabusCourse.update({
+        where: { id: existing.id },
+        data: {
+          name: row.name,
+          teacher: row.teacher,
+          weekday: row.weekday,
+          period: row.period,
+          division: row.division,
+          rawHash: newHash,
+          fetchedAt: new Date(),
+        },
+      });
+      updated++;
     }
+  }
+
+  // 今回の取得結果に含まれなくなった授業（閉講・コード変更等）を検知
+  const removed = existingRows.filter((c) => c.code && !seenCodes.has(c.code));
+  for (const r of removed) {
+    changes.push({ courseName: r.name, field: "removed", oldValue: "掲載あり", newValue: "掲載なし" });
   }
 
   if (changes.length > 0) {
@@ -91,7 +113,13 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ checked, changes });
+  return NextResponse.json({
+    checked: liveRows.length,
+    created,
+    updated,
+    removed: removed.length,
+    changes,
+  });
 }
 
 export async function GET(req: NextRequest) {
@@ -103,6 +131,7 @@ export async function GET(req: NextRequest) {
     orderBy: { detectedAt: "desc" },
     take: 50,
   });
+  const total = await prisma.syllabusCourse.count({ where: { year, semester } });
 
-  return NextResponse.json({ changes });
+  return NextResponse.json({ changes, total });
 }

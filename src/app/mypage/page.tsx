@@ -50,13 +50,15 @@ export default function MyPage() {
         body: JSON.stringify(semester),
       });
       const data = await res.json();
-      setSyncResult(
-        data.changes?.length
-          ? `${data.changes.length}件の変更を検知しました（${data.changes
-              .map((c: { courseName: string; field: string }) => `${c.courseName}:${c.field}`)
-              .join(", ")}）`
-          : `変更はありませんでした（${data.checked}件を確認）`
-      );
+      if (!res.ok) {
+        setSyncResult(data.error ?? "同期に失敗しました");
+        return;
+      }
+      const parts = [`${data.checked}件を取得`];
+      if (data.created) parts.push(`新規${data.created}件`);
+      if (data.updated) parts.push(`更新${data.updated}件`);
+      if (data.removed) parts.push(`掲載終了${data.removed}件`);
+      setSyncResult(parts.join(" / "));
     } finally {
       setSyncing(false);
     }
@@ -151,14 +153,14 @@ export default function MyPage() {
         <Card>
           <p className="text-sm font-medium mb-1">シラバス連携</p>
           <p className="text-xs text-gray-400 mb-3">
-            学外公開シラバスとの差分（教員変更など）を確認します。
+            {semesterLabel(semester)}の全授業を大学の公開シラバスから取得し、サーバーに保管します。数百〜千件規模のため数十秒かかることがあります。
           </p>
           <button
             onClick={runSyllabusSync}
             disabled={syncing}
             className="w-full rounded-lg border border-gray-300 text-sm py-2 disabled:opacity-50"
           >
-            {syncing ? "確認中..." : "シラバス差分を確認"}
+            {syncing ? "同期中...（しばらくお待ちください）" : "この学期のシラバスを全件同期"}
           </button>
           {syncResult && <p className="text-xs text-gray-500 mt-2">{syncResult}</p>}
         </Card>
