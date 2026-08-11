@@ -31,7 +31,7 @@ export default function FriendsPage() {
   const courses =
     useLiveQuery(
       () =>
-        db.courses.where({ year: semester.year, semester: semester.semester }).toArray(),
+        db.courses.where("[year+semester]").equals([semester.year, semester.semester]).toArray(),
       [semester.year, semester.semester]
     ) ?? [];
 

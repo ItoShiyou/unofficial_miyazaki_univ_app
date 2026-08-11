@@ -37,7 +37,8 @@ export default function TimetablePage() {
     useLiveQuery(
       () =>
         db.courses
-          .where({ year: semester.year, semester: semester.semester })
+          .where("[year+semester]")
+          .equals([semester.year, semester.semester])
           .toArray(),
       [semester.year, semester.semester]
     ) ?? [];

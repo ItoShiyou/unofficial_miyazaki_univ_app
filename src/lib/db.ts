@@ -65,6 +65,12 @@ class MiyadaiDB extends Dexie {
       notes: "id, courseId, date",
       tasks: "id, courseId, dueDate",
     });
+    this.version(3).stores({
+      courses: "id, weekday, period, [year+semester]",
+      attendances: "id, courseId, date",
+      notes: "id, courseId, date",
+      tasks: "id, courseId, dueDate",
+    });
   }
 }
 

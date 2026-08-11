@@ -14,9 +14,13 @@ export async function GET(req: NextRequest) {
   const year = Number(req.nextUrl.searchParams.get("year")) || new Date().getFullYear();
   const semester = req.nextUrl.searchParams.get("semester") ?? "後期";
 
-  // 実際に大学のシラバス検索を叩くのは、意味のある検索語が入力されたときだけ
-  // （空検索・1文字検索での全件取得は行わず、大学サーバーへの負荷を最小限にする）
-  if (q.length >= 2 && (semester === "前期" || semester === "後期")) {
+  // その学期がすでに全件同期済み（マイページの「全件同期」）であれば、
+  // 検索のたびに大学サイトへライブ問い合わせする必要はない。
+  // 同期未実施の学期（キャッシュがほぼ空）の場合だけ、その場でライブ取得してフォールバックする。
+  const cachedCount = await prisma.syllabusCourse.count({ where: { year, semester } });
+  const looksSynced = cachedCount >= 100;
+
+  if (!looksSynced && q.length >= 2 && (semester === "前期" || semester === "後期")) {
     try {
       const liveRows = await searchLiveSyllabus(year, semester, q);
       for (const row of liveRows) {
