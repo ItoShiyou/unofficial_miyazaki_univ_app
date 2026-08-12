@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 
 export async function GET(req: NextRequest) {
   const syllabusCourseId = req.nextUrl.searchParams.get("syllabusCourseId");
@@ -41,6 +42,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // 匿名投稿の連投（スパム・荒らし）を抑止する
+  const { allowed, retryAfterMs } = checkRateLimit(`karte-post:${clientIp(req)}`, 20, 60 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "投稿が続いています。しばらく時間をおいてから再度お試しください" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    );
+  }
+
   const body = await req.json();
   const {
     syllabusCourseId,
@@ -60,6 +70,32 @@ export async function POST(req: NextRequest) {
 
   if (!syllabusCourseId || !year || !semester) {
     return NextResponse.json({ error: "missing required fields" }, { status: 400 });
+  }
+
+  const MAX_SHORT = 200;
+  const MAX_LONG = 2000;
+  const textFields: Array<[string, unknown, number]> = [
+    ["attendanceMethod", attendanceMethod, MAX_SHORT],
+    ["examFormat", examFormat, MAX_SHORT],
+    ["atmosphere", atmosphere, MAX_SHORT],
+    ["pace", pace, MAX_SHORT],
+    ["advice", advice, MAX_LONG],
+    ["comment", comment, MAX_LONG],
+  ];
+  for (const [field, value, max] of textFields) {
+    if (typeof value === "string" && value.length > max) {
+      return NextResponse.json({ error: `${field} が長すぎます（${max}文字まで）` }, { status: 400 });
+    }
+  }
+  for (const [field, value] of [
+    ["attendanceStrictness", attendanceStrictness],
+    ["assignmentVolume", assignmentVolume],
+    ["examDifficulty", examDifficulty],
+    ["clarity", clarity],
+  ] as const) {
+    if (value !== undefined && value !== null && (typeof value !== "number" || value < 1 || value > 5)) {
+      return NextResponse.json({ error: `${field} は1〜5の数値である必要があります` }, { status: 400 });
+    }
   }
 
   const karte = await prisma.courseKarte.create({

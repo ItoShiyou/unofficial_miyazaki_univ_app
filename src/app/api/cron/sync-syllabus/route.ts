@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentSemester } from "@/lib/semester";
 import { runFullSemesterSync } from "@/lib/syllabusSync";
 
+// 全件取得は1学期あたり30秒前後かかるため、デフォルトの実行時間上限では
+// 途中で打ち切られる可能性がある。Vercel Hobby/Proの範囲で余裕を持たせる。
+export const maxDuration = 60;
+// cronからのみ叩かれる非キャッシュ対象のエンドポイント
+export const dynamic = "force-dynamic";
+
 /**
  * 学期に一度、サーバー側の判断のみでシラバスを全件同期するエンドポイント。
  *

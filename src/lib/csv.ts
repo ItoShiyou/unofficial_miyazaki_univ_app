@@ -61,10 +61,17 @@ function parseCsvLine(line: string): string[] {
 export async function importTimetableCsv(
   text: string,
   semester: SemesterKey
-): Promise<{ imported: number; skipped: number }> {
+): Promise<{ imported: number; skipped: number; conflicted: number }> {
   const lines = text.replace(/^﻿/, "").split(/\r?\n/).filter((l) => l.trim());
   let imported = 0;
   let skipped = 0;
+  let conflicted = 0;
+
+  const existing = await db.courses
+    .where("[year+semester]")
+    .equals([semester.year, semester.semester])
+    .toArray();
+  const occupied = new Set(existing.map((c) => `${c.weekday}${c.period}`));
 
   for (const line of lines.slice(1)) {
     const cols = parseCsvLine(line);
@@ -83,6 +90,13 @@ export async function importTimetableCsv(
       skipped++;
       continue;
     }
+
+    const slotKey = `${weekday}${period}`;
+    if (occupied.has(slotKey)) {
+      conflicted++;
+      continue;
+    }
+
     const palette = COURSE_COLORS[Math.floor(Math.random() * COURSE_COLORS.length)];
     await db.courses.add({
       id: newId(),
@@ -98,8 +112,9 @@ export async function importTimetableCsv(
       textColor: palette.text,
       createdAt: Date.now(),
     });
+    occupied.add(slotKey);
     imported++;
   }
 
-  return { imported, skipped };
+  return { imported, skipped, conflicted };
 }

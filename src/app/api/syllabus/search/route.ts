@@ -80,5 +80,30 @@ export async function GET(req: NextRequest) {
     take: 30,
   });
 
-  return NextResponse.json({ courses });
+  // 一覧の評価表示に必要な集計を1クエリでまとめて取得し、
+  // 一覧件数分の個別リクエスト（N+1）が発生しないようにする。
+  const ratings = await prisma.courseKarte.groupBy({
+    by: ["syllabusCourseId"],
+    where: { syllabusCourseId: { in: courses.map((c) => c.id) } },
+    _avg: {
+      attendanceStrictness: true,
+      assignmentVolume: true,
+      examDifficulty: true,
+      clarity: true,
+    },
+    _count: true,
+  });
+  const ratingByCourseId = new Map(ratings.map((r) => [r.syllabusCourseId, r]));
+
+  const coursesWithRating = courses.map((c) => {
+    const r = ratingByCourseId.get(c.id);
+    if (!r) return { ...c, overall: null, karteCount: 0 };
+    const avgs = [r._avg.attendanceStrictness, r._avg.assignmentVolume, r._avg.examDifficulty, r._avg.clarity].filter(
+      (v): v is number => v !== null
+    );
+    const overall = avgs.length ? Math.round((avgs.reduce((a, b) => a + b, 0) / avgs.length) * 10) / 10 : null;
+    return { ...c, overall, karteCount: r._count };
+  });
+
+  return NextResponse.json({ courses: coursesWithRating });
 }

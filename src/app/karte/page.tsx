@@ -13,38 +13,33 @@ interface SyllabusCourse {
   room: string | null;
   weekday: string | null;
   period: number | null;
+  overall: number | null;
 }
 
 export default function KartePage() {
   const semester = useCurrentSemester();
   const [query, setQuery] = useState("");
   const [courses, setCourses] = useState<SyllabusCourse[]>([]);
-  const [overallMap, setOverallMap] = useState<Record<string, number | null>>({});
   const [searched, setSearched] = useState(false);
 
   useEffect(() => {
+    let ignore = false;
     const t = setTimeout(() => {
       fetch(
         `/api/syllabus/search?q=${encodeURIComponent(query)}&year=${semester.year}&semester=${semester.semester}`
       )
         .then((r) => r.json())
         .then((d) => {
+          if (ignore) return;
           setCourses(d.courses ?? []);
           setSearched(true);
         });
     }, 200);
-    return () => clearTimeout(t);
+    return () => {
+      ignore = true;
+      clearTimeout(t);
+    };
   }, [query, semester]);
-
-  useEffect(() => {
-    courses.forEach((c) => {
-      if (overallMap[c.id] !== undefined) return;
-      fetch(`/api/karte?syllabusCourseId=${c.id}`)
-        .then((r) => r.json())
-        .then((d) => setOverallMap((m) => ({ ...m, [c.id]: d.overall })));
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courses]);
 
   return (
     <main className="flex-1 pb-4">
@@ -69,7 +64,7 @@ export default function KartePage() {
           >
             <div className="flex items-center justify-between">
               <span className="font-medium">{c.name}</span>
-              <StarRating value={overallMap[c.id] ?? null} />
+              <StarRating value={c.overall} />
             </div>
             <p className="text-xs text-gray-400 mt-1">
               {c.teacher} {c.room && `・${c.room}`} {c.weekday && `・${c.weekday}${c.period}限`}
