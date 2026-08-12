@@ -22,6 +22,8 @@ model SyllabusCourse {
   syllabusUrl String?
   rawHash     String? // 差分検知用の内容ハッシュ
   fetchedAt   DateTime @default(now())
+  attendanceHint      String?  // シラバス「履修上の注意」欄から抽出した出席・欠席関連の記述
+  attendanceHintFetchedAt DateTime? // 上記を取得済みかどうかの判定用（null=未取得）
 
   kartes  CourseKarte[]
   changes SyllabusChange[]

@@ -6,8 +6,10 @@ import * as cheerio from "cheerio";
  *
  * 節度を保つための方針:
  * - 明示的なユーザー操作（検索・同期ボタン）でのみ呼び出す。定期実行やクローリングは行わない。
- * - 詳細ページ（/syllabus/detail, robots.txt が Bingbot に対して明示的に禁止している経路）は取得しない。
- *   一覧ページの情報（講義名・担当教員・開講日）だけで用が足りるため。
+ * - 一覧ページの全件取得・検索は積極的に使うが、詳細ページ（/syllabus/detail）は
+ *   ユーザーが時間割に授業を登録する瞬間に「その1件だけ」を都度取得する用途に限定する
+ *   （履修上の注意欄から出席関連の記載を拾うため）。robots.txtはBingbotに対してのみ
+ *   /syllabus/ 以下を禁止しており、低頻度・単発の個人利用は許容範囲と判断している。
  * - 素性を隠さない User-Agent を送る。
  * - 複数ページ取得時は必ず間隔を空ける。
  */
@@ -139,4 +141,46 @@ export async function fetchFullSyllabusCatalog(
     await sleep(REQUEST_DELAY_MS);
   }
   return all;
+}
+
+const ATTENDANCE_KEYWORDS = ["欠席", "出席"];
+
+/**
+ * シラバス詳細ページの「履修上の注意」欄から、出席・欠席に関する記述だけを
+ * 抜き出す。宮崎大学のシラバスには「欠席◯回まで」のような構造化された
+ * 上限回数フィールドは存在しないため、数値としての自動反映はできない。
+ * ユーザーが自分で欠席上限を設定する際の参考情報として提示する用途。
+ */
+export async function fetchAttendanceHint(
+  year: number,
+  code: string
+): Promise<string | null> {
+  const params = new URLSearchParams({ n: String(year), j: code, s: code });
+  const res = await fetch(
+    `https://syllabus.eden.miyazaki-u.ac.jp/syllabus/detail?${params.toString()}`,
+    { headers: { "User-Agent": USER_AGENT } }
+  );
+  if (!res.ok) return null;
+
+  const html = await res.text();
+  const $ = cheerio.load(html);
+
+  const sections: string[] = [];
+  $(".card-header.panel-header-syllabus").each((_, el) => {
+    const heading = $(el).text().trim();
+    if (heading === "履修上の注意" || heading === "成績評価方法") {
+      const body = $(el).parent().find(".card-body").text();
+      sections.push(body);
+    }
+  });
+
+  const combined = sections.join("\n");
+  const sentences = combined
+    .split(/(?<=。)/)
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
+  const hits = sentences.filter((s) => ATTENDANCE_KEYWORDS.some((k) => s.includes(k)));
+  if (hits.length === 0) return null;
+  return hits.slice(0, 3).join(" ");
 }

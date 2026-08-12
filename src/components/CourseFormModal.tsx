@@ -39,6 +39,8 @@ export default function CourseFormModal({
   );
   const [rawHits, setRawHits] = useState<SyllabusHit[]>([]);
   const hits = name.trim() && !course ? rawHits : [];
+  const [rawAttendanceHint, setRawAttendanceHint] = useState<string | null>(null);
+  const attendanceHint = syllabusCourseId ? rawAttendanceHint : null;
 
   useEffect(() => {
     if (!name.trim() || course) return;
@@ -52,6 +54,22 @@ export default function CourseFormModal({
     }, 250);
     return () => clearTimeout(t);
   }, [name, course, semester]);
+
+  useEffect(() => {
+    if (!syllabusCourseId) return;
+    let ignore = false;
+    fetch(`/api/syllabus/attendance-hint?syllabusCourseId=${syllabusCourseId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!ignore) setRawAttendanceHint(d.hint ?? null);
+      })
+      .catch(() => {
+        if (!ignore) setRawAttendanceHint(null);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [syllabusCourseId]);
 
   function applyHit(h: SyllabusHit) {
     setName(h.name);
@@ -219,6 +237,15 @@ export default function CourseFormModal({
               value={absenceLimit}
               onChange={(e) => setAbsenceLimit(Number(e.target.value))}
             />
+            {attendanceHint && (
+              <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+                <p className="font-medium mb-0.5">シラバスの履修上の注意より</p>
+                <p>{attendanceHint}</p>
+                <p className="text-amber-500 mt-1">
+                  上限回数として明記されていない場合があります。参考程度にご利用ください。
+                </p>
+              </div>
+            )}
           </div>
           <p className="text-xs text-gray-400">
             {semester.year}年度 {semester.semester} の授業として登録されます。
