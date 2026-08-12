@@ -86,7 +86,7 @@ export async function importTimetableCsv(
       continue;
     }
     const period = Number(periodRaw);
-    if (!period || period < 1 || period > 6) {
+    if (!period || period < 1 || period > 5) {
       skipped++;
       continue;
     }

@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { db, WEEKDAYS } from "@/lib/db";
 import { todayLocalDate } from "@/lib/date";
+import { periodLabel } from "@/lib/periods";
 import { PageHeader } from "@/components/ui";
 
 function todayWeekday() {
@@ -78,7 +79,7 @@ export default function Home() {
                     className="inline-block w-2.5 h-2.5 rounded-full"
                     style={{ backgroundColor: c.textColor }}
                   />
-                  {c.period}限：{c.name}
+                  {periodLabel(c.period)}：{c.name}
                 </span>
                 {c.room && <span className="text-xs text-gray-400">{c.room}</span>}
               </Link>

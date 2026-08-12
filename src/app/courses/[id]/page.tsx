@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { db, newId } from "@/lib/db";
 import { todayLocalDate } from "@/lib/date";
+import { periodLabel } from "@/lib/periods";
 import CourseFormModal from "@/components/CourseFormModal";
 import { ProgressBar } from "@/components/ui";
 
@@ -147,7 +148,7 @@ export default function CourseDetailPage() {
       <div className="px-4 mb-4">
         <h1 className="text-2xl font-bold">{course.name}</h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          {course.room ?? "教室未設定"} ・ {course.weekday}{course.period}限
+          {course.room ?? "教室未設定"} ・ {course.weekday}{periodLabel(course.period)}
           {course.teacher ? ` ・ ${course.teacher}` : ""}
         </p>
         {course.syllabusCourseId && (

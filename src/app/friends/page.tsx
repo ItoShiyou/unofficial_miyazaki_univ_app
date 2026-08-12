@@ -7,8 +7,8 @@ import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
 import { getDeviceId, useDisplayName, setDisplayName } from "@/lib/device";
 import { PageHeader } from "@/components/ui";
+import { PERIODS } from "@/lib/periods";
 
-const PERIODS = [1, 2, 3, 4, 5];
 const DAYS = WEEKDAYS.slice(0, 5);
 
 interface FriendEntry {

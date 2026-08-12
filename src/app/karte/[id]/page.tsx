@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCurrentSemester } from "@/lib/useSemester";
+import { periodLabel } from "@/lib/periods";
 import { StarRating } from "@/components/ui";
 import KarteFormModal from "@/components/KarteFormModal";
 
@@ -88,7 +89,7 @@ export default function KarteDetailPage() {
       <div className="px-4 mb-4">
         <h1 className="text-2xl font-bold">{course.name}</h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          {course.room ?? ""} {course.weekday && `・${course.weekday}${course.period}限`}
+          {course.room ?? ""} {course.weekday && course.period && `・${course.weekday}${periodLabel(course.period)}`}
           {course.teacher && ` ・担当：${course.teacher}`}
         </p>
       </div>

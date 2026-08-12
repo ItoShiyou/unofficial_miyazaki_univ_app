@@ -6,10 +6,9 @@ import Link from "next/link";
 import { db, WEEKDAYS, type Course, type Weekday } from "@/lib/db";
 import { adjacentSemester, saveSemester, semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
+import { PERIODS, PERIOD_TIME, periodLabel } from "@/lib/periods";
 import CourseFormModal from "@/components/CourseFormModal";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
-
-const PERIODS = [1, 2, 3, 4, 5, 6];
 
 function currentWeekDates(): Date[] {
   const now = new Date();
@@ -137,7 +136,14 @@ export default function TimetablePage() {
           <tbody>
             {PERIODS.map((p) => (
               <tr key={p}>
-                <td className="w-5 text-center text-gray-400 align-top pt-2">{p}</td>
+                <td className="w-9 text-center text-gray-400 align-top pt-2">
+                  <div className="text-xs font-medium">{p}</div>
+                  <div className="text-[8px] leading-tight whitespace-nowrap">
+                    {PERIOD_TIME[p].split("–").map((t, i) => (
+                      <div key={i}>{t}</div>
+                    ))}
+                  </div>
+                </td>
                 {WEEKDAYS.slice(0, 6).map((w) => {
                   const course = findCourse(w, p);
                   return (
@@ -204,7 +210,7 @@ export default function TimetablePage() {
                     {c.name}
                   </span>
                   <span className="text-xs text-gray-400">
-                    {c.weekday}{c.period}限
+                    {c.weekday}{periodLabel(c.period)}
                   </span>
                 </Link>
               </li>

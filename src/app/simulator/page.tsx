@@ -6,8 +6,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, newId, COURSE_COLORS, WEEKDAYS, type Weekday } from "@/lib/db";
 import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
-
-const PERIODS = [1, 2, 3, 4, 5, 6];
+import { PERIODS, periodLabel } from "@/lib/periods";
 
 interface SyllabusHit {
   id: string;
@@ -63,7 +62,7 @@ export default function SimulatorPage() {
     selected &&
     courses.some((c) => c.weekday === selected.weekday && c.period === selected.period);
 
-  const emptySlots = 6 * 6 - courses.length - (selected && !conflict ? 1 : 0);
+  const emptySlots = 6 * 5 - courses.length - (selected && !conflict ? 1 : 0);
 
   const heavyCount = courses.length; // placeholder count of current heavy-load courses; refined below
   void heavyCount;
@@ -124,7 +123,7 @@ export default function SimulatorPage() {
                   >
                     <span className="font-medium">{h.name}</span>
                     <span className="block text-xs text-gray-400">
-                      {h.weekday}{h.period}限 {h.room && `・${h.room}`}
+                      {h.weekday}{h.period && periodLabel(h.period)} {h.room && `・${h.room}`}
                     </span>
                   </button>
                 </li>

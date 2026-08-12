@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { slotFromRawPeriod } from "@/lib/periods";
 
 /**
  * 宮崎大学の公開シラバス検索（ログイン不要、robots.txt でも Bingbot 以外は制限なし）から
@@ -48,10 +49,12 @@ function toHalfWidthDigits(s: string): string {
 function parseSchedule(text: string): { weekday: WeekdayKanji | null; period: number | null } {
   const normalized = toHalfWidthDigits(text.trim());
   const weekdayMatch = WEEKDAY_KANJI.find((w) => normalized.includes(w));
+  // シラバスは「１・２時限」のようにペア表記。アプリ内では1コマ=1スロット(1〜5)として扱うため、
+  // 生の時限番号（１・２→1、３・４→3、７・８→7、９・１０→9）をスロット番号に変換する。
   const periodMatch = normalized.match(/(\d+)(?:・\d+)?時限/);
   return {
     weekday: weekdayMatch ?? null,
-    period: periodMatch ? Number(periodMatch[1]) : null,
+    period: periodMatch ? slotFromRawPeriod(Number(periodMatch[1])) : null,
   };
 }
 

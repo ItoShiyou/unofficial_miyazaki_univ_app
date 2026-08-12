@@ -9,7 +9,7 @@ export interface Course {
   teacher?: string;
   room?: string;
   weekday: Weekday;
-  period: number; // 1〜6限
+  period: number; // 1〜5限（宮崎大学の公式時限。詳細は @/lib/periods）
   year: number;
   semester: "前期" | "後期" | "通年";
   absenceLimit: number; // 欠席上限回数

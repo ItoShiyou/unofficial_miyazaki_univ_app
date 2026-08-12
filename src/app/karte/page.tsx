@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
+import { periodLabel } from "@/lib/periods";
 import { PageHeader, StarRating } from "@/components/ui";
 
 interface SyllabusCourse {
@@ -67,7 +68,7 @@ export default function KartePage() {
               <StarRating value={c.overall} />
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              {c.teacher} {c.room && `・${c.room}`} {c.weekday && `・${c.weekday}${c.period}限`}
+              {c.teacher} {c.room && `・${c.room}`} {c.weekday && c.period && `・${c.weekday}${periodLabel(c.period)}`}
             </p>
           </Link>
         ))}
