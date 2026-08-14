@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   const year = Number(req.nextUrl.searchParams.get("year")) || new Date().getFullYear();
   const semester = req.nextUrl.searchParams.get("semester") ?? "後期";
+  const weekday = req.nextUrl.searchParams.get("weekday")?.trim() || undefined;
+  const periodRaw = req.nextUrl.searchParams.get("period");
+  const period = periodRaw ? Number(periodRaw) : undefined;
 
   // その学期がすでに全件同期済み（マイページの「全件同期」）であれば、
   // 検索のたびに大学サイトへライブ問い合わせする必要はない。
@@ -75,6 +78,8 @@ export async function GET(req: NextRequest) {
       year,
       semester,
       ...(q ? { name: { contains: q } } : {}),
+      ...(weekday ? { weekday } : {}),
+      ...(period ? { period } : {}),
     },
     orderBy: { name: "asc" },
     take: 30,

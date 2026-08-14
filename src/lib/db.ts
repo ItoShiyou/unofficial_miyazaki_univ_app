@@ -3,6 +3,9 @@ import Dexie, { type EntityTable } from "dexie";
 export const WEEKDAYS = ["月", "火", "水", "木", "金", "土", "日"] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
 
+export const GRADES = ["秀", "優", "良", "可", "不可"] as const;
+export type Grade = (typeof GRADES)[number];
+
 export interface Course {
   id: string;
   name: string;
@@ -13,6 +16,8 @@ export interface Course {
   year: number;
   semester: "前期" | "後期" | "通年";
   absenceLimit: number; // 欠席上限回数
+  credits?: number; // 単位数（自己入力）
+  grade?: Grade; // 成績（自己入力）。未設定＝履修中／未判定
   color: string; // 背景色(pastel)
   textColor: string; // 文字色
   syllabusCourseId?: string; // カルテ機能用: サーバー側シラバスカタログとの紐付け
@@ -46,11 +51,26 @@ export interface CourseTask {
   createdAt: number;
 }
 
+export interface ExamSlot {
+  id: string;
+  courseId?: string; // 登録済みの授業と紐付ける場合（未設定なら手動入力の予定）
+  title: string; // 授業名・試験名
+  date: string; // ISO date (YYYY-MM-DD)
+  startTime?: string; // "13:00" 等
+  endTime?: string;
+  room?: string;
+  note?: string;
+  year: number;
+  semester: "前期" | "後期" | "通年";
+  createdAt: number;
+}
+
 class MiyadaiDB extends Dexie {
   courses!: EntityTable<Course, "id">;
   attendances!: EntityTable<AttendanceRecord, "id">;
   notes!: EntityTable<CourseNote, "id">;
   tasks!: EntityTable<CourseTask, "id">;
+  examSlots!: EntityTable<ExamSlot, "id">;
 
   constructor() {
     super("miyadai-app");
@@ -70,6 +90,20 @@ class MiyadaiDB extends Dexie {
       attendances: "id, courseId, date",
       notes: "id, courseId, date",
       tasks: "id, courseId, dueDate",
+    });
+    this.version(4).stores({
+      courses: "id, weekday, period, [year+semester]",
+      attendances: "id, courseId, date",
+      notes: "id, courseId, date",
+      tasks: "id, courseId, dueDate",
+      examSlots: "id, date, [year+semester]",
+    });
+    this.version(5).stores({
+      courses: "id, weekday, period, [year+semester]",
+      attendances: "id, courseId, date",
+      notes: "id, courseId, date",
+      tasks: "id, courseId, dueDate",
+      examSlots: "id, courseId, date, [year+semester]",
     });
   }
 }

@@ -30,7 +30,8 @@ export default function CourseFormModal({
   const [step, setStep] = useState<"pick" | "details">(course ? "details" : "pick");
   const [query, setQuery] = useState("");
   const [rawHits, setRawHits] = useState<SyllabusHit[]>([]);
-  const hits = query.trim() ? rawHits : [];
+  const [hitsLoaded, setHitsLoaded] = useState(false);
+  const hits = rawHits;
 
   const [name, setName] = useState(course?.name ?? "");
   const [teacher, setTeacher] = useState(course?.teacher ?? "");
@@ -40,6 +41,7 @@ export default function CourseFormModal({
   const [absenceLimit, setAbsenceLimit] = useState<number>(
     course?.absenceLimit ?? 5
   );
+  const [credits, setCredits] = useState<number | "">(course?.credits ?? 2);
   const [syllabusCourseId, setSyllabusCourseId] = useState<string | undefined>(
     course?.syllabusCourseId
   );
@@ -47,25 +49,40 @@ export default function CourseFormModal({
   const attendanceHint = syllabusCourseId ? rawAttendanceHint : null;
 
   useEffect(() => {
-    if (!query.trim()) return;
+    if (step !== "pick") return;
     let ignore = false;
     const t = setTimeout(() => {
-      fetch(
-        `/api/syllabus/search?q=${encodeURIComponent(query.trim())}&year=${semester.year}&semester=${semester.semester}`
-      )
+      setHitsLoaded(false);
+      const params = new URLSearchParams({
+        year: String(semester.year),
+        semester: semester.semester,
+      });
+      if (query.trim()) params.set("q", query.trim());
+      // 検索語が未入力の間は、選択中の曜日・時限に一致する授業をあらかじめ絞り込んで表示する
+      if (!query.trim()) {
+        params.set("weekday", w);
+        params.set("period", String(p));
+      }
+      fetch(`/api/syllabus/search?${params.toString()}`)
         .then((r) => r.json())
         .then((d) => {
-          if (!ignore) setRawHits(d.courses ?? []);
+          if (!ignore) {
+            setRawHits(d.courses ?? []);
+            setHitsLoaded(true);
+          }
         })
         .catch(() => {
-          if (!ignore) setRawHits([]);
+          if (!ignore) {
+            setRawHits([]);
+            setHitsLoaded(true);
+          }
         });
     }, 250);
     return () => {
       ignore = true;
       clearTimeout(t);
     };
-  }, [query, semester]);
+  }, [query, semester, step, w, p]);
 
   useEffect(() => {
     if (!syllabusCourseId) return;
@@ -107,6 +124,7 @@ export default function CourseFormModal({
         weekday: w,
         period: p,
         absenceLimit,
+        credits: credits === "" ? undefined : credits,
         syllabusCourseId,
       });
     } else {
@@ -121,6 +139,7 @@ export default function CourseFormModal({
         year: semester.year,
         semester: semester.semester,
         absenceLimit,
+        credits: credits === "" ? undefined : credits,
         color: palette.bg,
         textColor: palette.text,
         syllabusCourseId,
@@ -137,6 +156,11 @@ export default function CourseFormModal({
     await db.attendances.where("courseId").equals(course.id).delete();
     await db.notes.where("courseId").equals(course.id).delete();
     await db.tasks.where("courseId").equals(course.id).delete();
+    // 試験予定は日付情報として意味を持つため削除はせず、授業との紐付けだけ解除する
+    await db.examSlots
+      .where("courseId")
+      .equals(course.id)
+      .modify({ courseId: undefined });
     await db.courses.delete(course.id);
     onClose();
   }
@@ -153,9 +177,33 @@ export default function CourseFormModal({
         {step === "pick" ? (
           <div className="flex flex-col min-h-0 flex-1 p-5">
             <h2 className="text-lg font-semibold mb-1">授業を選ぶ</h2>
-            <p className="text-xs text-gray-400 mb-4">
+            <p className="text-xs text-gray-400 mb-3">
               {semester.year}年度 {semester.semester} のシラバスから検索します。
             </p>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <select
+                className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
+                value={w}
+                onChange={(e) => setW(e.target.value as Weekday)}
+              >
+                {WEEKDAYS.slice(0, 6).map((d) => (
+                  <option key={d} value={d}>
+                    {d}曜日
+                  </option>
+                ))}
+              </select>
+              <select
+                className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
+                value={p}
+                onChange={(e) => setP(Number(e.target.value))}
+              >
+                {PERIODS.map((n) => (
+                  <option key={n} value={n}>
+                    {periodLabel(n)}
+                  </option>
+                ))}
+              </select>
+            </div>
             <input
               className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 mb-3"
               value={query}
@@ -183,13 +231,17 @@ export default function CourseFormModal({
                     </li>
                   ))}
                 </ul>
+              ) : !hitsLoaded ? (
+                <p className="text-sm text-gray-400 text-center mt-8">検索中…</p>
               ) : query.trim() ? (
                 <p className="text-sm text-gray-400 text-center mt-8">
                   該当する授業が見つかりません。
                 </p>
               ) : (
                 <p className="text-sm text-gray-400 text-center mt-8">
-                  授業名を入力すると、シラバスから候補が表示されます。
+                  {w}曜日{periodLabel(p)}に該当する授業が見つかりません。
+                  <br />
+                  授業名で検索することもできます。
                 </p>
               )}
             </div>
@@ -288,17 +340,33 @@ export default function CourseFormModal({
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    欠席上限（回）
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
+                    value={absenceLimit}
+                    onChange={(e) => setAbsenceLimit(Number(e.target.value))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">単位数</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
+                    value={credits}
+                    onChange={(e) =>
+                      setCredits(e.target.value === "" ? "" : Number(e.target.value))
+                    }
+                  />
+                </div>
+              </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
-                  欠席上限（回）
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
-                  value={absenceLimit}
-                  onChange={(e) => setAbsenceLimit(Number(e.target.value))}
-                />
                 {attendanceHint && (
                   <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
                     <p className="font-medium mb-0.5">シラバスの履修上の注意より</p>

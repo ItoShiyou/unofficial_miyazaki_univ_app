@@ -42,6 +42,8 @@ export default function TimetablePage() {
       [semester.year, semester.semester]
     ) ?? [];
 
+  const totalCredits = courses.reduce((sum, c) => sum + (c.credits ?? 0), 0);
+
   function changeSemester(dir: 1 | -1) {
     const next = adjacentSemester(semester, dir);
     saveSemester(next);
@@ -101,19 +103,31 @@ export default function TimetablePage() {
               >
                 履修シミュレーター
               </Link>
+              <Link
+                href="/exams"
+                onClick={() => setMenuOpen(false)}
+                className="block w-full text-left px-4 py-2.5 hover:bg-gray-50"
+              >
+                テスト期間の予定
+              </Link>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-1 px-4 mt-1 text-sm text-gray-500">
-        <button onClick={() => changeSemester(-1)} className="px-1">
-          ‹
-        </button>
-        <span className="font-medium text-gray-700">{semesterLabel(semester)}</span>
-        <button onClick={() => changeSemester(1)} className="px-1">
-          ›
-        </button>
+      <div className="flex items-center justify-between px-4 mt-1">
+        <div className="flex items-center gap-1 text-sm text-gray-500">
+          <button onClick={() => changeSemester(-1)} className="px-1">
+            ‹
+          </button>
+          <span className="font-medium text-gray-700">{semesterLabel(semester)}</span>
+          <button onClick={() => changeSemester(1)} className="px-1">
+            ›
+          </button>
+        </div>
+        {totalCredits > 0 && (
+          <span className="text-xs text-gray-400">合計 {totalCredits} 単位</span>
+        )}
       </div>
 
       <div className="grid grid-cols-6 text-center text-[11px] text-gray-400 px-4 mt-3">

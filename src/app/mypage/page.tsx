@@ -8,6 +8,7 @@ import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
 import { useDisplayName, setDisplayName } from "@/lib/device";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
+import { computeGpa } from "@/lib/gpa";
 import { PageHeader, Card } from "@/components/ui";
 
 interface SyllabusChangeEntry {
@@ -72,6 +73,9 @@ export default function MyPage() {
     const key = `${c.year}年度 ${c.semester}`;
     semesterCounts.set(key, (semesterCounts.get(key) ?? 0) + 1);
   }
+
+  const cumulativeGpa = computeGpa(courses);
+  const currentSemesterGpa = computeGpa(currentCourses);
 
   function saveName() {
     setDisplayName(draftName.trim());
@@ -147,6 +151,28 @@ export default function MyPage() {
               <p className="text-xs text-gray-400">まだ授業が登録されていません。</p>
             )}
           </div>
+        </Card>
+
+        <Card>
+          <p className="text-sm font-medium mb-2">成績・GPA</p>
+          <div className="grid grid-cols-2 gap-3 mb-2">
+            <div className="rounded-xl bg-gray-50 p-3">
+              <p className="text-xs text-gray-400 mb-1">{semesterLabel(semester)}</p>
+              <p className="text-xl font-bold">
+                {currentSemesterGpa.gpa != null ? currentSemesterGpa.gpa.toFixed(2) : "―"}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-3">
+              <p className="text-xs text-gray-400 mb-1">通算</p>
+              <p className="text-xl font-bold">
+                {cumulativeGpa.gpa != null ? cumulativeGpa.gpa.toFixed(2) : "―"}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400">
+            成績・単位数が入力済みの科目（{cumulativeGpa.gradedCourseCount}科目・
+            {cumulativeGpa.creditsCounted}単位）から算出。各授業の詳細ページで成績を入力できます。
+          </p>
         </Card>
 
         <Card>

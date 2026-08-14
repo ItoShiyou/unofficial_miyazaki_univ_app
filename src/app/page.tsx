@@ -3,7 +3,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { db, WEEKDAYS } from "@/lib/db";
-import { todayLocalDate } from "@/lib/date";
+import { addDaysLocalDate, todayLocalDate } from "@/lib/date";
 import { periodLabel } from "@/lib/periods";
 import { PageHeader } from "@/components/ui";
 
@@ -20,12 +20,17 @@ export default function Home() {
   const notes = useLiveQuery(() => db.notes.toArray(), []) ?? [];
   const allTasks = useLiveQuery(() => db.tasks.toArray(), []) ?? [];
   const tasks = allTasks.filter((t) => !t.done);
+  const allExams = useLiveQuery(() => db.examSlots.toArray(), []) ?? [];
 
   const courseMap = new Map(courses.map((c) => [c.id, c]));
 
   const todayCourses = courses
     .filter((c) => c.weekday === today)
     .sort((a, b) => a.period - b.period);
+
+  const todayExams = allExams
+    .filter((e) => e.date === todayStr)
+    .sort((a, b) => (a.startTime ?? "").localeCompare(b.startTime ?? ""));
 
   const warnings = courses
     .map((c) => {
@@ -39,6 +44,11 @@ export default function Home() {
   const dueTasks = tasks
     .filter((t) => !t.dueDate || t.dueDate <= todayStr)
     .sort((a, b) => (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999"));
+
+  const upcomingLimit = addDaysLocalDate(7);
+  const upcomingTasks = tasks
+    .filter((t) => t.dueDate && t.dueDate > todayStr && t.dueDate <= upcomingLimit)
+    .sort((a, b) => (a.dueDate ?? "").localeCompare(b.dueDate ?? ""));
 
   const previews = courses
     .map((c) => {
@@ -64,10 +74,25 @@ export default function Home() {
 
       <section className="px-4 mb-5">
         <h2 className="text-sm font-medium text-gray-500 mb-2">今日の予定</h2>
-        {todayCourses.length === 0 && (
-          <p className="text-sm text-gray-400">今日の授業はありません。</p>
+        {todayCourses.length === 0 && todayExams.length === 0 && (
+          <p className="text-sm text-gray-400">今日の授業・試験はありません。</p>
         )}
         <ul className="space-y-1.5">
+          {todayExams.map((e) => (
+            <li key={e.id}>
+              <Link
+                href="/exams"
+                className="flex items-center justify-between rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5"
+              >
+                <span className="flex items-center gap-2 text-sm">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  試験：{e.title}
+                  {e.startTime && `（${e.startTime}〜）`}
+                </span>
+                {e.room && <span className="text-xs text-amber-700">{e.room}</span>}
+              </Link>
+            </li>
+          ))}
           {todayCourses.map((c) => (
             <li key={c.id}>
               <Link
@@ -90,7 +115,12 @@ export default function Home() {
 
       {(dueTasks.length > 0 || warnings.length > 0) && (
         <section className="px-4 mb-5">
-          <h2 className="text-sm font-medium text-gray-500 mb-2">やること</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-medium text-gray-500">やること</h2>
+            <Link href="/tasks" className="text-xs text-blue-600">
+              課題を全部見る
+            </Link>
+          </div>
           <ul className="space-y-1.5">
             {dueTasks.map((t) => {
               const course = courseMap.get(t.courseId);
@@ -135,6 +165,28 @@ export default function Home() {
                 </Link>
               </li>
             ))}
+          </ul>
+        </section>
+      )}
+
+      {upcomingTasks.length > 0 && (
+        <section className="px-4 mb-5">
+          <h2 className="text-sm font-medium text-gray-500 mb-2">もうすぐの課題（7日以内）</h2>
+          <ul className="space-y-1.5">
+            {upcomingTasks.map((t) => {
+              const course = courseMap.get(t.courseId);
+              return (
+                <li
+                  key={t.id}
+                  className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5"
+                >
+                  <span className="text-sm">
+                    {course?.name}：{t.title}
+                  </span>
+                  <span className="text-xs text-gray-400">{t.dueDate}</span>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

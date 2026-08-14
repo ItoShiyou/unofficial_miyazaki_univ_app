@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { db, newId } from "@/lib/db";
+import { db, newId, GRADES, type Grade } from "@/lib/db";
 import { todayLocalDate } from "@/lib/date";
 import { periodLabel } from "@/lib/periods";
 import CourseFormModal from "@/components/CourseFormModal";
@@ -90,6 +90,10 @@ export default function CourseDetailPage() {
 
   async function removeAttendance(attId: string) {
     await db.attendances.delete(attId);
+  }
+
+  async function setGrade(grade: Grade | undefined) {
+    await db.courses.update(id, { grade });
   }
 
   async function addNote() {
@@ -236,6 +240,42 @@ export default function CourseDetailPage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="px-4 mb-5">
+        <div className="rounded-2xl border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">成績</span>
+            {course.grade && (
+              <button onClick={() => setGrade(undefined)} className="text-xs text-gray-400">
+                未評価に戻す
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {GRADES.map((g) => (
+              <button
+                key={g}
+                onClick={() => setGrade(g)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium ${
+                  course.grade === g ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+          {!course.grade && (
+            <p className="text-xs text-gray-400 mt-2">
+              成績が確定したら選択してください。未選択の間は履修中として扱われ、GPAには含まれません。
+            </p>
+          )}
+          {course.grade && course.credits == null && (
+            <p className="text-xs text-amber-600 mt-2">
+              単位数が未入力のため、この科目はGPA計算に含まれません。「⋯」から編集して単位数を入力してください。
+            </p>
+          )}
+        </div>
       </section>
 
       <div className="px-4 flex gap-2 mb-3">

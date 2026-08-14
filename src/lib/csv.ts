@@ -1,7 +1,7 @@
 import { db, newId, COURSE_COLORS, WEEKDAYS, type Course, type Weekday } from "@/lib/db";
 import type { SemesterKey } from "@/lib/semester";
 
-const HEADER = ["授業名", "曜日", "時限", "教員", "教室", "欠席上限"];
+const HEADER = ["授業名", "曜日", "時限", "教員", "教室", "欠席上限", "単位数"];
 
 function csvEscape(v: string): string {
   if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
@@ -18,6 +18,7 @@ export function exportTimetableCsv(courses: Course[]) {
       c.teacher ?? "",
       c.room ?? "",
       String(c.absenceLimit),
+      c.credits != null ? String(c.credits) : "",
     ]),
   ];
   const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
@@ -75,7 +76,7 @@ export async function importTimetableCsv(
 
   for (const line of lines.slice(1)) {
     const cols = parseCsvLine(line);
-    const [name, weekdayRaw, periodRaw, teacher, room, limitRaw] = cols;
+    const [name, weekdayRaw, periodRaw, teacher, room, limitRaw, creditsRaw] = cols;
     if (!name || !weekdayRaw || !periodRaw) {
       skipped++;
       continue;
@@ -108,6 +109,7 @@ export async function importTimetableCsv(
       year: semester.year,
       semester: semester.semester,
       absenceLimit: Number(limitRaw) || 5,
+      credits: creditsRaw && Number(creditsRaw) > 0 ? Number(creditsRaw) : undefined,
       color: palette.bg,
       textColor: palette.text,
       createdAt: Date.now(),
