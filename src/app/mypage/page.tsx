@@ -11,6 +11,7 @@ import { useDisplayName, setDisplayName } from "@/lib/device";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 import { computeGpa } from "@/lib/gpa";
 import { universityName } from "@/lib/universities";
+import { useAccount } from "@/lib/useAccount";
 import { PageHeader, Card } from "@/components/ui";
 
 interface SyllabusChangeEntry {
@@ -34,12 +35,6 @@ interface SyllabusStatus {
   lastFetchedAt: string | null;
 }
 
-interface AccountInfo {
-  email: string;
-  university: string;
-  displayName: string | null;
-}
-
 export default function MyPage() {
   const router = useRouter();
   const savedName = useDisplayName();
@@ -48,23 +43,8 @@ export default function MyPage() {
   const semester = useCurrentSemester();
   const [changes, setChanges] = useState<SyllabusChangeEntry[]>([]);
   const [status, setStatus] = useState<SyllabusStatus | null>(null);
-  const [account, setAccount] = useState<AccountInfo | null>(null);
+  const account = useAccount();
   const [loggingOut, setLoggingOut] = useState(false);
-
-  useEffect(() => {
-    let ignore = false;
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d) => {
-        if (!ignore) setAccount(d.user ?? null);
-      })
-      .catch(() => {
-        if (!ignore) setAccount(null);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -78,8 +58,11 @@ export default function MyPage() {
   }
 
   useEffect(() => {
+    if (!account) return;
     let ignore = false;
-    fetch(`/api/syllabus/changes?year=${semester.year}&semester=${semester.semester}`)
+    fetch(
+      `/api/syllabus/changes?year=${semester.year}&semester=${semester.semester}&university=${account.university}`
+    )
       .then((r) => r.json())
       .then((d) => {
         if (!ignore) setChanges(d.changes ?? []);
@@ -87,7 +70,9 @@ export default function MyPage() {
       .catch(() => {
         if (!ignore) setChanges([]);
       });
-    fetch(`/api/syllabus/status?year=${semester.year}&semester=${semester.semester}`)
+    fetch(
+      `/api/syllabus/status?year=${semester.year}&semester=${semester.semester}&university=${account.university}`
+    )
       .then((r) => r.json())
       .then((d) => {
         if (!ignore) setStatus(d);
@@ -98,7 +83,7 @@ export default function MyPage() {
     return () => {
       ignore = true;
     };
-  }, [semester.year, semester.semester]);
+  }, [semester.year, semester.semester, account]);
 
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
   const currentCourses = courses.filter(

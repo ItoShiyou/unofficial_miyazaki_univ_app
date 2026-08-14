@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   const year = Number(req.nextUrl.searchParams.get("year")) || new Date().getFullYear();
   const semester = req.nextUrl.searchParams.get("semester") ?? "後期";
+  const university = req.nextUrl.searchParams.get("university") ?? "miyazaki-u";
   const weekday = req.nextUrl.searchParams.get("weekday")?.trim() || undefined;
   const periodRaw = req.nextUrl.searchParams.get("period");
   const period = periodRaw ? Number(periodRaw) : undefined;
@@ -20,10 +21,11 @@ export async function GET(req: NextRequest) {
   // その学期がすでに全件同期済み（マイページの「全件同期」）であれば、
   // 検索のたびに大学サイトへライブ問い合わせする必要はない。
   // 同期未実施の学期（キャッシュがほぼ空）の場合だけ、その場でライブ取得してフォールバックする。
-  const cachedCount = await prisma.syllabusCourse.count({ where: { year, semester } });
+  // ライブ検索（searchLiveSyllabus）は宮崎大学のみ対応しているため、他大学はキャッシュのみを参照する。
+  const cachedCount = await prisma.syllabusCourse.count({ where: { university, year, semester } });
   const looksSynced = cachedCount >= 100;
 
-  if (!looksSynced && q.length >= 2 && (semester === "前期" || semester === "後期")) {
+  if (university === "miyazaki-u" && !looksSynced && q.length >= 2 && (semester === "前期" || semester === "後期")) {
     try {
       const liveRows = await searchLiveSyllabus(year, semester, q);
       for (const row of liveRows) {
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
           period: row.period,
         });
         const existing = await prisma.syllabusCourse.findFirst({
-          where: { year, semester, code: row.code },
+          where: { university, year, semester, code: row.code },
         });
         if (existing) {
           if (existing.rawHash !== hash) {
@@ -54,6 +56,7 @@ export async function GET(req: NextRequest) {
         } else {
           await prisma.syllabusCourse.create({
             data: {
+              university,
               year,
               semester,
               code: row.code,
@@ -75,6 +78,7 @@ export async function GET(req: NextRequest) {
 
   const courses = await prisma.syllabusCourse.findMany({
     where: {
+      university,
       year,
       semester,
       ...(q ? { name: { contains: q } } : {}),

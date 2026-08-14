@@ -72,6 +72,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "missing required fields" }, { status: 400 });
   }
 
+  const targetCourse = await prisma.syllabusCourse.findUnique({
+    where: { id: syllabusCourseId },
+    select: { university: true },
+  });
+  if (!targetCourse) {
+    return NextResponse.json({ error: "course not found" }, { status: 404 });
+  }
+
   const MAX_SHORT = 200;
   const MAX_LONG = 2000;
   const textFields: Array<[string, unknown, number]> = [
@@ -101,6 +109,7 @@ export async function POST(req: NextRequest) {
   const karte = await prisma.courseKarte.create({
     data: {
       syllabusCourseId,
+      university: targetCourse.university,
       year,
       semester,
       attendanceMethod,

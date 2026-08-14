@@ -211,22 +211,33 @@ export default function TimetablePage() {
                 a.period - b.period
             )
             .map((c) => (
-              <li key={c.id}>
+              <li
+                key={c.id}
+                className="flex items-stretch gap-1.5 rounded-xl border border-gray-200 overflow-hidden"
+              >
                 <Link
                   href={`/courses/${c.id}`}
-                  className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2.5"
+                  className="flex-1 flex items-center justify-between px-3 py-2.5 min-w-0"
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 min-w-0">
                     <span
-                      className="inline-block w-2.5 h-2.5 rounded-full"
+                      className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: c.textColor }}
                     />
-                    {c.name}
+                    <span className="truncate">{c.name}</span>
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
                     {c.weekday}{periodLabel(c.period)}
                   </span>
                 </Link>
+                {c.syllabusCourseId && (
+                  <Link
+                    href={`/karte/${c.syllabusCourseId}`}
+                    className="flex-shrink-0 flex items-center px-3 text-xs text-blue-600 border-l border-gray-200 bg-gray-50"
+                  >
+                    カルテ
+                  </Link>
+                )}
               </li>
             ))}
           {courses.length === 0 && (

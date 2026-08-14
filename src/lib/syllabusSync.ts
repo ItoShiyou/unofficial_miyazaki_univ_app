@@ -1,7 +1,22 @@
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { fetchFullSyllabusCatalog } from "@/lib/syllabusSource";
+import { fetchFullSyllabusCatalog, type RawSyllabusRow } from "@/lib/syllabusSource";
+import { fetchFullSyllabusCatalogMmu } from "@/lib/syllabusSourceMmu";
 import type { SemesterName } from "@/lib/semester";
+
+// 大学ごとの一覧取得関数のレジストリ。新しい大学を追加する場合は
+// ここに1エントリ追加し、対応するsyllabusSourceXxx.tsを実装する。
+const CATALOG_FETCHERS: Record<
+  string,
+  (year: number, semester: SemesterName) => Promise<RawSyllabusRow[]>
+> = {
+  "miyazaki-u": fetchFullSyllabusCatalog,
+  "miyazaki-municipal-u": fetchFullSyllabusCatalogMmu,
+};
+
+export function supportsSyllabusSync(university: string): boolean {
+  return university in CATALOG_FETCHERS;
+}
 
 /**
  * 指定した学期の授業を大学の公開シラバスから全件取得し、サーバー側DBに丸ごと保管する。
@@ -17,6 +32,7 @@ function hashOf(c: { name: string; teacher: string | null; weekday: string | nul
 }
 
 export interface SyllabusSyncResult {
+  university: string;
   year: number;
   semester: SemesterName;
   checked: number;
@@ -33,15 +49,21 @@ export interface SyllabusSyncResult {
 }
 
 export async function runFullSemesterSync(
+  university: string,
   year: number,
   semester: SemesterName
 ): Promise<SyllabusSyncResult> {
+  const fetchCatalog = CATALOG_FETCHERS[university];
+  if (!fetchCatalog) {
+    throw new Error(`unsupported university for syllabus sync: ${university}`);
+  }
+
   const existingRows = await prisma.syllabusCourse.findMany({
-    where: { year, semester },
+    where: { university, year, semester },
   });
   const existingByCode = new Map(existingRows.map((c) => [c.code, c]));
 
-  const liveRows = await fetchFullSyllabusCatalog(year, semester);
+  const liveRows = await fetchCatalog(year, semester);
 
   const changes: SyllabusSyncResult["changes"] = [];
   let created = 0;
@@ -61,6 +83,7 @@ export async function runFullSemesterSync(
     if (!existing) {
       await prisma.syllabusCourse.create({
         data: {
+          university,
           year,
           semester,
           code: row.code,
@@ -125,11 +148,12 @@ export async function runFullSemesterSync(
 
   if (changes.length > 0) {
     await prisma.syllabusChange.createMany({
-      data: changes.map((c) => ({ ...c, year, semester })),
+      data: changes.map((c) => ({ ...c, university, year, semester })),
     });
   }
 
   return {
+    university,
     year,
     semester,
     checked: liveRows.length,

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { db, newId, COURSE_COLORS, WEEKDAYS, type Course, type Weekday } from "@/lib/db";
 import { PERIODS, periodLabel } from "@/lib/periods";
 import type { SemesterKey } from "@/lib/semester";
+import { useAccount } from "@/lib/useAccount";
 
 interface SyllabusHit {
   id: string;
@@ -27,6 +28,7 @@ export default function CourseFormModal({
   semester: SemesterKey;
   onClose: () => void;
 }) {
+  const account = useAccount();
   const [step, setStep] = useState<"pick" | "details">(course ? "details" : "pick");
   const [query, setQuery] = useState("");
   const [rawHits, setRawHits] = useState<SyllabusHit[]>([]);
@@ -49,13 +51,14 @@ export default function CourseFormModal({
   const attendanceHint = syllabusCourseId ? rawAttendanceHint : null;
 
   useEffect(() => {
-    if (step !== "pick") return;
+    if (step !== "pick" || !account) return;
     let ignore = false;
     const t = setTimeout(() => {
       setHitsLoaded(false);
       const params = new URLSearchParams({
         year: String(semester.year),
         semester: semester.semester,
+        university: account.university,
       });
       if (query.trim()) params.set("q", query.trim());
       // 検索語が未入力の間は、選択中の曜日・時限に一致する授業をあらかじめ絞り込んで表示する
@@ -82,7 +85,7 @@ export default function CourseFormModal({
       ignore = true;
       clearTimeout(t);
     };
-  }, [query, semester, step, w, p]);
+  }, [query, semester, step, w, p, account]);
 
   useEffect(() => {
     if (!syllabusCourseId) return;

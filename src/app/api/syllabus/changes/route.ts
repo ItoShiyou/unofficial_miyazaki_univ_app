@@ -5,6 +5,7 @@ export async function GET(req: NextRequest) {
   const syllabusCourseId = req.nextUrl.searchParams.get("syllabusCourseId");
   const year = Number(req.nextUrl.searchParams.get("year")) || undefined;
   const semester = req.nextUrl.searchParams.get("semester") ?? undefined;
+  const university = req.nextUrl.searchParams.get("university") ?? "miyazaki-u";
 
   if (!syllabusCourseId && !(year && semester)) {
     return NextResponse.json(
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   }
 
   const changes = await prisma.syllabusChange.findMany({
-    where: syllabusCourseId ? { syllabusCourseId } : { year, semester },
+    where: syllabusCourseId ? { syllabusCourseId } : { university, year, semester },
     orderBy: { detectedAt: "desc" },
     take: syllabusCourseId ? 20 : 50,
   });

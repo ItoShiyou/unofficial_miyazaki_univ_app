@@ -7,12 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 学外公開シラバスから取得した授業カタログ（学期ごと）
+// 学外公開シラバスから取得した授業カタログ（大学・学期ごと）
 model SyllabusCourse {
   id          String   @id @default(uuid())
+  university  String   @default("miyazaki-u") // @/lib/universities の id
   year        Int
   semester    String // "前期" | "後期" | "通年"
-  code        String? // 講義コード（宮崎大学シラバス検索の講義コード。差分検知の同一性判定に使用）
+  code        String? // 講義コード（大学ごとのシラバス検索の講義コード。差分検知の同一性判定に使用）
   name        String
   teacher     String?
   room        String?
@@ -28,8 +29,8 @@ model SyllabusCourse {
   kartes  CourseKarte[]
   changes SyllabusChange[]
 
-  @@index([year, semester, name])
-  @@index([year, semester, code])
+  @@index([university, year, semester, name])
+  @@index([university, year, semester, code])
 }
 
 // シラバス差分（教員変更等）の検知ログ
@@ -37,6 +38,7 @@ model SyllabusChange {
   id               String   @id @default(uuid())
   syllabusCourseId String?
   syllabusCourse   SyllabusCourse? @relation(fields: [syllabusCourseId], references: [id])
+  university       String   @default("miyazaki-u") // @/lib/universities の id
   courseName       String
   year             Int
   semester         String
@@ -46,7 +48,7 @@ model SyllabusChange {
   detectedAt       DateTime @default(now())
 
   @@index([syllabusCourseId])
-  @@index([year, semester])
+  @@index([university, year, semester])
 }
 
 // 授業カルテ（匿名の一次情報）
@@ -54,6 +56,7 @@ model CourseKarte {
   id                 String   @id @default(uuid())
   syllabusCourseId   String
   syllabusCourse     SyllabusCourse @relation(fields: [syllabusCourseId], references: [id])
+  university         String   @default("miyazaki-u") // @/lib/universities の id
   year               Int
   semester           String
   attendanceMethod   String? // 出席確認方法
