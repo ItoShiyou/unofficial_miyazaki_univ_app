@@ -202,7 +202,7 @@ export default function CourseFormModal({
               >
                 {PERIODS.map((n) => (
                   <option key={n} value={n}>
-                    {periodLabel(n)}
+                    {periodLabel(n, account?.university)}
                   </option>
                 ))}
               </select>
@@ -227,7 +227,7 @@ export default function CourseFormModal({
                         <span className="font-medium block">{h.name}</span>
                         <span className="block text-xs text-gray-400 mt-0.5">
                           {h.teacher}
-                          {h.weekday && h.period ? ` ・ ${h.weekday}${periodLabel(h.period)}` : ""}
+                          {h.weekday && h.period ? ` ・ ${h.weekday}${periodLabel(h.period, account?.university)}` : ""}
                           {h.room && ` ・ ${h.room}`}
                         </span>
                       </button>
@@ -242,7 +242,7 @@ export default function CourseFormModal({
                 </p>
               ) : (
                 <p className="text-sm text-gray-400 text-center mt-8">
-                  {w}曜日{periodLabel(p)}に該当する授業が見つかりません。
+                  {w}曜日{periodLabel(p, account?.university)}に該当する授業が見つかりません。
                   <br />
                   授業名で検索することもできます。
                 </p>
@@ -317,7 +317,7 @@ export default function CourseFormModal({
                   >
                     {PERIODS.map((n) => (
                       <option key={n} value={n}>
-                        {periodLabel(n)}
+                        {periodLabel(n, account?.university)}
                       </option>
                     ))}
                   </select>

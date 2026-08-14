@@ -7,6 +7,7 @@ import { db, newId, COURSE_COLORS, WEEKDAYS, type Weekday } from "@/lib/db";
 import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
 import { PERIODS, periodLabel } from "@/lib/periods";
+import { useAccount } from "@/lib/useAccount";
 
 interface SyllabusHit {
   id: string;
@@ -20,6 +21,7 @@ interface SyllabusHit {
 export default function SimulatorPage() {
   const router = useRouter();
   const semester = useCurrentSemester();
+  const account = useAccount();
   const [query, setQuery] = useState("");
   const [rawHits, setRawHits] = useState<SyllabusHit[]>([]);
   const [selected, setSelected] = useState<SyllabusHit | null>(null);
@@ -34,16 +36,16 @@ export default function SimulatorPage() {
     ) ?? [];
 
   useEffect(() => {
-    if (!query.trim()) return;
+    if (!query.trim() || !account) return;
     const t = setTimeout(() => {
       fetch(
-        `/api/syllabus/search?q=${encodeURIComponent(query)}&year=${semester.year}&semester=${semester.semester}`
+        `/api/syllabus/search?q=${encodeURIComponent(query)}&year=${semester.year}&semester=${semester.semester}&university=${account.university}`
       )
         .then((r) => r.json())
         .then((d) => setRawHits(d.courses ?? []));
     }, 200);
     return () => clearTimeout(t);
-  }, [query, semester]);
+  }, [query, semester, account]);
 
   useEffect(() => {
     if (!selected) return;
@@ -123,7 +125,7 @@ export default function SimulatorPage() {
                   >
                     <span className="font-medium">{h.name}</span>
                     <span className="block text-xs text-gray-400">
-                      {h.weekday}{h.period && periodLabel(h.period)} {h.room && `・${h.room}`}
+                      {h.weekday}{h.period && periodLabel(h.period, account?.university)} {h.room && `・${h.room}`}
                     </span>
                   </button>
                 </li>

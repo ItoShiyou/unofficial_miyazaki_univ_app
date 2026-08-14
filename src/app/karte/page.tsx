@@ -168,7 +168,7 @@ export default function KartePage() {
               </div>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              {c.teacher} {c.room && `・${c.room}`} {c.weekday && c.period && `・${c.weekday}${periodLabel(c.period)}`}
+              {c.teacher} {c.room && `・${c.room}`} {c.weekday && c.period && `・${c.weekday}${periodLabel(c.period, account?.university)}`}
             </p>
           </Link>
         ))}

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCurrentSemester } from "@/lib/useSemester";
 import { periodLabel } from "@/lib/periods";
+import { useAccount } from "@/lib/useAccount";
 import { StarRating } from "@/components/ui";
 import KarteFormModal from "@/components/KarteFormModal";
 
@@ -62,6 +63,7 @@ export default function KarteDetailPage() {
   const [data, setData] = useState<Data | null>(null);
   const [posting, setPosting] = useState(false);
   const semester = useCurrentSemester();
+  const account = useAccount();
 
   const load = useCallback(() => {
     fetch(`/api/karte?syllabusCourseId=${id}`)
@@ -89,7 +91,7 @@ export default function KarteDetailPage() {
       <div className="px-4 mb-4">
         <h1 className="text-2xl font-bold">{course.name}</h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          {course.room ?? ""} {course.weekday && course.period && `・${course.weekday}${periodLabel(course.period)}`}
+          {course.room ?? ""} {course.weekday && course.period && `・${course.weekday}${periodLabel(course.period, account?.university)}`}
           {course.teacher && ` ・担当：${course.teacher}`}
         </p>
       </div>

@@ -6,7 +6,8 @@ import Link from "next/link";
 import { db, WEEKDAYS, type Course, type Weekday } from "@/lib/db";
 import { adjacentSemester, saveSemester, semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
-import { PERIODS, PERIOD_TIME, periodLabel } from "@/lib/periods";
+import { PERIODS, periodTimeTable, periodLabel } from "@/lib/periods";
+import { useAccount } from "@/lib/useAccount";
 import CourseFormModal from "@/components/CourseFormModal";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 
@@ -25,6 +26,8 @@ function currentWeekDates(): Date[] {
 
 export default function TimetablePage() {
   const semester = useCurrentSemester();
+  const account = useAccount();
+  const periodTimes = periodTimeTable(account?.university);
   const [modalTarget, setModalTarget] = useState<
     { weekday: Weekday; period: number; course?: Course } | null
   >(null);
@@ -153,7 +156,7 @@ export default function TimetablePage() {
                 <td className="w-9 text-center text-gray-400 align-top pt-2">
                   <div className="text-xs font-medium">{p}</div>
                   <div className="text-[8px] leading-tight whitespace-nowrap">
-                    {PERIOD_TIME[p].split("–").map((t, i) => (
+                    {periodTimes[p].split("–").map((t, i) => (
                       <div key={i}>{t}</div>
                     ))}
                   </div>
@@ -227,7 +230,7 @@ export default function TimetablePage() {
                     <span className="truncate">{c.name}</span>
                   </span>
                   <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
-                    {c.weekday}{periodLabel(c.period)}
+                    {c.weekday}{periodLabel(c.period, account?.university)}
                   </span>
                 </Link>
                 {c.syllabusCourseId && (

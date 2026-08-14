@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { db, newId, GRADES, type Grade } from "@/lib/db";
 import { todayLocalDate } from "@/lib/date";
 import { periodLabel } from "@/lib/periods";
+import { useAccount } from "@/lib/useAccount";
 import CourseFormModal from "@/components/CourseFormModal";
 import { ProgressBar } from "@/components/ui";
 
@@ -27,6 +28,7 @@ const FIELD_LABEL: Record<string, string> = {
 export default function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const account = useAccount();
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState<"memo" | "task">("memo");
   const [noteText, setNoteText] = useState("");
@@ -152,7 +154,7 @@ export default function CourseDetailPage() {
       <div className="px-4 mb-4">
         <h1 className="text-2xl font-bold">{course.name}</h1>
         <p className="text-sm text-gray-400 mt-0.5">
-          {course.room ?? "教室未設定"} ・ {course.weekday}{periodLabel(course.period)}
+          {course.room ?? "教室未設定"} ・ {course.weekday}{periodLabel(course.period, account?.university)}
           {course.teacher ? ` ・ ${course.teacher}` : ""}
         </p>
         {course.syllabusCourseId && (

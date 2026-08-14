@@ -5,6 +5,7 @@ import Link from "next/link";
 import { db, WEEKDAYS } from "@/lib/db";
 import { addDaysLocalDate, todayLocalDate } from "@/lib/date";
 import { periodLabel } from "@/lib/periods";
+import { useAccount } from "@/lib/useAccount";
 import { PageHeader } from "@/components/ui";
 
 function todayWeekday() {
@@ -13,6 +14,7 @@ function todayWeekday() {
 }
 
 export default function Home() {
+  const account = useAccount();
   const today = todayWeekday();
   const todayStr = todayLocalDate();
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
@@ -104,7 +106,7 @@ export default function Home() {
                     className="inline-block w-2.5 h-2.5 rounded-full"
                     style={{ backgroundColor: c.textColor }}
                   />
-                  {periodLabel(c.period)}：{c.name}
+                  {periodLabel(c.period, account?.university)}：{c.name}
                 </span>
                 {c.room && <span className="text-xs text-gray-400">{c.room}</span>}
               </Link>
