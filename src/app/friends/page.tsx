@@ -5,14 +5,14 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, WEEKDAYS, type Weekday } from "@/lib/db";
 import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
-import { getDeviceId, useDisplayName, setDisplayName } from "@/lib/device";
+import { useDisplayName, setDisplayName } from "@/lib/device";
 import { PageHeader } from "@/components/ui";
 import { PERIODS } from "@/lib/periods";
 
 const DAYS = WEEKDAYS.slice(0, 5);
 
 interface FriendEntry {
-  deviceId: string;
+  userId: string;
   name: string;
   timetable: Array<{ weekday: Weekday; period: number; name: string }>;
 }
@@ -37,8 +37,8 @@ export default function FriendsPage() {
 
   const loadFriends = useCallback(() => {
     if (!name) return;
-    const deviceId = getDeviceId();
-    fetch(`/api/friends?deviceId=${deviceId}`)
+    // 誰の友達一覧かはサーバー側がセッションから判断する
+    fetch("/api/friends")
       .then((r) => r.json())
       .then((d) => setFriends(d.friends ?? []));
   }, [name]);
@@ -50,12 +50,10 @@ export default function FriendsPage() {
 
   useEffect(() => {
     if (!name || courses.length === 0) return;
-    const deviceId = getDeviceId();
     fetch("/api/timetable/share", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        deviceId,
         displayName: name,
         data: courses.map((c) => ({ weekday: c.weekday, period: c.period, name: c.name })),
       }),
@@ -77,11 +75,10 @@ export default function FriendsPage() {
     setBusy(true);
     setError("");
     try {
-      const deviceId = getDeviceId();
       const res = await fetch("/api/friends/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, displayName: name }),
+        body: JSON.stringify({ displayName: name }),
       });
       const data = await res.json();
       setInviteCode(data.code);
@@ -95,11 +92,10 @@ export default function FriendsPage() {
     setBusy(true);
     setError("");
     try {
-      const deviceId = getDeviceId();
       const res = await fetch("/api/friends/accept", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, displayName: name, code: enterCode.trim().toUpperCase() }),
+        body: JSON.stringify({ displayName: name, code: enterCode.trim().toUpperCase() }),
       });
       const data = await res.json();
       if (!res.ok) {

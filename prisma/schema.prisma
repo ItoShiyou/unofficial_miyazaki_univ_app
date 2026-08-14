@@ -84,29 +84,32 @@ model User {
   createdAt    DateTime @default(now())
 }
 
-// 友達連携（匿名デバイスID同士を招待コードで接続）
+// 友達連携（アカウント同士を招待コードで接続）
+// DBのカラム名はアカウント導入前の deviceId のまま（@mapで維持）だが、
+// 実際に入る値はログイン中のUser.id。識別はサーバー側のセッションから導出し、
+// クライアントから送られてきた値は信用しない。
 model Friend {
-  id          String   @id @default(uuid())
-  deviceId    String
-  friendDeviceId String
-  friendName  String
-  createdAt   DateTime @default(now())
+  id           String   @id @default(uuid())
+  userId       String   @map("deviceId")
+  friendUserId String   @map("friendDeviceId")
+  friendName   String
+  createdAt    DateTime @default(now())
 
-  @@unique([deviceId, friendDeviceId])
+  @@unique([userId, friendUserId])
 }
 
-// 招待コード（デバイスが発行し、相手が入力して友達登録）
+// 招待コード（アカウントが発行し、相手が入力して友達登録）
 model InviteCode {
   code        String   @id
-  deviceId    String
+  userId      String   @map("deviceId")
   displayName String
   createdAt   DateTime @default(now())
   expiresAt   DateTime
 }
 
-// 友達と共有する時間割スナップショット（デバイスごとに最新を保持）
+// 友達と共有する時間割スナップショット（アカウントごとに最新を保持）
 model SharedTimetable {
-  deviceId    String   @id
+  userId      String   @id @map("deviceId")
   displayName String
   data        String // JSON文字列 [{weekday, period, name}]
   updatedAt   DateTime @updatedAt

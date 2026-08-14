@@ -10,6 +10,11 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ user: null }, { status: 401 });
 
   return NextResponse.json({
-    user: { email: user.email, university: user.university, displayName: user.displayName },
+    user: {
+      id: user.id,
+      email: user.email,
+      university: user.university,
+      displayName: user.displayName,
+    },
   });
 }

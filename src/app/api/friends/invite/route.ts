@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
+import { currentUserId } from "@/lib/currentUser";
 
 function genCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -15,16 +16,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { deviceId, displayName } = await req.json();
-  if (!deviceId || !displayName) {
-    return NextResponse.json({ error: "deviceId and displayName are required" }, { status: 400 });
+  const userId = await currentUserId(req);
+  if (!userId) {
+    return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  }
+
+  const { displayName } = await req.json();
+  if (!displayName || typeof displayName !== "string") {
+    return NextResponse.json({ error: "ニックネームを設定してください" }, { status: 400 });
   }
 
   const code = genCode();
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
 
   await prisma.inviteCode.create({
-    data: { code, deviceId, displayName, expiresAt },
+    data: { code, userId, displayName: displayName.trim().slice(0, 50), expiresAt },
   });
 
   return NextResponse.json({ code, expiresAt });

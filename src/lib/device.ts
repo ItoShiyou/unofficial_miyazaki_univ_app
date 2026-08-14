@@ -2,17 +2,9 @@
 
 import { useSyncExternalStore } from "react";
 
-const DEVICE_ID_KEY = "miyadai-device-id";
+// 友達連携の識別はアカウント（User.id）で行うため、端末ごとのIDは使わなくなった。
+// 表示名だけは端末内に保持する（サーバーには友達に見せる用として送る）。
 const DISPLAY_NAME_KEY = "miyadai-display-name";
-
-export function getDeviceId(): string {
-  let id = localStorage.getItem(DEVICE_ID_KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(DEVICE_ID_KEY, id);
-  }
-  return id;
-}
 
 export function getDisplayName(): string {
   return localStorage.getItem(DISPLAY_NAME_KEY) ?? "";

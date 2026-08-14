@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
+import { currentUser } from "@/lib/currentUser";
 
 export async function GET(req: NextRequest) {
   const syllabusCourseId = req.nextUrl.searchParams.get("syllabusCourseId");
@@ -78,6 +79,20 @@ export async function POST(req: NextRequest) {
   });
   if (!targetCourse) {
     return NextResponse.json({ error: "course not found" }, { status: 404 });
+  }
+
+  // 自分の大学の授業にだけ投稿できるようにする。
+  // 検索APIは所属大学でスコープされているため通常のUI操作では起きないが、
+  // 「その大学の学生が書いた一次情報」という前提を崩さないためサーバー側でも確認する。
+  const me = await currentUser(req);
+  if (!me) {
+    return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  }
+  if (me.university !== targetCourse.university) {
+    return NextResponse.json(
+      { error: "所属大学の授業にのみ投稿できます。" },
+      { status: 403 }
+    );
   }
 
   const MAX_SHORT = 200;
