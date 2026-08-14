@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
-import AdBanner from "@/components/AdBanner";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const geistSans = Geist({
@@ -46,9 +45,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           crossOrigin="anonymous"
           strategy="beforeInteractive"
         />
-        <div className="sticky top-0 z-20">
-          <AdBanner />
-        </div>
         <div className="flex-1 flex flex-col">{children}</div>
         <BottomNav />
         <ServiceWorkerRegister />
