@@ -4,7 +4,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // 通常のクエリはコネクションプーリング経由（サーバーレスでは接続数を抑える必要があるため）
   url      = env("DATABASE_URL")
+  // マイグレーションはプーリング経由だと失敗するため、直接接続のURLを使う。
+  // Vercel+Neonでは DATABASE_URL_UNPOOLED が自動で用意される。
+  // ローカル開発では DATABASE_URL と同じ値を .env に設定しておけばよい。
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 // 学外公開シラバスから取得した授業カタログ（大学・学期ごと）
