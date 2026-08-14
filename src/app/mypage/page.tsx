@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import { semesterLabel } from "@/lib/semester";
@@ -9,6 +10,7 @@ import { useCurrentSemester } from "@/lib/useSemester";
 import { useDisplayName, setDisplayName } from "@/lib/device";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 import { computeGpa } from "@/lib/gpa";
+import { universityName } from "@/lib/universities";
 import { PageHeader, Card } from "@/components/ui";
 
 interface SyllabusChangeEntry {
@@ -32,13 +34,48 @@ interface SyllabusStatus {
   lastFetchedAt: string | null;
 }
 
+interface AccountInfo {
+  email: string;
+  university: string;
+  displayName: string | null;
+}
+
 export default function MyPage() {
+  const router = useRouter();
   const savedName = useDisplayName();
   const [draftName, setDraftName] = useState(savedName);
   const [editingName, setEditingName] = useState(false);
   const semester = useCurrentSemester();
   const [changes, setChanges] = useState<SyllabusChangeEntry[]>([]);
   const [status, setStatus] = useState<SyllabusStatus | null>(null);
+  const [account, setAccount] = useState<AccountInfo | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!ignore) setAccount(d.user ?? null);
+      })
+      .catch(() => {
+        if (!ignore) setAccount(null);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   useEffect(() => {
     let ignore = false;
@@ -97,6 +134,25 @@ export default function MyPage() {
       <PageHeader title="マイページ" />
 
       <div className="px-4 space-y-4">
+        <Card>
+          <p className="text-xs text-gray-400 mb-2">アカウント</p>
+          {account ? (
+            <div className="space-y-1 mb-3">
+              <p className="text-sm font-medium">{account.email}</p>
+              <p className="text-xs text-gray-500">{universityName(account.university)}</p>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400 mb-3">読み込み中...</p>
+          )}
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="text-xs text-red-600 disabled:opacity-50"
+          >
+            {loggingOut ? "ログアウト中..." : "ログアウト"}
+          </button>
+        </Card>
+
         <Card>
           <p className="text-xs text-gray-400 mb-2">ニックネーム</p>
           {editingName ? (

@@ -71,6 +71,16 @@ model CourseKarte {
   @@index([syllabusCourseId])
 }
 
+// アカウント（メールアドレス＋パスワードでのログイン必須化）
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  university   String // @/lib/universities の id
+  displayName  String?
+  createdAt    DateTime @default(now())
+}
+
 // 友達連携（匿名デバイスID同士を招待コードで接続）
 model Friend {
   id          String   @id @default(uuid())

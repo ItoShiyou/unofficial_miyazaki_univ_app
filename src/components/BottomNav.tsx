@@ -57,6 +57,7 @@ function Icon({ name, active }: { name: string; active: boolean }) {
 
 export default function BottomNav() {
   const pathname = usePathname();
+  if (pathname === "/login" || pathname === "/signup") return null;
   return (
     <nav className="sticky bottom-0 z-20 flex border-t border-gray-200 bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
       {items.map((item) => {
