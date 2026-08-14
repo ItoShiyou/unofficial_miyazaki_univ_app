@@ -24,6 +24,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "メールアドレスまたはパスワードが正しくありません。" }, { status: 401 });
   }
 
+  // 仮パスワードは期限切れになったら使えない（漏れた場合の影響を24時間に限定する）
+  if (
+    user.mustChangePassword &&
+    user.tempPasswordExpiresAt &&
+    user.tempPasswordExpiresAt < new Date()
+  ) {
+    return NextResponse.json(
+      { error: "仮パスワードの有効期限が切れています。再発行を依頼してください。" },
+      { status: 401 }
+    );
+  }
+
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE_NAME, await createSessionToken(user.id), {
     httpOnly: true,

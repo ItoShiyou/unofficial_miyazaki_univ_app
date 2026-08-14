@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
+import AdBanner from "@/components/AdBanner";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const geistSans = Geist({
@@ -39,7 +40,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-white text-gray-900">
         <div className="flex-1 flex flex-col">{children}</div>
-        <BottomNav />
+        <div className="sticky bottom-0 z-20 flex flex-col">
+          <AdBanner />
+          <BottomNav />
+        </div>
         <ServiceWorkerRegister />
       </body>
     </html>

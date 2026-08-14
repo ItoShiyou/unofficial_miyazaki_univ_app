@@ -8,6 +8,8 @@ export interface Account {
   email: string;
   university: string;
   displayName: string | null;
+  /** 運営が発行した仮パスワードでログイン中。早くパスワードを変更してもらう必要がある */
+  mustChangePassword: boolean;
 }
 
 const LAST_USER_KEY = "miyadai-last-user-id";

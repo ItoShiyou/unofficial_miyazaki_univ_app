@@ -46,6 +46,14 @@ export default function MyPage() {
   const account = useAccount();
   const [loggingOut, setLoggingOut] = useState(false);
 
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordDone, setPasswordDone] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+
   async function handleLogout() {
     setLoggingOut(true);
     try {
@@ -54,6 +62,42 @@ export default function MyPage() {
       router.refresh();
     } finally {
       setLoggingOut(false);
+    }
+  }
+
+  function closePasswordForm() {
+    setShowPasswordForm(false);
+    setCurrentPassword("");
+    setNewPassword("");
+    setNewPasswordConfirm("");
+    setPasswordError(null);
+  }
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordError(null);
+    if (newPassword !== newPasswordConfirm) {
+      setPasswordError("新しいパスワードが一致しません。");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPasswordError(data.error ?? "変更に失敗しました。");
+        return;
+      }
+      closePasswordForm();
+      setPasswordDone(true);
+    } catch {
+      setPasswordError("通信エラーが発生しました。時間をおいて再度お試しください。");
+    } finally {
+      setChangingPassword(false);
     }
   }
 
@@ -129,6 +173,93 @@ export default function MyPage() {
           ) : (
             <p className="text-xs text-gray-400 mb-3">読み込み中...</p>
           )}
+
+          {account?.mustChangePassword && !showPasswordForm && (
+            <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mb-3">
+              <p className="text-xs text-amber-800">
+                仮パスワードでログインしています。24時間で失効するため、
+                下の「パスワードを変更」から早めに新しいパスワードを設定してください。
+              </p>
+            </div>
+          )}
+
+          {passwordDone && (
+            <p className="text-xs text-emerald-600 mb-3">パスワードを変更しました。</p>
+          )}
+
+          {showPasswordForm ? (
+            <form onSubmit={handleChangePassword} className="space-y-2 mb-3">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">現在のパスワード</label>
+                <input
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">
+                  新しいパスワード（8文字以上）
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">
+                  新しいパスワード（確認）
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  value={newPasswordConfirm}
+                  onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                />
+              </div>
+
+              {passwordError && <p className="text-xs text-red-600">{passwordError}</p>}
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={changingPassword}
+                  className="rounded-lg bg-gray-900 text-white text-sm px-4 py-2 disabled:opacity-50"
+                >
+                  {changingPassword ? "変更中..." : "変更する"}
+                </button>
+                <button
+                  type="button"
+                  onClick={closePasswordForm}
+                  className="rounded-lg border border-gray-300 text-sm px-4 py-2"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={() => {
+                setPasswordDone(false);
+                setShowPasswordForm(true);
+              }}
+              className="block text-xs text-blue-600 mb-3"
+            >
+              パスワードを変更
+            </button>
+          )}
+
           <button
             onClick={handleLogout}
             disabled={loggingOut}

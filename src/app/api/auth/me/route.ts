@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       email: user.email,
       university: user.university,
       displayName: user.displayName,
+      mustChangePassword: user.mustChangePassword,
     },
   });
 }

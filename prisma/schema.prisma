@@ -87,6 +87,11 @@ model User {
   university   String // @/lib/universities の id
   displayName  String?
   createdAt    DateTime @default(now())
+
+  // パスワードを忘れた利用者に運営が発行する仮パスワードの状態。
+  // メール送信基盤がないため、運営が本人確認のうえ発行し、本人へ直接伝える運用。
+  mustChangePassword    Boolean   @default(false) // 仮パスワードでのログイン中はtrue
+  tempPasswordExpiresAt DateTime? // 仮パスワードの有効期限（過ぎたらログイン不可）
 }
 
 // 友達連携（アカウント同士を招待コードで接続）

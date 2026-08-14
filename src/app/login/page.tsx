@@ -81,6 +81,12 @@ export default function LoginPage() {
           新規登録
         </Link>
       </p>
+
+      <p className="text-xs text-gray-400 text-center mt-4 leading-relaxed">
+        パスワードを忘れた場合は、開発者までご連絡ください。
+        <br />
+        本人確認のうえ、24時間有効な仮パスワードを発行します。
+      </p>
     </main>
   );
 }
