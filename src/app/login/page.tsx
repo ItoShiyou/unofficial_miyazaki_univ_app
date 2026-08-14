@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import BonjinBadge from "@/components/BonjinBadge";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -87,6 +88,10 @@ export default function LoginPage() {
         <br />
         本人確認のうえ、24時間有効な仮パスワードを発行します。
       </p>
+
+      <div className="flex justify-center mt-8">
+        <BonjinBadge />
+      </div>
     </main>
   );
 }

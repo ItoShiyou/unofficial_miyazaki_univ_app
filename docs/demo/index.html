@@ -170,6 +170,12 @@
   }
   footer.pagefoot a { text-decoration: none; }
   footer.pagefoot a:hover { color: var(--ink); }
+  .bonjin-badge {
+    width: 28px; height: 28px; border-radius: 8px; background: #fff;
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .bonjin-badge video, .bonjin-badge img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
   .mobile-shot { display: none; }
 
@@ -306,7 +312,16 @@
 <footer class="pagefoot">
   <div class="inner">
     <span>宮大非公式アプリ ｜ 宮崎大学非公式の学生支援プロジェクト（大学とは無関係の個人開発）</span>
-    <a href="../">トップに戻る</a>
+    <span style="display:flex; align-items:center; gap:16px;">
+      <a href="../">トップに戻る</a>
+      <span class="bonjin-badge" title="THE BONJIN">
+        <video autoplay muted playsinline preload="auto"
+          onended="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <source src="../assets/bonjin/bonjin_rogo.mp4" type="video/mp4">
+        </video>
+        <img src="../assets/bonjin/thebonjin_rogo.png" alt="THE BONJIN" style="display:none;">
+      </span>
+    </span>
   </div>
 </footer>
 

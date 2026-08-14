@@ -13,6 +13,7 @@ import { computeGpa } from "@/lib/gpa";
 import { universityName } from "@/lib/universities";
 import { useAccount } from "@/lib/useAccount";
 import { PageHeader, Card } from "@/components/ui";
+import BonjinBadge from "@/components/BonjinBadge";
 
 interface SyllabusChangeEntry {
   id: string;
@@ -438,6 +439,9 @@ export default function MyPage() {
         )}
 
         <p className="text-[11px] text-gray-300 text-center pt-2">宮大非公式アプリ（開発版）</p>
+        <div className="flex justify-center pb-4">
+          <BonjinBadge />
+        </div>
       </div>
     </main>
   );
