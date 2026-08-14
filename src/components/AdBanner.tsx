@@ -8,15 +8,14 @@ const ADMAX_ID = "f89cad0092452c7fcfe52c2b720e1043";
 /**
  * admax（ninja by Shinobi）の画面上部バナー広告。
  *
- * type: "overlay" は画面下部に固定されるフッター広告専用のため、
- * 画面最上部に置くには type: "banner" を使う必要がある。
+ * 非同期タグ(st/t.js + admaxadsキュー)では広告枠は表示されても中身が
+ * つかなかったため、同期タグ(s/{admax_id})をそのまま埋め込む方式に変更。
  *
  * このアプリはNext.jsのApp RouterでSPA的にページ遷移するが、
  * このコンポーネントはルートレイアウトに置かれ画面遷移では再マウントされないため、
  * 広告スクリプトの初期化は初回の1回だけでよい。
- * ただしadmaxの読み込みスクリプト(t.js)はページ内で1回しか初期化処理をしない
- * 前提の実装になっていることがあるため、広告を独立したiframe内に描画し、
- * 親ページの状態と切り離す（他のページ内スクリプトとの干渉を避ける）。
+ * 広告を独立したiframe内に描画し、親ページの状態と切り離す
+ * （他のページ内スクリプトとの干渉を避ける）。
  */
 export default function AdBanner() {
   const pathname = usePathname();
@@ -38,8 +37,7 @@ export default function AdBanner() {
 </head>
 <body>
 <div class="admax-ads" data-admax-id="${ADMAX_ID}" style="display:block;width:100%;"></div>
-<script type="text/javascript">(admaxads = window.admaxads || []).push({admax_id: "${ADMAX_ID}", type: "banner"});</script>
-<script type="text/javascript" charset="utf-8" src="https://adm.shinobi.jp/st/t.js" async></script>
+<script src="https://adm.shinobi.jp/s/${ADMAX_ID}"></script>
 </body>
 </html>`;
     container.appendChild(iframe);
