@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "宮大非公式",
   },
+  other: {
+    "google-adsense-account": "ca-pub-7288550090197475",
+  },
 };
 
 export const viewport: Viewport = {
