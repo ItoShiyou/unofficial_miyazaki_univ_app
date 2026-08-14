@@ -39,11 +39,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-gray-900">
-        <div className="flex-1 flex flex-col">{children}</div>
-        <div className="sticky bottom-0 z-20 flex flex-col">
+        <div className="sticky top-0 z-20">
           <AdBanner />
-          <BottomNav />
         </div>
+        <div className="flex-1 flex flex-col">{children}</div>
+        <BottomNav />
         <ServiceWorkerRegister />
       </body>
     </html>
