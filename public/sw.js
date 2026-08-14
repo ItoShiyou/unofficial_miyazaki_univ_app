@@ -50,6 +50,11 @@ self.addEventListener("fetch", (event) => {
         }
         return res;
       })
-      .catch(() => caches.match(event.request))
+      .catch(async () => {
+        // キャッシュに無い場合(初回アクセスや未キャッシュページ)はundefinedになり、
+        // respondWithにResponse以外を渡すとエラーになるためフォールバックを用意する。
+        const cached = await caches.match(event.request);
+        return cached ?? Response.error();
+      })
   );
 });
