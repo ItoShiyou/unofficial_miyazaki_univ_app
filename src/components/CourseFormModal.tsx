@@ -380,10 +380,11 @@ export default function CourseFormModal({
               <div>
                 {attendanceHint && (
                   <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
-                    <p className="font-medium mb-0.5">シラバスの履修上の注意より</p>
+                    <p className="font-medium mb-0.5">シラバスの履修上の注意より（自動抽出・抜粋）</p>
                     <p>{attendanceHint}</p>
                     <p className="text-amber-500 mt-1">
-                      上限回数として明記されていない場合があります。参考程度にご利用ください。
+                      教員ごとに記載形式が異なるため、上限回数などが正しく抽出できていない場合があります。
+                      単位に関わる正式な出欠方針は、必ず大学公式のシラバス本文でご確認ください。
                     </p>
                   </div>
                 )}
