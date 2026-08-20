@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { fetchAttendanceHint } from "@/lib/syllabusSource";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 
 /**
  * シラバス「履修上の注意」欄の出席・欠席関連の記述をヒントとして返す。
@@ -23,6 +24,13 @@ export async function GET(req: NextRequest) {
   }
 
   if (!course.code) {
+    return NextResponse.json({ hint: null });
+  }
+
+  // 未キャッシュの授業IDを次々指定されると、そのたびに大学サイトへ外部リクエストが
+  // 飛んでしまう（`syllabus/search`のライブ取得と同じ懸念）。同じ制限をここにもかける。
+  const { allowed } = checkRateLimit(`attendance-hint-live:${clientIp(req)}`, 20, 60_000);
+  if (!allowed) {
     return NextResponse.json({ hint: null });
   }
 
