@@ -38,8 +38,14 @@ export async function PATCH(
   }
   if (typeof body.isActive === "boolean") data.isActive = body.isActive;
   if (typeof body.sortOrder === "number") data.sortOrder = body.sortOrder;
-  if (body.endsAt === null || typeof body.endsAt === "string") {
-    data.endsAt = body.endsAt ? new Date(body.endsAt) : null;
+  if (body.endsAt === null) {
+    data.endsAt = null;
+  } else if (typeof body.endsAt === "string") {
+    const parsed = new Date(body.endsAt);
+    if (Number.isNaN(parsed.getTime())) {
+      return NextResponse.json({ error: "endsAt の日付形式が不正です" }, { status: 400 });
+    }
+    data.endsAt = parsed;
   }
 
   const sponsor = await prisma.sponsor

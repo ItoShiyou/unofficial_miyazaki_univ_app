@@ -77,20 +77,34 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const sponsor = await prisma.sponsor.create({
-    data: {
-      name,
-      category,
-      description,
-      offer: typeof body?.offer === "string" ? body.offer.trim() : null,
-      url: typeof body?.url === "string" ? body.url.trim() : null,
-      imageUrl: typeof body?.imageUrl === "string" ? body.imageUrl.trim() : null,
-      area: typeof body?.area === "string" ? body.area.trim() : null,
-      couponCode: typeof body?.couponCode === "string" ? body.couponCode.trim() : null,
-      sortOrder: typeof body?.sortOrder === "number" ? body.sortOrder : 0,
-      endsAt: typeof body?.endsAt === "string" ? new Date(body.endsAt) : null,
-    },
-  });
+  let endsAt: Date | null = null;
+  if (typeof body?.endsAt === "string" && body.endsAt) {
+    const parsed = new Date(body.endsAt);
+    if (Number.isNaN(parsed.getTime())) {
+      return NextResponse.json({ error: "endsAt の日付形式が不正です" }, { status: 400 });
+    }
+    endsAt = parsed;
+  }
+
+  const sponsor = await prisma.sponsor
+    .create({
+      data: {
+        name,
+        category,
+        description,
+        offer: typeof body?.offer === "string" ? body.offer.trim() : null,
+        url: typeof body?.url === "string" ? body.url.trim() : null,
+        imageUrl: typeof body?.imageUrl === "string" ? body.imageUrl.trim() : null,
+        area: typeof body?.area === "string" ? body.area.trim() : null,
+        couponCode: typeof body?.couponCode === "string" ? body.couponCode.trim() : null,
+        sortOrder: typeof body?.sortOrder === "number" ? body.sortOrder : 0,
+        endsAt,
+      },
+    })
+    .catch(() => null);
+  if (!sponsor) {
+    return NextResponse.json({ error: "作成に失敗しました" }, { status: 400 });
+  }
 
   return NextResponse.json({ sponsor }, { status: 201 });
 }
