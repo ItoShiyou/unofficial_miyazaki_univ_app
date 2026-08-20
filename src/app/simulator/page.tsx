@@ -64,10 +64,8 @@ export default function SimulatorPage() {
     selected &&
     courses.some((c) => c.weekday === selected.weekday && c.period === selected.period);
 
-  const emptySlots = 6 * 5 - courses.length - (selected && !conflict ? 1 : 0);
-
-  const heavyCount = courses.length; // placeholder count of current heavy-load courses; refined below
-  void heavyCount;
+  const totalSlots = WEEKDAYS.slice(0, 6).length * PERIODS.length;
+  const emptySlots = totalSlots - courses.length - (selected && !conflict ? 1 : 0);
 
   async function handleSave() {
     if (!selected || conflict) return;
