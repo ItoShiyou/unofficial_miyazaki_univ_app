@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/session";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/sponsors", "/install"];
+// /browse は未登録の見込みユーザーが「サインアップ前に価値を確認できる」ようにする
+// 読み取り専用のシラバス検索プレビュー画面。実データレビューにより、直接競合の
+// Penmarkはサインアップ不要で利用開始できる一方、本アプリは全機能がログイン必須で、
+// 冷スタートのキャンパスほど離脱の摩擦になりやすいと判明したための対応。
+const PUBLIC_PATHS = ["/login", "/signup", "/sponsors", "/install", "/browse"];
 // これらは独自のBearerトークン認証（CRON_SECRET / ADMIN_SECRET）を各ルート側で行うため、
 // ログインセッションによるゲートの対象外にする。
 // /api/sponsors は協賛企業が未ログインでも掲載内容を確認できるよう公開する。
-const PUBLIC_API_PREFIXES = ["/api/auth/", "/api/cron/", "/api/admin/", "/api/sponsors"];
+// /api/syllabus/search は個人を特定する情報を含まず、匿名集計（平均評価・件数）のみを
+// 返すため公開する。自由記述コメント本文を含む /api/karte は引き続きログイン必須のまま。
+const PUBLIC_API_PREFIXES = ["/api/auth/", "/api/cron/", "/api/admin/", "/api/sponsors", "/api/syllabus/search"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
