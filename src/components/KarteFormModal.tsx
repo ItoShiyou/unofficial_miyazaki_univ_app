@@ -55,11 +55,13 @@ export default function KarteFormModal({
   const [advice, setAdvice] = useState("");
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSave() {
     setSaving(true);
+    setError(null);
     try {
-      await fetch("/api/karte", {
+      const res = await fetch("/api/karte", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -78,8 +80,15 @@ export default function KarteFormModal({
           comment,
         }),
       });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error ?? "投稿に失敗しました。時間をおいて再度お試しください。");
+        return;
+      }
       onSaved();
       onClose();
+    } catch {
+      setError("通信エラーが発生しました。時間をおいて再度お試しください。");
     } finally {
       setSaving(false);
     }
@@ -158,6 +167,8 @@ export default function KarteFormModal({
             />
           </div>
         </div>
+
+        {error && <p className="text-xs text-red-600 mt-3">{error}</p>}
 
         <div className="mt-5 flex gap-2 justify-end">
           <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm">
