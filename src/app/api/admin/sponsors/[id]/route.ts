@@ -32,6 +32,7 @@ export async function PATCH(
     "url",
     "imageUrl",
     "area",
+    "couponCode",
   ] as const) {
     if (typeof body[key] === "string") data[key] = body[key].trim();
   }

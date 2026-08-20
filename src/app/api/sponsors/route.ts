@@ -24,5 +24,12 @@ export async function GET() {
       .catch(() => {});
   }
 
-  return NextResponse.json({ sponsors });
+  // couponCodeは「開封」操作を経て初めて渡す（一覧取得時点では見せない）。
+  const publicSponsors = sponsors.map((s) => {
+    const { couponCode, codeRevealCount, ...rest } = s;
+    void codeRevealCount;
+    return { ...rest, hasCoupon: Boolean(couponCode) };
+  });
+
+  return NextResponse.json({ sponsors: publicSponsors });
 }

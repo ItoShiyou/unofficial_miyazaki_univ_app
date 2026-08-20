@@ -150,8 +150,16 @@ model Sponsor {
 
   // 将来、協賛企業へ掲載効果を示すための簡易計測。
   // 表示のたびにimpressionCountを、詳細リンクのクリックのたびにclickCountを加算する。
+  // ただしCTR(クリック数/表示回数)は表示形式に対して一般的に低くなる指標のため、
+  // 協賛企業向けの効果訴求には使わず、管理者内部のトリアージ用途に限定する
+  // （実データレビューで確認。詳細は docs/autonomous_improvement_log.md サイクル10参照）。
   impressionCount Int @default(0)
   clickCount      Int @default(0)
+
+  // 協賛企業向けのクーポンコード。学生がコードを開封（コピー）した回数=codeRevealCountは、
+  // 単なるクリックより購入・来店意図の強い行動のため、協賛企業への効果説明にはこちらを主指標とする
+  couponCode      String? // 例: "MIYADAI10"
+  codeRevealCount Int     @default(0)
 
   @@index([isActive, sortOrder])
 }

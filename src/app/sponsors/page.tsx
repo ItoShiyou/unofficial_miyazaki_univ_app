@@ -11,10 +11,23 @@ type Sponsor = {
   offer: string | null;
   url: string | null;
   area: string | null;
+  hasCoupon: boolean;
 };
 
 export default function SponsorsPage() {
   const [sponsors, setSponsors] = useState<Sponsor[] | null>(null);
+  const [revealedCodes, setRevealedCodes] = useState<Record<string, string>>({});
+
+  const revealCode = (id: string) => {
+    fetch(`/api/sponsors/${id}/reveal-code`, { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.couponCode) {
+          setRevealedCodes((prev) => ({ ...prev, [id]: data.couponCode }));
+        }
+      })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     fetch("/api/sponsors")
@@ -61,6 +74,20 @@ export default function SponsorsPage() {
               <p className="text-xs font-medium text-emerald-700 bg-emerald-50 rounded-lg px-2.5 py-1.5 mt-2 inline-block">
                 🎁 {s.offer}
               </p>
+            )}
+            {s.hasCoupon && (
+              revealedCodes[s.id] ? (
+                <p className="text-xs font-mono font-bold text-orange-700 bg-orange-50 rounded-lg px-2.5 py-1.5 mt-2 inline-block">
+                  コード: {revealedCodes[s.id]}
+                </p>
+              ) : (
+                <button
+                  onClick={() => revealCode(s.id)}
+                  className="block text-xs font-medium text-orange-700 bg-orange-50 rounded-lg px-2.5 py-1.5 mt-2"
+                >
+                  🎟️ クーポンコードを見る
+                </button>
+              )
             )}
             {s.url && (
               <a
