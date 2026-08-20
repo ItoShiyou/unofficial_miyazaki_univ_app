@@ -78,8 +78,13 @@ model CourseKarte {
 
   // 匿名投稿ゆえの誹謗中傷リスクへの対策。一定数の通報が集まった投稿は
   // 自動的に非表示にし、運営が確認するまでの間の被害を抑える。
-  reportCount Int     @default(0)
-  hidden      Boolean @default(false)
+  // ただし実データレビューにより、報告数だけの自動非表示は集団による
+  // 悪意ある通報（brigading）で正当な投稿も消せてしまう既知の弱点と判明したため、
+  // (1) 通報時に理由カテゴリを必須化し、(2) 非表示は「運営確認待ちの一時的な保留」として
+  // 扱い、管理者が`/api/admin/karte`で内容を確認のうえ復元・削除を判断できるようにする。
+  reportCount   Int      @default(0)
+  reportReasons String[] @default([])
+  hidden        Boolean  @default(false)
 
   @@index([syllabusCourseId])
 }

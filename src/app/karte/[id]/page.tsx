@@ -63,6 +63,7 @@ export default function KarteDetailPage() {
   const [data, setData] = useState<Data | null>(null);
   const [posting, setPosting] = useState(false);
   const [reported, setReported] = useState<Set<string>>(new Set());
+  const [reportMenuFor, setReportMenuFor] = useState<string | null>(null);
   const semester = useCurrentSemester();
   const account = useAccount();
 
@@ -183,16 +184,43 @@ export default function KarteDetailPage() {
                   <p className="text-[10px] text-gray-300">
                     {new Date(k.createdAt).toLocaleDateString("ja-JP")}・匿名
                   </p>
-                  <button
-                    onClick={() => {
-                      if (reported.has(k.id)) return;
-                      setReported((prev) => new Set(prev).add(k.id));
-                      fetch(`/api/karte/${k.id}/report`, { method: "POST" }).catch(() => {});
-                    }}
-                    className="text-[10px] text-gray-300"
-                  >
-                    {reported.has(k.id) ? "通報済み" : "不適切な内容を報告"}
-                  </button>
+                  {!reported.has(k.id) && reportMenuFor !== k.id && (
+                    <button
+                      onClick={() => setReportMenuFor(k.id)}
+                      className="text-[10px] text-gray-300"
+                    >
+                      不適切な内容を報告
+                    </button>
+                  )}
+                  {reported.has(k.id) && (
+                    <span className="text-[10px] text-gray-300">通報済み</span>
+                  )}
+                  {!reported.has(k.id) && reportMenuFor === k.id && (
+                    <div className="flex items-center gap-1.5">
+                      {[
+                        { value: "defamation", label: "誹謗中傷" },
+                        { value: "harassment", label: "嫌がらせ" },
+                        { value: "spam", label: "スパム" },
+                        { value: "other", label: "その他" },
+                      ].map((r) => (
+                        <button
+                          key={r.value}
+                          onClick={() => {
+                            setReported((prev) => new Set(prev).add(k.id));
+                            setReportMenuFor(null);
+                            fetch(`/api/karte/${k.id}/report`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ reason: r.value }),
+                            }).catch(() => {});
+                          }}
+                          className="text-[10px] text-gray-400 bg-gray-50 rounded-full px-1.5 py-0.5"
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
