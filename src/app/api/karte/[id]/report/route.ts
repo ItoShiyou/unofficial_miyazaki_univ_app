@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
+import { notifyAdmin } from "@/lib/adminNotify";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,12 @@ export async function POST(
 
   if (karte.reportCount >= HIDE_THRESHOLD && !karte.hidden) {
     await prisma.courseKarte.update({ where: { id }, data: { hidden: true } });
+    // 運営（自分）が能動的に管理APIを定期確認しなくても気付けるよう、
+    // 一時的に保留した時点で通知する。応答は待たない（失敗しても通報自体は成立させる）。
+    notifyAdmin(
+      `⚠️ 授業カルテが通報により一時非表示になりました（ID: ${id}, 通報${karte.reportCount}件）。` +
+        `\`/api/admin/karte\`で内容を確認し、復元か削除かを判断してください。`
+    ).catch(() => {});
   }
 
   return NextResponse.json({ ok: true });
