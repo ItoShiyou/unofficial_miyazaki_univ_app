@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   }
 
   const kartes = await prisma.courseKarte.findMany({
-    where: { syllabusCourseId },
+    where: { syllabusCourseId, hidden: false },
     orderBy: { createdAt: "desc" },
   });
 

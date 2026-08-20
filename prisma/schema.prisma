@@ -76,6 +76,11 @@ model CourseKarte {
   comment            String? // 自由コメント（実際に受けてみてどうだったか）
   createdAt          DateTime @default(now())
 
+  // 匿名投稿ゆえの誹謗中傷リスクへの対策。一定数の通報が集まった投稿は
+  // 自動的に非表示にし、運営が確認するまでの間の被害を抑える。
+  reportCount Int     @default(0)
+  hidden      Boolean @default(false)
+
   @@index([syllabusCourseId])
 }
 

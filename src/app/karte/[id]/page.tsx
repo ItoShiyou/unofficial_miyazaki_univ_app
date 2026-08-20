@@ -62,6 +62,7 @@ export default function KarteDetailPage() {
   const [tab, setTab] = useState<"summary" | "detail" | "voices">("summary");
   const [data, setData] = useState<Data | null>(null);
   const [posting, setPosting] = useState(false);
+  const [reported, setReported] = useState<Set<string>>(new Set());
   const semester = useCurrentSemester();
   const account = useAccount();
 
@@ -178,9 +179,21 @@ export default function KarteDetailPage() {
             .map((k) => (
               <div key={k.id} className="rounded-2xl border border-gray-200 p-4">
                 <p className="text-sm whitespace-pre-wrap">{k.comment}</p>
-                <p className="text-[10px] text-gray-300 mt-2">
-                  {new Date(k.createdAt).toLocaleDateString("ja-JP")}・匿名
-                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-[10px] text-gray-300">
+                    {new Date(k.createdAt).toLocaleDateString("ja-JP")}・匿名
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (reported.has(k.id)) return;
+                      setReported((prev) => new Set(prev).add(k.id));
+                      fetch(`/api/karte/${k.id}/report`, { method: "POST" }).catch(() => {});
+                    }}
+                    className="text-[10px] text-gray-300"
+                  >
+                    {reported.has(k.id) ? "通報済み" : "不適切な内容を報告"}
+                  </button>
+                </div>
               </div>
             ))}
         </section>
