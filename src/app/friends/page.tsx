@@ -80,8 +80,14 @@ export default function FriendsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ displayName: name }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.code) {
+        setError(data?.error ?? "招待コードの発行に失敗しました");
+        return;
+      }
       setInviteCode(data.code);
+    } catch {
+      setError("通信に失敗しました。時間をおいて再度お試しください");
     } finally {
       setBusy(false);
     }
@@ -90,10 +96,17 @@ export default function FriendsPage() {
   async function removeFriend(friendUserId: string, friendName: string) {
     if (!window.confirm(`${friendName}さんとの友達関係を解除しますか？`)) return;
     setBusy(true);
+    setError("");
     try {
-      await fetch(`/api/friends/${friendUserId}`, { method: "DELETE" });
+      const res = await fetch(`/api/friends/${friendUserId}`, { method: "DELETE" });
+      if (!res.ok) {
+        setError("友達の解除に失敗しました");
+        return;
+      }
       setActiveIdx(-1);
       loadFriends();
+    } catch {
+      setError("通信に失敗しました。時間をおいて再度お試しください");
     } finally {
       setBusy(false);
     }
@@ -258,6 +271,9 @@ export default function FriendsPage() {
             >
               {friend.name}さんとの友達を解除
             </button>
+            {error && !showAdd && (
+              <p className="text-xs text-red-500 text-center">{error}</p>
+            )}
           </div>
         </>
       )}
