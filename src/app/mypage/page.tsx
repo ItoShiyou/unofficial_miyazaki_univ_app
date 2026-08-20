@@ -121,9 +121,15 @@ export default function MyPage() {
   async function handleLogout() {
     setLoggingOut(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (!res.ok) {
+        alert("ログアウトに失敗しました。時間をおいて再度お試しください。");
+        return;
+      }
       router.push("/login");
       router.refresh();
+    } catch {
+      alert("通信エラーが発生しました。時間をおいて再度お試しください。");
     } finally {
       setLoggingOut(false);
     }
@@ -213,13 +219,17 @@ export default function MyPage() {
   }
 
   async function handleImportFile(file: File) {
-    const text = await file.text();
-    const result = await importTimetableCsv(text, semester);
-    const notes = [
-      result.skipped ? `${result.skipped}件は形式不正でスキップ` : "",
-      result.conflicted ? `${result.conflicted}件は時間割の重複でスキップ` : "",
-    ].filter(Boolean);
-    alert(`${result.imported}件の授業を読み込みました。${notes.length ? `（${notes.join(" / ")}）` : ""}`);
+    try {
+      const text = await file.text();
+      const result = await importTimetableCsv(text, semester);
+      const notes = [
+        result.skipped ? `${result.skipped}件は形式不正でスキップ` : "",
+        result.conflicted ? `${result.conflicted}件は時間割の重複でスキップ` : "",
+      ].filter(Boolean);
+      alert(`${result.imported}件の授業を読み込みました。${notes.length ? `（${notes.join(" / ")}）` : ""}`);
+    } catch {
+      alert("ファイルの読み込みに失敗しました。CSVの形式をご確認ください。");
+    }
   }
 
   return (
@@ -249,7 +259,10 @@ export default function MyPage() {
                   {universityError && <p className="text-xs text-red-600">{universityError}</p>}
                   <button
                     type="button"
-                    onClick={() => setEditingUniversity(false)}
+                    onClick={() => {
+                      setEditingUniversity(false);
+                      setUniversityError(null);
+                    }}
                     disabled={savingUniversity}
                     className="text-xs text-gray-400"
                   >
