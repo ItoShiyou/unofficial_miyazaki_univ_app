@@ -14,14 +14,39 @@ function isAuthorized(req: NextRequest): boolean {
 }
 
 // 一覧（非公開分・期限切れ分も含めて全件。管理側で状況を把握するため）
+// ?sort=clicks でクリック数の多い順に並び替えられる（協賛企業への説明・更新提案の優先順位づけ用）。
+// 各件にCTR（クリック数÷表示回数）を付与し、効果測定を一目で確認できるようにする。
 export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const sponsors = await prisma.sponsor.findMany({
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-  });
-  return NextResponse.json({ sponsors });
+
+  const sortParam = req.nextUrl.searchParams.get("sort");
+  const orderBy =
+    sortParam === "clicks"
+      ? [{ clickCount: "desc" as const }]
+      : sortParam === "impressions"
+        ? [{ impressionCount: "desc" as const }]
+        : [{ sortOrder: "asc" as const }, { createdAt: "desc" as const }];
+
+  const sponsors = await prisma.sponsor.findMany({ orderBy });
+
+  const withCtr = sponsors.map((s) => ({
+    ...s,
+    ctr:
+      s.impressionCount > 0
+        ? Math.round((s.clickCount / s.impressionCount) * 1000) / 10 // %表示（小数点1桁）
+        : null,
+  }));
+
+  const summary = {
+    totalSponsors: sponsors.length,
+    activeSponsors: sponsors.filter((s) => s.isActive).length,
+    totalImpressions: sponsors.reduce((sum, s) => sum + s.impressionCount, 0),
+    totalClicks: sponsors.reduce((sum, s) => sum + s.clickCount, 0),
+  };
+
+  return NextResponse.json({ summary, sponsors: withCtr });
 }
 
 // 新規登録
