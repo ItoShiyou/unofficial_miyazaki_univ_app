@@ -55,9 +55,16 @@ function Icon({ name, active }: { name: string; active: boolean }) {
   }
 }
 
+// アカウント登録前の利用者だけが訪れることを想定した公開ページ。
+// これらのページでBottomNavを出すと、押しても直後にログイン画面へ弾かれる
+// リンクだらけのナビゲーションを見せてしまうため非表示にする。
+// "/sponsors" は既存ユーザーもマイページから訪れる混在ページで、戻る手段が
+// BottomNav以外に無いため、意図的にこの一覧に含めない（対象外のまま）。
+const PRE_ACCOUNT_PATHS = ["/login", "/signup", "/browse", "/install"];
+
 export default function BottomNav() {
   const pathname = usePathname();
-  if (pathname === "/login" || pathname === "/signup") return null;
+  if (PRE_ACCOUNT_PATHS.includes(pathname)) return null;
   return (
     <nav className="sticky bottom-0 z-20 flex border-t border-gray-200 bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
       {items.map((item) => {
