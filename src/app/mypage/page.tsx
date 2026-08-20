@@ -55,6 +55,42 @@ export default function MyPage() {
   const [passwordDone, setPasswordDone] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
 
+  const [showDeleteForm, setShowDeleteForm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setDeleteError(null);
+    if (
+      !window.confirm(
+        "本当にアカウントを削除しますか？時間割・友達関係などのデータは全て失われ、元に戻せません。"
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/auth/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDeleteError(data.error ?? "削除に失敗しました。");
+        return;
+      }
+      router.push("/login");
+      router.refresh();
+    } catch {
+      setDeleteError("通信エラーが発生しました。時間をおいて再度お試しください。");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   async function handleLogout() {
     setLoggingOut(true);
     try {
@@ -445,6 +481,54 @@ export default function MyPage() {
             </ul>
           </Card>
         )}
+
+        <Card>
+          <p className="text-xs text-gray-400 mb-2">アカウントの削除</p>
+          {showDeleteForm ? (
+            <form onSubmit={handleDeleteAccount} className="space-y-2">
+              <p className="text-xs text-red-600 leading-relaxed">
+                削除すると時間割・友達関係などのデータは全て失われ、元に戻せません。確認のためパスワードを入力してください。
+              </p>
+              <input
+                type="password"
+                required
+                autoComplete="current-password"
+                placeholder="パスワード"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+              />
+              {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={deleting}
+                  className="rounded-lg bg-red-600 text-white text-sm px-4 py-2 disabled:opacity-50"
+                >
+                  {deleting ? "削除中..." : "完全に削除する"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteForm(false);
+                    setDeletePassword("");
+                    setDeleteError(null);
+                  }}
+                  className="rounded-lg border border-gray-300 text-sm px-4 py-2"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowDeleteForm(true)}
+              className="text-xs text-red-600"
+            >
+              アカウントを削除する
+            </button>
+          )}
+        </Card>
 
         <p className="text-center pt-2">
           <Link href="/sponsors" className="text-xs text-gray-400 underline">
