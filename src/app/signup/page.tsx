@@ -45,7 +45,7 @@ export default function SignupPage() {
     <main className="flex-1 flex flex-col justify-center px-6 py-10 max-w-sm mx-auto w-full">
       <h1 className="text-2xl font-bold mb-1">新規登録</h1>
       <p className="text-sm text-gray-400 mb-6">
-        宮大非公式アプリ（開発中）。時間割・欠席記録などのデータは端末内にのみ保存され、サーバーには送信されません。
+        宮大非公式アプリ（開発中）。大学・大学当局とは一切関係のない、学生有志による個人開発のアプリです。学籍番号や大学配布のパスワードは使用せず、ここで登録するメールアドレス・パスワードのみでログインします。時間割・欠席記録などのデータは端末内にのみ保存され、サーバーには送信されません。
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-3">
