@@ -10,7 +10,7 @@ import { useCurrentSemester } from "@/lib/useSemester";
 import { useDisplayName, setDisplayName } from "@/lib/device";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 import { computeGpa } from "@/lib/gpa";
-import { universityName } from "@/lib/universities";
+import { universityName, universitySupportsSyllabusSync } from "@/lib/universities";
 import { useAccount } from "@/lib/useAccount";
 import { PageHeader, Card } from "@/components/ui";
 import BonjinBadge from "@/components/BonjinBadge";
@@ -375,26 +375,34 @@ export default function MyPage() {
 
         <Card>
           <p className="text-sm font-medium mb-1">シラバス連携</p>
-          <p className="text-xs text-gray-400 mb-3">
-            {semesterLabel(semester)}の全授業を大学の公開シラバスから学期に1回、サーバー側で自動的に取得・保管しています（手動での再取得はできません）。
-          </p>
-          {status ? (
-            <div className="text-sm text-gray-600 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400 text-xs">保管件数</span>
-                <span>{status.total}件</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400 text-xs">最終更新</span>
-                <span>
-                  {status.lastFetchedAt
-                    ? new Date(status.lastFetchedAt).toLocaleDateString("ja-JP")
-                    : "未取得"}
-                </span>
-              </div>
-            </div>
+          {account && !universitySupportsSyllabusSync(account.university) ? (
+            <p className="text-xs text-gray-400">
+              {universityName(account.university)}は、まだシラバス連携（自動取得・変更検知）に対応していません。時間割・授業カルテは手動で入力・登録してご利用いただけます。対応拡大のご要望は開発者までお寄せください。
+            </p>
           ) : (
-            <p className="text-xs text-gray-400">読み込み中...</p>
+            <>
+              <p className="text-xs text-gray-400 mb-3">
+                {semesterLabel(semester)}の全授業を大学の公開シラバスから学期に1回、サーバー側で自動的に取得・保管しています（手動での再取得はできません）。
+              </p>
+              {status ? (
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-xs">保管件数</span>
+                    <span>{status.total}件</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-xs">最終更新</span>
+                    <span>
+                      {status.lastFetchedAt
+                        ? new Date(status.lastFetchedAt).toLocaleDateString("ja-JP")
+                        : "未取得"}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">読み込み中...</p>
+              )}
+            </>
           )}
         </Card>
 

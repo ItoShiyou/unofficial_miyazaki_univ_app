@@ -5,6 +5,7 @@ import { db, newId, COURSE_COLORS, WEEKDAYS, type Course, type Weekday } from "@
 import { PERIODS, periodLabel } from "@/lib/periods";
 import type { SemesterKey } from "@/lib/semester";
 import { useAccount } from "@/lib/useAccount";
+import { universitySupportsSyllabusSync } from "@/lib/universities";
 
 interface SyllabusHit {
   id: string;
@@ -52,6 +53,7 @@ export default function CourseFormModal({
 
   useEffect(() => {
     if (step !== "pick" || !account) return;
+    if (!universitySupportsSyllabusSync(account.university)) return;
     let ignore = false;
     const t = setTimeout(() => {
       setHitsLoaded(false);
@@ -215,7 +217,13 @@ export default function CourseFormModal({
               autoFocus
             />
             <div className="flex-1 min-h-0 overflow-y-auto -mx-1 px-1">
-              {hits.length > 0 ? (
+              {account && !universitySupportsSyllabusSync(account.university) ? (
+                <p className="text-sm text-gray-400 text-center mt-8">
+                  この大学はまだシラバス連携に対応していないため、授業名での検索はできません。
+                  <br />
+                  下の「シラバスにない授業を手動で入力する」から登録してください。
+                </p>
+              ) : hits.length > 0 ? (
                 <ul className="space-y-2">
                   {hits.map((h) => (
                     <li key={h.id}>

@@ -2,10 +2,12 @@ import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { fetchFullSyllabusCatalog, type RawSyllabusRow } from "@/lib/syllabusSource";
 import { fetchFullSyllabusCatalogMmu } from "@/lib/syllabusSourceMmu";
+import { universitySupportsSyllabusSync } from "@/lib/universities";
 import type { SemesterName } from "@/lib/semester";
 
 // 大学ごとの一覧取得関数のレジストリ。新しい大学を追加する場合は
-// ここに1エントリ追加し、対応するsyllabusSourceXxx.tsを実装する。
+// ここに1エントリ追加し、対応するsyllabusSourceXxx.tsを実装した上で、
+// @/lib/universities の syllabusSyncSupported も true にする。
 const CATALOG_FETCHERS: Record<
   string,
   (year: number, semester: SemesterName) => Promise<RawSyllabusRow[]>
@@ -15,7 +17,7 @@ const CATALOG_FETCHERS: Record<
 };
 
 export function supportsSyllabusSync(university: string): boolean {
-  return university in CATALOG_FETCHERS;
+  return universitySupportsSyllabusSync(university);
 }
 
 /**
