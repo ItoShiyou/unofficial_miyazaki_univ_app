@@ -1,5 +1,6 @@
 import { db, newId, COURSE_COLORS, WEEKDAYS, type Course, type Weekday } from "@/lib/db";
 import type { SemesterKey } from "@/lib/semester";
+import { PERIODS } from "@/lib/periods";
 
 const HEADER = ["授業名", "曜日", "時限", "教員", "教室", "欠席上限", "単位数"];
 
@@ -77,7 +78,7 @@ export async function importTimetableCsv(
   for (const line of lines.slice(1)) {
     const cols = parseCsvLine(line);
     const [name, weekdayRaw, periodRaw, teacher, room, limitRaw, creditsRaw] = cols;
-    if (!name || !weekdayRaw || !periodRaw) {
+    if (!name?.trim() || !weekdayRaw || !periodRaw) {
       skipped++;
       continue;
     }
@@ -87,7 +88,7 @@ export async function importTimetableCsv(
       continue;
     }
     const period = Number(periodRaw);
-    if (!period || period < 1 || period > 5) {
+    if (!period || !(PERIODS as readonly number[]).includes(period)) {
       skipped++;
       continue;
     }
@@ -108,7 +109,7 @@ export async function importTimetableCsv(
       period,
       year: semester.year,
       semester: semester.semester,
-      absenceLimit: Number(limitRaw) || 5,
+      absenceLimit: limitRaw?.trim() && Number(limitRaw) >= 0 ? Number(limitRaw) : 5,
       credits: creditsRaw && Number(creditsRaw) > 0 ? Number(creditsRaw) : undefined,
       color: palette.bg,
       textColor: palette.text,
