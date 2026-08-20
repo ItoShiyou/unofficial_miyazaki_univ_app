@@ -3,6 +3,11 @@
 import { useState } from "react";
 import type { SemesterKey } from "@/lib/semester";
 
+// サーバー側（src/app/api/karte/route.ts）の文字数上限と揃える。
+// 揃えないと、投稿ボタンを押すまで文字数超過に気づけないUXになってしまう。
+const MAX_SHORT = 200;
+const MAX_LONG = 2000;
+
 function RatingSelect({
   label,
   value,
@@ -114,6 +119,7 @@ export default function KarteFormModal({
               placeholder="例: 毎回リアクションペーパー"
               value={attendanceMethod}
               onChange={(e) => setAttendanceMethod(e.target.value)}
+              maxLength={MAX_SHORT}
             />
           </div>
 
@@ -127,6 +133,7 @@ export default function KarteFormModal({
               placeholder="例: 期末試験（記述式）"
               value={examFormat}
               onChange={(e) => setExamFormat(e.target.value)}
+              maxLength={MAX_SHORT}
             />
           </div>
           <RatingSelect label="試験の難易度" value={examDifficulty} onChange={setExamDifficulty} />
@@ -138,6 +145,7 @@ export default function KarteFormModal({
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               value={atmosphere}
               onChange={(e) => setAtmosphere(e.target.value)}
+              maxLength={MAX_SHORT}
             />
           </div>
           <div>
@@ -146,6 +154,7 @@ export default function KarteFormModal({
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               value={pace}
               onChange={(e) => setPace(e.target.value)}
+              maxLength={MAX_SHORT}
             />
           </div>
           <div>
@@ -155,7 +164,11 @@ export default function KarteFormModal({
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               value={advice}
               onChange={(e) => setAdvice(e.target.value)}
+              maxLength={MAX_LONG}
             />
+            <p className="text-[10px] text-gray-400 text-right mt-0.5">
+              {advice.length} / {MAX_LONG}
+            </p>
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">実際に受けてみてどうだったか</label>
@@ -164,7 +177,11 @@ export default function KarteFormModal({
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
+              maxLength={MAX_LONG}
             />
+            <p className="text-[10px] text-gray-400 text-right mt-0.5">
+              {comment.length} / {MAX_LONG}
+            </p>
           </div>
         </div>
 
