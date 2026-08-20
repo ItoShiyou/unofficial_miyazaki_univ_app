@@ -143,5 +143,10 @@ model Sponsor {
   endsAt      DateTime? // 協賛期間の終了日（nullなら無期限）
   createdAt   DateTime @default(now())
 
+  // 将来、協賛企業へ掲載効果を示すための簡易計測。
+  // 表示のたびにimpressionCountを、詳細リンクのクリックのたびにclickCountを加算する。
+  impressionCount Int @default(0)
+  clickCount      Int @default(0)
+
   @@index([isActive, sortOrder])
 }

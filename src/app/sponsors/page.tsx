@@ -67,6 +67,9 @@ export default function SponsorsPage() {
                 href={s.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  fetch(`/api/sponsors/${s.id}/click`, { method: "POST" }).catch(() => {});
+                }}
                 className="block text-xs text-blue-600 mt-2"
               >
                 詳しく見る →

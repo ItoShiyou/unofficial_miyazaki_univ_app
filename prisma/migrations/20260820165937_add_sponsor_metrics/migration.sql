@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Sponsor" ADD COLUMN     "clickCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "impressionCount" INTEGER NOT NULL DEFAULT 0;

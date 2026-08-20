@@ -167,6 +167,22 @@ export default function CourseDetailPage() {
         )}
       </div>
 
+      {course.grade && course.syllabusCourseId && (
+        <div className="px-4 mb-4">
+          <div className="rounded-2xl bg-blue-50 border border-blue-200 p-4 flex items-center justify-between gap-3">
+            <p className="text-xs text-blue-700 leading-relaxed">
+              成績が確定しましたね。この授業の実態を、来年度この授業を選ぶ後輩のためにカルテへ残しませんか？
+            </p>
+            <Link
+              href={`/karte/${course.syllabusCourseId}`}
+              className="shrink-0 rounded-full bg-blue-600 text-white text-xs font-medium px-3 py-1.5"
+            >
+              カルテを書く
+            </Link>
+          </div>
+        </div>
+      )}
+
       {syllabusChanges.length > 0 && (
         <div className="px-4 mb-4">
           <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4">
