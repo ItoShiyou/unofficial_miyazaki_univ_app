@@ -293,6 +293,7 @@ export default function CourseFormModal({
                     setSyllabusCourseId(undefined);
                   }}
                   placeholder="例: 情報工学概論"
+                  maxLength={100}
                 />
                 {syllabusCourseId && (
                   <p className="text-xs text-emerald-600 mt-1">
@@ -339,6 +340,7 @@ export default function CourseFormModal({
                     className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
                     value={teacher}
                     onChange={(e) => setTeacher(e.target.value)}
+                    maxLength={50}
                   />
                 </div>
                 <div>
@@ -347,6 +349,7 @@ export default function CourseFormModal({
                     className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
                     value={room}
                     onChange={(e) => setRoom(e.target.value)}
+                    maxLength={50}
                   />
                 </div>
               </div>
@@ -359,9 +362,15 @@ export default function CourseFormModal({
                   <input
                     type="number"
                     min={0}
+                    max={200}
                     className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
                     value={absenceLimit}
-                    onChange={(e) => setAbsenceLimit(Number(e.target.value))}
+                    onChange={(e) => {
+                      // min/max属性はスピナー操作にしか効かず、キーボード直接入力での
+                      // 負の値・非現実的な値の入力までは防げないため、ここで丸める。
+                      const n = Number(e.target.value);
+                      setAbsenceLimit(Number.isNaN(n) ? 0 : Math.min(200, Math.max(0, n)));
+                    }}
                   />
                 </div>
                 <div>
@@ -369,11 +378,17 @@ export default function CourseFormModal({
                   <input
                     type="number"
                     min={0}
+                    max={30}
                     className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
                     value={credits}
-                    onChange={(e) =>
-                      setCredits(e.target.value === "" ? "" : Number(e.target.value))
-                    }
+                    onChange={(e) => {
+                      if (e.target.value === "") {
+                        setCredits("");
+                        return;
+                      }
+                      const n = Number(e.target.value);
+                      setCredits(Number.isNaN(n) ? "" : Math.min(30, Math.max(0, n)));
+                    }}
                   />
                 </div>
               </div>

@@ -80,9 +80,9 @@ export default function RecordsPage() {
                 href={`/courses/${c.id}`}
                 className="block rounded-2xl border border-gray-200 p-4"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">{c.name}</span>
-                  <span className="text-xs text-gray-400">
+                <div className="flex items-center justify-between mb-2 gap-2">
+                  <span className="font-medium truncate min-w-0">{c.name}</span>
+                  <span className="text-xs text-gray-400 shrink-0">
                     あと{Math.max(c.absenceLimit - count, 0)}回 / 全{c.absenceLimit}回
                   </span>
                 </div>
@@ -108,9 +108,9 @@ export default function RecordsPage() {
                       href={`/courses/${c.id}`}
                       className="block rounded-2xl border border-gray-200 p-4"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{c.name}</span>
-                        <span className="text-xs text-gray-400">欠席 {count}回</span>
+                      <div className="flex items-center justify-between mb-2 gap-2">
+                        <span className="font-medium truncate min-w-0">{c.name}</span>
+                        <span className="text-xs text-gray-400 shrink-0">欠席 {count}回</span>
                       </div>
                       <ProgressBar value={count} max={c.absenceLimit} />
                     </Link>

@@ -107,6 +107,7 @@ export default function ExamFormModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="例: 情報セキュリティ 期末試験"
+              maxLength={100}
             />
           </div>
 
@@ -147,6 +148,7 @@ export default function ExamFormModal({
               className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
               value={room}
               onChange={(e) => setRoom(e.target.value)}
+              maxLength={50}
             />
           </div>
 
@@ -157,6 +159,7 @@ export default function ExamFormModal({
               rows={2}
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              maxLength={500}
             />
           </div>
 

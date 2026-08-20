@@ -184,7 +184,7 @@ export default function TimetablePage() {
                         {course ? (
                           <>
                             <span
-                              className="font-semibold leading-tight text-center break-words text-[11px]"
+                              className="font-semibold leading-tight text-center break-words text-[11px] line-clamp-2"
                               style={{ color: course.textColor }}
                             >
                               {course.name}
