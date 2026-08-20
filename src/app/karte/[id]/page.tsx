@@ -7,6 +7,7 @@ import { periodLabel } from "@/lib/periods";
 import { useAccount } from "@/lib/useAccount";
 import { StarRating } from "@/components/ui";
 import KarteFormModal from "@/components/KarteFormModal";
+import { universityName } from "@/lib/universities";
 
 interface Karte {
   id: string;
@@ -32,6 +33,7 @@ interface SyllabusCourse {
   period: number | null;
   year: number;
   semester: string;
+  university: string;
 }
 
 interface Data {
@@ -95,6 +97,9 @@ export default function KarteDetailPage() {
         <p className="text-sm text-gray-400 mt-0.5">
           {course.room ?? ""} {course.weekday && course.period && `・${course.weekday}${periodLabel(course.period, account?.university)}`}
           {course.teacher && ` ・担当：${course.teacher}`}
+        </p>
+        <p className="text-[10px] text-gray-300 mt-1">
+          出典：{universityName(course.university)}公式シラバス
         </p>
       </div>
 
