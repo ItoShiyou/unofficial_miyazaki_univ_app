@@ -37,7 +37,9 @@ interface SyllabusCourse {
 }
 
 interface Data {
-  course: SyllabusCourse;
+  // 存在しないsyllabusCourseIdを指定した場合、APIは404ではなく
+  // course: null を含む200を返す仕様のため、nullを許容する必要がある。
+  course: SyllabusCourse | null;
   kartes: Karte[];
   summary: {
     count: number;
@@ -100,6 +102,21 @@ export default function KarteDetailPage() {
 
   if (!data) return null;
   const { course, kartes, summary, overall } = data;
+
+  // 存在しないsyllabusCourseId（削除済み・不正なURL等）の場合、APIは
+  // course: null を含む200を返す。ここでnullチェックをしないと
+  // 直後のcourse.nameアクセスで実行時エラーになってしまう。
+  if (!course) {
+    return (
+      <main className="flex-1 pb-6 px-4 pt-8 text-center">
+        <p className="text-sm text-gray-500 mb-3">この授業が見つかりませんでした。</p>
+        <button onClick={() => router.back()} className="text-sm text-blue-600">
+          戻る
+        </button>
+      </main>
+    );
+  }
+
   const latest = kartes[0];
 
   return (
