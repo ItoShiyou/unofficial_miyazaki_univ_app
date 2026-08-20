@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { searchLiveSyllabus } from "@/lib/syllabusSource";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 
 function hashOf(c: { name: string; teacher: string | null; weekday: string | null; period: number | null }) {
   return createHash("sha256")
@@ -25,7 +26,12 @@ export async function GET(req: NextRequest) {
   const cachedCount = await prisma.syllabusCourse.count({ where: { university, year, semester } });
   const looksSynced = cachedCount >= 100;
 
-  if (university === "miyazaki-u" && !looksSynced && q.length >= 2 && (semester === "前期" || semester === "後期")) {
+  // ライブ取得は大学サイトへの外部リクエストを伴うため、連打・スクリプトによる
+  // 大量アクセスで大学側に負荷をかけないよう、IPごとに頻度を制限する。
+  // 制限にかかった場合はライブ取得だけをスキップし、以降の処理でキャッシュ済みデータを返す。
+  const liveSearchAllowed = checkRateLimit(`syllabus-live-search:${clientIp(req)}`, 20, 60_000).allowed;
+
+  if (university === "miyazaki-u" && !looksSynced && liveSearchAllowed && q.length >= 2 && (semester === "前期" || semester === "後期")) {
     try {
       const liveRows = await searchLiveSyllabus(year, semester, q);
       for (const row of liveRows) {
