@@ -17,7 +17,7 @@ function isAuthorized(req: NextRequest): boolean {
 // ?sort=clicks / ?sort=impressions / ?sort=reveals で並び替えられる（更新提案の優先順位づけ用）。
 // 各件にctr（クリック数÷表示回数）とrevealRate（コード開封数÷表示回数）を付与する。
 // 注意: ctrは表示形式の広告一般において低くなりやすい指標であり、単体では協賛企業への
-// 効果訴求に使わないこと（実データレビュー済み、docs/autonomous_improvement_log.md サイクル10参照）。
+// 効果訴求に使わないこと（実データレビュー済み、docs/autonomous_improvement_log.md サイクル11参照）。
 // 管理者内部のトリアージ（クリックがほぼ無い協賛枠を見つける等）にのみ用いる。
 // 協賛企業への説明にはimpressionCount（リーチ）とcodeRevealCount/revealRate（来店・購入意図）を主指標とする。
 export async function GET(req: NextRequest) {
