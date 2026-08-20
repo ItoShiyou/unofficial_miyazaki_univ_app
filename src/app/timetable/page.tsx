@@ -57,14 +57,19 @@ export default function TimetablePage() {
   }
 
   async function handleImportFile(file: File) {
-    const text = await file.text();
-    const result = await importTimetableCsv(text, semester);
-    const notes = [
-      result.skipped ? `${result.skipped}件は形式不正でスキップ` : "",
-      result.conflicted ? `${result.conflicted}件は時間割の重複でスキップ` : "",
-    ].filter(Boolean);
-    alert(`${result.imported}件の授業を読み込みました。${notes.length ? `（${notes.join(" / ")}）` : ""}`);
-    setMenuOpen(false);
+    try {
+      const text = await file.text();
+      const result = await importTimetableCsv(text, semester);
+      const notes = [
+        result.skipped ? `${result.skipped}件は形式不正でスキップ` : "",
+        result.conflicted ? `${result.conflicted}件は時間割の重複でスキップ` : "",
+      ].filter(Boolean);
+      alert(`${result.imported}件の授業を読み込みました。${notes.length ? `（${notes.join(" / ")}）` : ""}`);
+    } catch {
+      alert("ファイルの読み込みに失敗しました。CSVの形式をご確認ください。");
+    } finally {
+      setMenuOpen(false);
+    }
   }
 
   return (

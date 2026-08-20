@@ -63,6 +63,7 @@ export default function KarteDetailPage() {
   const router = useRouter();
   const [tab, setTab] = useState<"summary" | "detail" | "voices">("summary");
   const [data, setData] = useState<Data | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [posting, setPosting] = useState(false);
   const [reported, setReported] = useState<Set<string>>(new Set());
   const [reportMenuFor, setReportMenuFor] = useState<string | null>(null);
@@ -71,13 +72,31 @@ export default function KarteDetailPage() {
 
   const load = useCallback(() => {
     fetch(`/api/karte?syllabusCourseId=${id}`)
-      .then((r) => r.json())
-      .then(setData);
+      .then((r) => {
+        if (!r.ok) throw new Error("failed to load");
+        return r.json();
+      })
+      .then((d) => {
+        setData(d);
+        setLoadError(false);
+      })
+      .catch(() => setLoadError(true));
   }, [id]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  if (loadError) {
+    return (
+      <main className="flex-1 pb-6 px-4 pt-8 text-center">
+        <p className="text-sm text-gray-500 mb-3">読み込みに失敗しました。</p>
+        <button onClick={load} className="text-sm text-blue-600">
+          再読み込み
+        </button>
+      </main>
+    );
+  }
 
   if (!data) return null;
   const { course, kartes, summary, overall } = data;
@@ -211,13 +230,17 @@ export default function KarteDetailPage() {
                         <button
                           key={r.value}
                           onClick={() => {
-                            setReported((prev) => new Set(prev).add(k.id));
                             setReportMenuFor(null);
                             fetch(`/api/karte/${k.id}/report`, {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({ reason: r.value }),
-                            }).catch(() => {});
+                            })
+                              .then((res) => {
+                                if (!res.ok) throw new Error("failed");
+                                setReported((prev) => new Set(prev).add(k.id));
+                              })
+                              .catch(() => alert("通報に失敗しました。時間をおいて再度お試しください。"));
                           }}
                           className="text-[10px] text-gray-400 bg-gray-50 rounded-full px-1.5 py-0.5"
                         >
