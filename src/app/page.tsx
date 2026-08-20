@@ -7,6 +7,7 @@ import { addDaysLocalDate, todayLocalDate } from "@/lib/date";
 import { periodLabel } from "@/lib/periods";
 import { useAccount } from "@/lib/useAccount";
 import { PageHeader } from "@/components/ui";
+import AdUnit from "@/components/AdUnit";
 
 function todayWeekday() {
   const map = [6, 0, 1, 2, 3, 4, 5];
@@ -224,6 +225,10 @@ export default function Home() {
           から授業を追加しましょう。
         </p>
       )}
+
+      <div className="px-4 mt-6">
+        <AdUnit slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME} />
+      </div>
     </main>
   );
 }
