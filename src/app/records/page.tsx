@@ -30,7 +30,14 @@ export default function RecordsPage() {
 
   const grouped = new Map<string, Course[]>();
   if (tab === "past") {
-    for (const c of list) {
+    // IndexedDBの登録順のままだと学期の並びがバラバラになるため、
+    // 直近の学期が上に来るよう年度・学期で並び替えてからグループ化する。
+    const semesterRank = { 後期: 2, 通年: 1, 前期: 0 } as const;
+    const sorted = [...list].sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return semesterRank[b.semester] - semesterRank[a.semester];
+    });
+    for (const c of sorted) {
       const key = `${c.year}年度 ${c.semester}`;
       grouped.set(key, [...(grouped.get(key) ?? []), c]);
     }
