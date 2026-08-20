@@ -18,8 +18,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
   }
 
-  const { displayName, code } = await req.json();
-  if (!displayName || !code) {
+  const body = await req.json().catch(() => null);
+  const displayName = body?.displayName;
+  const code = body?.code;
+  if (typeof displayName !== "string" || !displayName || typeof code !== "string" || !code) {
     return NextResponse.json({ error: "ニックネームと招待コードが必要です" }, { status: 400 });
   }
 

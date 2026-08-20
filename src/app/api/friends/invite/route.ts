@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
   }
 
-  const { displayName } = await req.json();
+  const body = await req.json().catch(() => null);
+  const displayName = body?.displayName;
   if (!displayName || typeof displayName !== "string") {
     return NextResponse.json({ error: "ニックネームを設定してください" }, { status: 400 });
   }

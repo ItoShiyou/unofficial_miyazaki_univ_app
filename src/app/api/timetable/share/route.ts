@@ -8,8 +8,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
   }
 
-  const { displayName, data } = await req.json();
-  if (!displayName || !Array.isArray(data)) {
+  const body = await req.json().catch(() => null);
+  const displayName = body?.displayName;
+  const data = body?.data;
+  if (typeof displayName !== "string" || !displayName || !Array.isArray(data)) {
     return NextResponse.json({ error: "displayName, data are required" }, { status: 400 });
   }
 
