@@ -10,7 +10,7 @@ import { useCurrentSemester } from "@/lib/useSemester";
 import { useDisplayName, setDisplayName } from "@/lib/device";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 import { computeGpa } from "@/lib/gpa";
-import { universityName, universitySupportsSyllabusSync } from "@/lib/universities";
+import { UNIVERSITIES, universityName, universitySupportsSyllabusSync } from "@/lib/universities";
 import { useAccount } from "@/lib/useAccount";
 import { PageHeader, Card } from "@/components/ui";
 import BonjinBadge from "@/components/BonjinBadge";
@@ -59,6 +59,33 @@ export default function MyPage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [editingUniversity, setEditingUniversity] = useState(false);
+  const [savingUniversity, setSavingUniversity] = useState(false);
+  const [universityError, setUniversityError] = useState<string | null>(null);
+
+  async function saveUniversity(university: string) {
+    setUniversityError(null);
+    setSavingUniversity(true);
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ university }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUniversityError(data.error ?? "変更に失敗しました。");
+        return;
+      }
+      setEditingUniversity(false);
+      window.location.reload();
+    } catch {
+      setUniversityError("通信エラーが発生しました。時間をおいて再度お試しください。");
+    } finally {
+      setSavingUniversity(false);
+    }
+  }
 
   async function handleDeleteAccount(e: React.FormEvent) {
     e.preventDefault();
@@ -205,7 +232,41 @@ export default function MyPage() {
           {account ? (
             <div className="space-y-1 mb-3">
               <p className="text-sm font-medium">{account.email}</p>
-              <p className="text-xs text-gray-500">{universityName(account.university)}</p>
+              {editingUniversity ? (
+                <div className="space-y-2 pt-1">
+                  <select
+                    defaultValue={account.university}
+                    disabled={savingUniversity}
+                    onChange={(e) => saveUniversity(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    {UNIVERSITIES.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </select>
+                  {universityError && <p className="text-xs text-red-600">{universityError}</p>}
+                  <button
+                    type="button"
+                    onClick={() => setEditingUniversity(false)}
+                    disabled={savingUniversity}
+                    className="text-xs text-gray-400"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  {universityName(account.university)}
+                  <button
+                    onClick={() => setEditingUniversity(true)}
+                    className="ml-2 text-blue-600"
+                  >
+                    変更
+                  </button>
+                </p>
+              )}
             </div>
           ) : (
             <p className="text-xs text-gray-400 mb-3">読み込み中...</p>
