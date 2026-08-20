@@ -87,6 +87,18 @@ export default function FriendsPage() {
     }
   }
 
+  async function removeFriend(friendUserId: string, friendName: string) {
+    if (!window.confirm(`${friendName}さんとの友達関係を解除しますか？`)) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/friends/${friendUserId}`, { method: "DELETE" });
+      setActiveIdx(-1);
+      loadFriends();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function acceptInvite() {
     if (!enterCode.trim()) return;
     setBusy(true);
@@ -239,6 +251,13 @@ export default function FriendsPage() {
               <span className="text-sm text-gray-500">時間が被っているコマ</span>
               <span className="text-sm font-medium">{overlapping}コマ</span>
             </div>
+            <button
+              onClick={() => removeFriend(friend.userId, friend.name)}
+              disabled={busy}
+              className="w-full text-center text-xs text-gray-400 py-2"
+            >
+              {friend.name}さんとの友達を解除
+            </button>
           </div>
         </>
       )}
