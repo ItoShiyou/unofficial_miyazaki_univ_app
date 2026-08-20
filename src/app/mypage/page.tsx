@@ -438,6 +438,11 @@ export default function MyPage() {
           </Card>
         )}
 
+        <p className="text-center pt-2">
+          <Link href="/sponsors" className="text-xs text-gray-400 underline">
+            地元とつながる（協賛企業一覧）
+          </Link>
+        </p>
         <p className="text-[11px] text-gray-300 text-center pt-2">宮大非公式アプリ（開発版）</p>
         <div className="flex justify-center pb-4">
           <BonjinBadge />

@@ -124,3 +124,24 @@ model SharedTimetable {
   data        String // JSON文字列 [{weekday, period, name}]
   updatedAt   DateTime @updatedAt
 }
+
+// 地域協賛枠（宮崎県内の企業・店舗）。
+// 学生からは課金せず、この協賛枠を収益源とする。広告ではなく
+// 「学生生活で使える地元のお店・企業の情報」として提示する。
+model Sponsor {
+  id          String   @id @default(uuid())
+  name        String // 店舗・企業名
+  category    String // "カフェ" | "飲食" | "書店" | "美容" | "スポーツ" | "企業" 等
+  description String // 一言紹介
+  offer       String? // 学生向け特典（例: "学生証提示で10%オフ"）。無くても掲載可
+  url         String? // 公式サイト・SNS等へのリンク
+  imageUrl    String? // ロゴ・写真
+  area        String? // 宮崎県内のエリア（例: "木花" "橘通り"）
+  isActive    Boolean  @default(true) // 協賛期間終了後はfalseにして非表示
+  sortOrder   Int      @default(0) // 表示順（手動調整用）
+  startsAt    DateTime @default(now())
+  endsAt      DateTime? // 協賛期間の終了日（nullなら無期限）
+  createdAt   DateTime @default(now())
+
+  @@index([isActive, sortOrder])
+}
