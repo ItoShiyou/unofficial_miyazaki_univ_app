@@ -1,6 +1,5 @@
 import { deflateSync } from "node:zlib";
 import { writeFileSync } from "node:fs";
-import { createHash } from "node:crypto";
 
 function crc32(buf) {
   let c;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 
 /**
  * mp4は静止ロゴ(png)に動きをつけたものなので、再生完了と同時にpngへ
@@ -29,9 +30,11 @@ export default function BonjinBadge() {
         </video>
       )}
       {!showVideo && (
-        <img
+        <Image
           src="/bonjin/thebonjin_rogo.png"
           alt="THE BONJIN"
+          width={32}
+          height={32}
           className="w-full h-full object-cover"
         />
       )}

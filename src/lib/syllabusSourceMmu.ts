@@ -23,8 +23,7 @@ const MAX_PAGES = 10; // 500件×10ページ=5,000件分の余裕を見た上限
 const CAMPUS_CD = "10"; // 船塚キャンパス（現状これ一つのみ）
 const KAIKO_CD: Record<"前期" | "後期", string> = { 前期: "2", 後期: "3" };
 
-const WEEKDAY_KANJI = ["月", "火", "水", "木", "金", "土", "日"] as const;
-type WeekdayKanji = (typeof WEEKDAY_KANJI)[number];
+type WeekdayKanji = "月" | "火" | "水" | "木" | "金" | "土" | "日";
 
 function toHalfWidthDigits(s: string): string {
   return s.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
