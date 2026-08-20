@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import OfflineBanner from "@/components/OfflineBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           crossOrigin="anonymous"
           strategy="beforeInteractive"
         />
+        <OfflineBanner />
         <div className="flex-1 flex flex-col">{children}</div>
         <BottomNav />
         <ServiceWorkerRegister />
