@@ -4353,4 +4353,23 @@ Web検索による客観検証の結果、**重大な事実が判明した**。
 
 ---
 
+## サイクル171（`/api/friends`のN+1クエリを修正・1回のfindManyにまとめる・2026-08-21）
+
+### 経緯
+サイクル168のコードレビューで見つかった`/api/friends`のN+1クエリ（友達の人数分`sharedTimetable.findUnique`をループ実行）を修正した。友達数が少ない前提のため実害は小さいと評価されていたが、コードの見通しの良さと将来のスケール双方の観点で修正する価値があると判断した。
+
+### 実施した機能
+- [src/app/api/friends/route.ts](../src/app/api/friends/route.ts)：`friends.map`内で1件ずつ`prisma.sharedTimetable.findUnique`していた箇所を、`friendUserId`の配列を使った1回の`findMany({where:{userId:{in:...}}})`にまとめ、`Map`でメモリ上突合するよう変更した。クエリ発行回数が友達数に比例する構造から、常に2回（`friend.findMany`＋`sharedTimetable.findMany`）に固定された。
+
+### 検証
+- `npx eslint src/app/api/friends/route.ts`、`npx tsc --noEmit`ともにエラーなし。
+- `curl`で2つのテストアカウント（A・B）を作成し、招待コードで友達登録→Aが時間割を共有→Bが`/api/friends`を取得、という一連の流れで、修正後も友達情報と共有時間割データが正しく返ることを確認した。検証後、テストアカウントを削除済み。
+- `git fetch`/`git log HEAD..origin/main`で並行セッションとの分岐がないことを確認済み。
+
+### 次サイクルの候補
+- 新規の実データに基づく機能候補の探索を継続する。
+- `syllabus/search`のライブ同期ループのN+1は、外部同期処理でレート制限済み・実行頻度が低い（学期に数回）ため、優先度は引き続き低いと判断し今回は対応しない。
+
+---
+
 *このログは自律改善サイクルのたびに追記される。ユーザーが停止を指示した場合、進行中のサイクルの扱いを確認したうえで、最終的な変更点一覧とビジコン向けプレゼンテーションを作成する。*

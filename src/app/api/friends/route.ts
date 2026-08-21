@@ -10,19 +10,21 @@ export async function GET(req: NextRequest) {
 
   const friends = await prisma.friend.findMany({ where: { userId } });
 
-  const withTimetables = await Promise.all(
-    friends.map(async (f) => {
-      const shared = await prisma.sharedTimetable.findUnique({
-        where: { userId: f.friendUserId },
-      });
-      return {
-        userId: f.friendUserId,
-        name: f.friendName,
-        timetable: shared ? JSON.parse(shared.data) : [],
-        updatedAt: shared?.updatedAt ?? null,
-      };
-    })
-  );
+  // 友達1人ずつfindUniqueするとN+1になるため、まとめて1回のfindManyで取得する
+  const sharedTimetables = await prisma.sharedTimetable.findMany({
+    where: { userId: { in: friends.map((f) => f.friendUserId) } },
+  });
+  const sharedByUserId = new Map(sharedTimetables.map((s) => [s.userId, s]));
+
+  const withTimetables = friends.map((f) => {
+    const shared = sharedByUserId.get(f.friendUserId);
+    return {
+      userId: f.friendUserId,
+      name: f.friendName,
+      timetable: shared ? JSON.parse(shared.data) : [],
+      updatedAt: shared?.updatedAt ?? null,
+    };
+  });
 
   return NextResponse.json({ friends: withTimetables });
 }
