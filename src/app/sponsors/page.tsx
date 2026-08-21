@@ -14,6 +14,8 @@ type Sponsor = {
   url: string | null;
   area: string | null;
   hasCoupon: boolean;
+  eventLabel: string | null;
+  eventAt: string | null;
 };
 
 export default function SponsorsPage() {
@@ -36,10 +38,23 @@ export default function SponsorsPage() {
       .catch(() => {});
   };
 
+  const [upcomingEvents, setUpcomingEvents] = useState<Sponsor[]>([]);
+
   useEffect(() => {
     fetch("/api/sponsors")
       .then((res) => res.json())
-      .then((data) => setSponsors(data.sponsors ?? []))
+      .then((data) => {
+        const all: Sponsor[] = data.sponsors ?? [];
+        setSponsors(all);
+        // イベント一覧は取得時点（副作用）で計算する。renderの中で
+        // Date.now()を呼ぶとReact Compilerの純粋性チェックに引っかかるため。
+        const now = Date.now();
+        setUpcomingEvents(
+          all
+            .filter((s) => s.eventLabel && s.eventAt && new Date(s.eventAt).getTime() > now)
+            .sort((a, b) => new Date(a.eventAt!).getTime() - new Date(b.eventAt!).getTime())
+        );
+      })
       .catch(() => setSponsors([]));
   }, []);
 
@@ -69,6 +84,34 @@ export default function SponsorsPage() {
             宮崎県内で協賛にご興味のある企業様は、開発者までご連絡ください。
           </p>
         </Card>
+      )}
+
+      {upcomingEvents.length > 0 && (
+        <div className="mb-5">
+          <p className="text-sm font-medium mb-2 px-0.5">今度のイベント</p>
+          <p className="text-xs text-gray-400 mb-2 px-0.5">
+            宮崎県内のどの大学の学生でも参加できます。大学の垣根を越えて集まる場です。
+          </p>
+          <div className="space-y-2">
+            {upcomingEvents.map((s) => (
+              <div key={s.id} className="rounded-2xl border border-violet-200 bg-violet-50 p-3">
+                <p className="text-xs text-violet-500 font-medium">
+                  {new Date(s.eventAt!).toLocaleString("ja-JP", {
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+                <p className="text-sm font-bold mt-0.5">{s.eventLabel}</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {s.name}
+                  {s.area ? ` ・ ${s.area}` : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="space-y-3">

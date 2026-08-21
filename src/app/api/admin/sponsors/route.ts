@@ -86,6 +86,15 @@ export async function POST(req: NextRequest) {
     endsAt = parsed;
   }
 
+  let eventAt: Date | null = null;
+  if (typeof body?.eventAt === "string" && body.eventAt) {
+    const parsed = new Date(body.eventAt);
+    if (Number.isNaN(parsed.getTime())) {
+      return NextResponse.json({ error: "eventAt の日付形式が不正です" }, { status: 400 });
+    }
+    eventAt = parsed;
+  }
+
   const sponsor = await prisma.sponsor
     .create({
       data: {
@@ -99,6 +108,8 @@ export async function POST(req: NextRequest) {
         couponCode: typeof body?.couponCode === "string" ? body.couponCode.trim() : null,
         sortOrder: typeof body?.sortOrder === "number" ? body.sortOrder : 0,
         endsAt,
+        eventLabel: typeof body?.eventLabel === "string" ? body.eventLabel.trim() || null : null,
+        eventAt,
       },
     })
     .catch(() => null);

@@ -172,6 +172,14 @@ model Sponsor {
   couponCode      String? // 例: "MIYADAI10"
   codeRevealCount Int     @default(0)
 
+  // 協賛企業・店舗が開催するイベント（提案5「複数大学イベント枠」の実装）。
+  // 時間割データをサーバーに送らない設計のため、個々の学生の空きコマを
+  // 厳密に突き合わせる「マッチング」はできない。代わりに、Sponsorモデルが
+  // もともと特定の大学に紐付かない設計であることを活かし、県内のどの大学の
+  // 学生からも同じイベント情報が見える、という緩やかな合流の場を提供する。
+  eventLabel String? // イベント名（例: "県内大学交流会" "OB訪問イベント"）。nullなら通常の協賛枠のまま
+  eventAt    DateTime? // 開催日時
+
   stamps SponsorStamp[]
 
   @@index([isActive, sortOrder])

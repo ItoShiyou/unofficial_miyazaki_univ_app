@@ -36,6 +36,11 @@ export async function PATCH(
   ] as const) {
     if (typeof body[key] === "string") data[key] = body[key].trim();
   }
+  if (body.eventLabel === null) {
+    data.eventLabel = null;
+  } else if (typeof body.eventLabel === "string") {
+    data.eventLabel = body.eventLabel.trim() || null;
+  }
   if (typeof body.isActive === "boolean") data.isActive = body.isActive;
   if (typeof body.sortOrder === "number") data.sortOrder = body.sortOrder;
   if (body.endsAt === null) {
@@ -46,6 +51,15 @@ export async function PATCH(
       return NextResponse.json({ error: "endsAt の日付形式が不正です" }, { status: 400 });
     }
     data.endsAt = parsed;
+  }
+  if (body.eventAt === null) {
+    data.eventAt = null;
+  } else if (typeof body.eventAt === "string") {
+    const parsed = new Date(body.eventAt);
+    if (Number.isNaN(parsed.getTime())) {
+      return NextResponse.json({ error: "eventAt の日付形式が不正です" }, { status: 400 });
+    }
+    data.eventAt = parsed;
   }
 
   const sponsor = await prisma.sponsor
