@@ -304,6 +304,11 @@ export default function SponsorsPage() {
           <br />
           開発者までご連絡ください。学生に負担のない形で、地域と学生をつなげます。
         </p>
+        <p className="text-center mt-2">
+          <Link href="/sponsors/for-business" className="text-xs text-blue-600 underline">
+            協賛掲載についてのご案内（企業・店舗様向け）→
+          </Link>
+        </p>
       </div>
     </main>
   );
