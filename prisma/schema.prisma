@@ -33,9 +33,30 @@ model SyllabusCourse {
 
   kartes  CourseKarte[]
   changes SyllabusChange[]
+  cancellationReports CancellationReport[]
 
   @@index([university, year, semester, name])
   @@index([university, year, semester, code])
+}
+
+// 「今日休講速報」：学期に1回しか行わないシラバス自動同期（休講・教員変更等の
+// 恒久的な変更検知）とは別に、「今日この授業は休講かもしれない」という
+// その日限りの一次情報を学生同士で共有するための crowd-sourced 機能。
+// 東洋大学等の実例では大学公式アプリが当日リアルタイムで休講通知を配信しており、
+// 本アプリの学期1回の同期ではこの即時性のあるニーズに応えられていないと
+// 実データレビューで判明したため、匿名の自己申告を集約する形で補う。
+// サイクル104・111の教訓（1人の連打が複数人の報告に見えてしまう）を踏まえ、
+// 最初からユーザーごとに1日1回までの制約をDBのunique制約で持たせる。
+model CancellationReport {
+  id               String        @id @default(uuid())
+  syllabusCourseId String
+  syllabusCourse   SyllabusCourse @relation(fields: [syllabusCourseId], references: [id], onDelete: Cascade)
+  date             String // "YYYY-MM-DD"（サーバー側のローカル日付、その日限りの報告のため時刻は持たない）
+  userId           String
+  createdAt        DateTime      @default(now())
+
+  @@unique([syllabusCourseId, date, userId])
+  @@index([syllabusCourseId, date])
 }
 
 // シラバス差分（教員変更等）の検知ログ

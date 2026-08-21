@@ -9,6 +9,7 @@ import { useCurrentSemester } from "@/lib/useSemester";
 import { PERIODS, periodTimeTable, periodLabel } from "@/lib/periods";
 import { useAccount } from "@/lib/useAccount";
 import CourseFormModal from "@/components/CourseFormModal";
+import CancellationReportsSection from "@/components/CancellationReportsSection";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 
 function currentWeekDates(): Date[] {
@@ -46,6 +47,7 @@ export default function TimetablePage() {
     ) ?? [];
 
   const totalCredits = courses.reduce((sum, c) => sum + (c.credits ?? 0), 0);
+  const todaysCourses = todayIdx < 6 ? courses.filter((c) => c.weekday === WEEKDAYS[todayIdx]) : [];
 
   function changeSemester(dir: 1 | -1) {
     const next = adjacentSemester(semester, dir);
@@ -207,6 +209,8 @@ export default function TimetablePage() {
           </tbody>
         </table>
       </div>
+
+      <CancellationReportsSection todaysCourses={todaysCourses} />
 
       <div className="mt-6 px-4">
         <h2 className="text-sm font-medium text-gray-500 mb-2">登録済み授業一覧</h2>
