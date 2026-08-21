@@ -22,28 +22,26 @@ export async function GET(req: NextRequest) {
   }
   const syllabusCourseIds = idsParam.split(",").filter(Boolean).slice(0, 20);
 
+  // 対象授業数は最大20件・報告は1ユーザー1日1回までのため件数自体が小さく、
+  // 集計と「自分が報告済みか」を1回のfindManyから両方導出する方が
+  // groupBy+findManyの2クエリより単純で分かりやすい。
   const date = todayJstDate();
-  const reports = await prisma.cancellationReport.groupBy({
-    by: ["syllabusCourseId"],
+  const reports = await prisma.cancellationReport.findMany({
     where: { syllabusCourseId: { in: syllabusCourseIds }, date },
-    _count: { _all: true },
+    select: { syllabusCourseId: true, userId: true },
   });
 
   const counts: Record<string, number> = {};
+  const reportedByMe: string[] = [];
   for (const r of reports) {
-    counts[r.syllabusCourseId] = r._count._all;
+    counts[r.syllabusCourseId] = (counts[r.syllabusCourseId] ?? 0) + 1;
+    if (r.userId === me.id) reportedByMe.push(r.syllabusCourseId);
   }
-
-  // 自分が既に今日報告済みの授業も併せて返す（UIでボタンを押せない状態にするため）。
-  const mine = await prisma.cancellationReport.findMany({
-    where: { syllabusCourseId: { in: syllabusCourseIds }, date, userId: me.id },
-    select: { syllabusCourseId: true },
-  });
 
   return NextResponse.json({
     date,
     counts,
-    reportedByMe: mine.map((m) => m.syllabusCourseId),
+    reportedByMe,
   });
 }
 
