@@ -14,6 +14,7 @@ import { UNIVERSITIES, universityName, universitySupportsSyllabusSync } from "@/
 import { useAccount } from "@/lib/useAccount";
 import { PageHeader, Card } from "@/components/ui";
 import BonjinBadge from "@/components/BonjinBadge";
+import AppSurveyCard from "@/components/AppSurveyCard";
 import {
   getPushSubscriptionState,
   subscribeToPush,
@@ -303,6 +304,8 @@ export default function MyPage() {
       <PageHeader title="マイページ" />
 
       <div className="px-4 space-y-4">
+        <AppSurveyCard />
+
         <Card>
           <p className="text-xs text-gray-400 mb-2">アカウント</p>
           {account ? (

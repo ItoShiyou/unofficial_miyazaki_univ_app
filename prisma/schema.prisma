@@ -110,6 +110,18 @@ model User {
   tempPasswordExpiresAt DateTime? // 仮パスワードの有効期限（過ぎたらログイン不可）
 }
 
+// 超軽量ヒアリング（1問アンケート）。長文アンケートは回答率が低いため、
+// 「使い続けたいと思いますか？」1問＋任意コメントのみに絞る。
+// アカウント作成から一定期間経過後（実際に使ってみた実感が伴ってから）に
+// マイページで1度だけ表示し、回答済みなら二度と出さない。
+model AppSurveyResponse {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  score     Int // 1〜5（「使い続けたいと思いますか？」への回答）
+  comment   String?
+  createdAt DateTime @default(now())
+}
+
 // 友達連携（アカウント同士を招待コードで接続）
 // DBのカラム名はアカウント導入前の deviceId のまま（@mapで維持）だが、
 // 実際に入る値はログイン中のUser.id。識別はサーバー側のセッションから導出し、

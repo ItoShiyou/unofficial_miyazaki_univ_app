@@ -68,7 +68,7 @@ export default function AdminPage() {
   );
   const [secretInput, setSecretInput] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"sponsors" | "jobs" | "karte">("sponsors");
+  const [tab, setTab] = useState<"sponsors" | "jobs" | "karte" | "survey">("sponsors");
 
   async function tryLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -127,6 +127,7 @@ export default function AdminPage() {
           { key: "sponsors", label: "協賛・イベント" },
           { key: "jobs", label: "求人掲示板" },
           { key: "karte", label: "カルテ通報" },
+          { key: "survey", label: "アンケート" },
         ].map((t) => (
           <button
             key={t.key}
@@ -143,6 +144,7 @@ export default function AdminPage() {
       {tab === "sponsors" && <SponsorsPanel secret={secret} />}
       {tab === "jobs" && <JobsPanel secret={secret} />}
       {tab === "karte" && <KartePanel secret={secret} />}
+      {tab === "survey" && <SurveyPanel secret={secret} />}
     </main>
   );
 }
@@ -431,6 +433,48 @@ function KartePanel({ secret }: { secret: string }) {
         </div>
       ))}
       {kartes?.length === 0 && <p className="text-sm text-gray-400">通報された投稿はありません。</p>}
+    </div>
+  );
+}
+
+type SurveyResponse = {
+  id: string;
+  score: number;
+  comment: string | null;
+  createdAt: string;
+};
+
+function SurveyPanel({ secret }: { secret: string }) {
+  const [data, setData] = useState<{ count: number; avg: number | null; responses: SurveyResponse[] } | null>(
+    null
+  );
+
+  useEffect(() => {
+    fetch("/api/admin/survey", { headers: authHeaders(secret) })
+      .then((r) => r.json())
+      .then((d) => setData(d))
+      .catch(() => setData({ count: 0, avg: null, responses: [] }));
+  }, [secret]);
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] text-gray-400">
+        マイページに表示される超軽量ヒアリング「使い続けたいと思いますか？」（1〜5点）の回答一覧です。
+      </p>
+      {data === null && <p className="text-sm text-gray-400">読み込み中…</p>}
+      {data && (
+        <div className="rounded-lg bg-gray-50 p-3 text-sm">
+          回答{data.count}件{data.avg != null && `・平均${data.avg}/5`}
+        </div>
+      )}
+      {data?.responses.map((r) => (
+        <div key={r.id} className="rounded-xl border border-gray-200 p-3">
+          <p className="text-sm font-medium text-amber-600">{"★".repeat(r.score)}{"☆".repeat(5 - r.score)}</p>
+          {r.comment && <p className="text-sm mt-1 whitespace-pre-wrap">{r.comment}</p>}
+          <p className="text-[11px] text-gray-400 mt-1.5">{new Date(r.createdAt).toLocaleString("ja-JP")}</p>
+        </div>
+      ))}
+      {data?.responses.length === 0 && <p className="text-sm text-gray-400">まだ回答がありません。</p>}
     </div>
   );
 }
