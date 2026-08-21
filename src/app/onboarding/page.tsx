@@ -208,14 +208,17 @@ export default function OnboardingPage() {
           学生は既に代替手段で適応済みで深刻な未解決課題とまでは言えないため、
           リアルタイム運行情報等は作り込まず、外部リンク中心の軽量な情報提供に
           とどめた（宮崎交通は運行情報APIを公開していないため、遅延情報の
-          スクレイピングによる自前実装は保守コスト・規約リスクの観点で避けた）。 */}
+          スクレイピングによる自前実装は保守コスト・規約リスクの観点で避けた）。
+          学割証・学生定期については、証明書自動発行機（IC学生証利用）や宮崎交通
+          の学生向け6ヶ月定期「CAM・PASS mini」等の公式手段が既に整備されており、
+          本アプリが代替・仲介する必要はないと判断し、リンクの追記のみとした。 */}
       <div className="px-4 mt-3">
         <Card>
           <p className="text-xs font-medium mb-1">通学・アクセス情報</p>
           <p className="text-xs text-gray-600 leading-relaxed">
-            宮崎大学は木花・清武の2キャンパス制で、バス便は多くありません。原付・自転車・自動車での通学が主流です。木花⇔清武間の移動は乗り継ぎが必要な場合が多いため、時間に余裕を持って計画してください。
+            宮崎大学は木花・清武の2キャンパス制で、バス便は多くありません。原付・自転車・自動車での通学が主流です。木花⇔清武間の移動は乗り継ぎが必要な場合が多いため、時間に余裕を持って計画してください。学割証・通学証明書は学内の証明書自動発行機（IC学生証利用）で発行できます。
           </p>
-          <div className="flex flex-wrap gap-x-4 mt-2">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
             <a
               href="https://www.miyazaki-u.ac.jp/access/kibana/"
               target="_blank"
@@ -231,6 +234,22 @@ export default function OnboardingPage() {
               className="text-xs text-blue-600"
             >
               清武キャンパスへのアクセス →
+            </a>
+            <a
+              href="https://www.miyazaki-u.ac.jp/manabi-jim/campus-life-info/commute/content-1.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              学割証・通学証明書の発行案内 →
+            </a>
+            <a
+              href="https://www.miyakoh.co.jp/rosen/ticket/campass-mini.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              宮崎交通の学生定期「CAM・PASS mini」 →
             </a>
           </div>
         </Card>
