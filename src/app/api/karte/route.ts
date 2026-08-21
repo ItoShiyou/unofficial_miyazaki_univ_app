@@ -17,6 +17,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "syllabusCourseId is required" }, { status: 400 });
   }
 
+  // 実データレビューで、GETにはPOSTと違って大学スコープの確認が無く、
+  // 他大学のsyllabusCourseIdを（検索APIで正規に）入手すれば、他大学の
+  // 授業カルテ（自由記述含む）をAPI直叩きで閲覧できてしまうと判明した。
+  // 「同じ大学の学生にだけ読まれる」前提で書かれた自由記述が、他大学の
+  // 第三者に見えてしまう実害があるため、POSTと同様にログイン必須にし、
+  // 自分の所属大学の授業かどうかを確認する。
+  const me = await currentUser(req);
+  if (!me) {
+    return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  }
+
+  const course = await prisma.syllabusCourse.findUnique({
+    where: { id: syllabusCourseId },
+  });
+  if (course && course.university !== me.university) {
+    return NextResponse.json(
+      { error: "所属大学の授業のみ閲覧できます。" },
+      { status: 403 }
+    );
+  }
+
   const rawKartes = await prisma.courseKarte.findMany({
     where: { syllabusCourseId, hidden: false },
     orderBy: { createdAt: "desc" },
@@ -26,10 +47,6 @@ export async function GET(req: NextRequest) {
   const kartes = freeTextHidden
     ? rawKartes.map((k) => ({ ...k, advice: null, comment: null }))
     : rawKartes;
-
-  const course = await prisma.syllabusCourse.findUnique({
-    where: { id: syllabusCourseId },
-  });
 
   function avg(field: keyof (typeof kartes)[number]) {
     const vals = kartes
