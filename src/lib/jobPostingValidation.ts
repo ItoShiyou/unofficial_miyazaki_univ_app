@@ -4,8 +4,16 @@
  * schema.prismaのコメントだけに頼らず実際にAPI側でも弾くための検証。
  * 実データレビュー（docs/pivot_story.md 9-1節）で、この方針をコメントのみに
  * 頼っていた点は不十分だと判明したため追加した。
+ *
+ * 実データレビューで、当初の実装（「◯円」「◯万円」を無条件に検知）は、
+ * 「資本金1000万円の企業です」「交通費（上限1万円まで支給）」「参加費0円」
+ * 「粗品（500円相当）」等の、給与とは無関係な正当な記載まで誤って弾いてしまう
+ * 具体的な誤検知リスクがあると判明した。給与を示す語（年収・月収・時給・日給・
+ * 給与・賃金・報酬・手当・賞与）の近く（15文字以内）に数字が続く場合のみを
+ * 検知対象とし、無関係な金額表記までは弾かないようにする。
  */
-const SALARY_PATTERN = /(¥\s*\d|(?:年収|月収|時給|日給|給与)\s*\d|\d[\d,]*\s*万円|\d[\d,]*\s*円)/;
+const COMPENSATION_KEYWORDS = "年収|月収|時給|日給|給与|賃金|報酬|手当|賞与";
+const SALARY_PATTERN = new RegExp(`(¥\\s*\\d|(?:${COMPENSATION_KEYWORDS})[^。\\n]{0,15}?\\d)`);
 
 export function containsSalaryFigure(text: string): boolean {
   return SALARY_PATTERN.test(text);
