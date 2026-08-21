@@ -747,6 +747,11 @@ export default function MyPage() {
             宮崎の企業から（求人・インターン・説明会）
           </Link>
         </p>
+        <p className="text-center pt-1">
+          <Link href="/privacy" className="text-xs text-gray-400 underline">
+            プライバシーポリシー
+          </Link>
+        </p>
         <p className="text-[11px] text-gray-300 text-center pt-2 leading-relaxed px-6">
           宮大非公式アプリ（開発版）。大学・大学当局とは一切関係のない、学生有志による個人開発のアプリです。学籍番号や大学配布のパスワードは取り扱いません。
         </p>
