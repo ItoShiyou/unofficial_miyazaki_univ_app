@@ -6,7 +6,7 @@ import { isHttpUrl } from "@/lib/urlValidation";
 
 export const dynamic = "force-dynamic";
 
-const VALID_POSTING_TYPES = ["job", "internship", "info_session"] as const;
+const VALID_POSTING_TYPES = ["job", "internship", "info_session", "volunteer"] as const;
 
 // 部分更新（掲載終了時は isActive: false にする、内容修正、表示順変更など）
 export async function PATCH(

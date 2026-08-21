@@ -11,7 +11,7 @@ import { isHttpUrl } from "@/lib/urlValidation";
  */
 export const dynamic = "force-dynamic";
 
-const VALID_POSTING_TYPES = ["job", "internship", "info_session"] as const;
+const VALID_POSTING_TYPES = ["job", "internship", "info_session", "volunteer"] as const;
 
 // 一覧（非公開分・期限切れ分も含めて全件）
 export async function GET(req: NextRequest) {

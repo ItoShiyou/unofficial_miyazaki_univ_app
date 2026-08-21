@@ -24,6 +24,7 @@ const POSTING_TYPE_LABEL: Record<string, string> = {
   job: "求人",
   internship: "インターン",
   info_session: "説明会",
+  volunteer: "ボランティア・地域活動",
 };
 
 export default function JobsPage() {
@@ -38,9 +39,9 @@ export default function JobsPage() {
 
   return (
     <main className="flex-1 flex flex-col px-4 pb-8">
-      <PageHeader title="宮崎の企業から" />
+      <PageHeader title="宮崎の企業・地域から" />
       <p className="text-sm text-gray-500 px-0.5 pb-4">
-        宮崎県内の企業・団体からの求人・インターン・説明会情報です。応募は各企業の応募先へ直接お進みください（本アプリが応募を仲介することはありません）。
+        宮崎県内の企業・自治体・NPO等からの求人・インターン・説明会・ボランティア／地域プロジェクト情報です。参加・応募は各募集元のページへ直接お進みください（本アプリが仲介することはありません）。
       </p>
 
       {jobs === null && (
@@ -52,7 +53,7 @@ export default function JobsPage() {
           <p className="text-sm text-gray-500 text-center py-6">
             まだ掲載がありません。
             <br />
-            宮崎県内で求人・インターン・説明会情報の掲載にご興味のある企業様は、開発者までご連絡ください。
+            宮崎県内で求人・インターン・説明会・ボランティア／地域プロジェクト情報の掲載にご興味のある企業様・自治体・団体様は、開発者までご連絡ください。
           </p>
         </Card>
       )}
@@ -94,7 +95,7 @@ export default function JobsPage() {
               }}
               className="block text-xs text-blue-600 mt-2"
             >
-              応募・詳細ページへ →
+              詳細・お申し込みへ →
             </a>
           </Card>
         ))}
@@ -102,8 +103,8 @@ export default function JobsPage() {
 
       <div className="mt-8 pt-6 border-t border-gray-100 space-y-3">
         <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5 leading-relaxed">
-          掲載企業・団体様の情報については確認のうえ掲載していますが、本アプリまたは宮崎大学が企業の信頼性・安全性を保証・審査するものではありません。
-          アルバイト・就活を装った詐欺など、実在の求人を装った悪質な事例も報告されています。応募の際は、労働条件・企業情報をご自身でも十分にご確認ください。
+          掲載企業・団体様の情報については確認のうえ掲載していますが、本アプリまたは宮崎大学が企業・団体の信頼性・安全性を保証・審査するものではありません。
+          アルバイト・就活を装った詐欺など、実在の求人を装った悪質な事例も報告されています。応募・参加の際は、労働条件・活動内容をご自身でも十分にご確認ください。
           不審な点があれば、
           <a
             href="https://forms.gle/7qhSqMxSQUyGzaPL9"
@@ -116,9 +117,9 @@ export default function JobsPage() {
           または最寄りの労働基準監督署等にご相談ください。
         </p>
         <p className="text-xs text-gray-400 text-center leading-relaxed">
-          本ページは求人情報の掲示のみを行うものであり、本アプリが学生と企業のあっせん・仲介を行うものではありません。
+          本ページは求人・活動情報の掲示のみを行うものであり、本アプリが学生と企業・団体のあっせん・仲介を行うものではありません。
           <br />
-          宮崎県内で学生向けの求人・インターン・説明会情報の掲載にご興味のある企業様・団体様は
+          宮崎県内で学生向けの求人・インターン・説明会・ボランティア／地域プロジェクト情報の掲載にご興味のある企業様・自治体・団体様は
           <br />
           開発者までご連絡ください。
         </p>
