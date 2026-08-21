@@ -3,6 +3,14 @@
     { "path": "/api/cron/sync-syllabus?university=miyazaki-u", "schedule": "0 0 1 4 *" },
     { "path": "/api/cron/sync-syllabus?university=miyazaki-u", "schedule": "0 0 1 10 *" },
     { "path": "/api/cron/sync-syllabus?university=miyazaki-municipal-u", "schedule": "10 0 1 4 *" },
-    { "path": "/api/cron/sync-syllabus?university=miyazaki-municipal-u", "schedule": "10 0 1 10 *" }
+    { "path": "/api/cron/sync-syllabus?university=miyazaki-municipal-u", "schedule": "10 0 1 10 *" },
+    { "path": "/api/cron/sync-syllabus?university=miyazaki-international-u", "schedule": "20 0 1 4 *" },
+    { "path": "/api/cron/sync-syllabus?university=miyazaki-international-u", "schedule": "20 0 1 10 *" },
+    { "path": "/api/cron/sync-syllabus?university=miyazaki-nursing-u", "schedule": "30 0 1 4 *" },
+    { "path": "/api/cron/sync-syllabus?university=miyazaki-nursing-u", "schedule": "30 0 1 10 *" },
+    { "path": "/api/cron/sync-syllabus?university=minami-kyushu-u", "schedule": "40 0 1 4 *" },
+    { "path": "/api/cron/sync-syllabus?university=minami-kyushu-u", "schedule": "40 0 1 10 *" },
+    { "path": "/api/cron/sync-syllabus?university=kyushu-uhs", "schedule": "50 0 1 4 *" },
+    { "path": "/api/cron/sync-syllabus?university=kyushu-uhs", "schedule": "50 0 1 10 *" }
   ]
 }

@@ -57,12 +57,28 @@ curl -H "Authorization: Bearer <CRON_SECRETの値>" \
   "https://<あなたのドメイン>/api/cron/sync-syllabus?university=miyazaki-u"
 ```
 
-宮崎公立大学の分も同様に:
+宮崎公立大学・宮崎国際大学・宮崎県立看護大学・南九州大学・九州医療科学大学の分も同様に:
 
 ```bash
 curl -H "Authorization: Bearer <CRON_SECRETの値>" \
   "https://<あなたのドメイン>/api/cron/sync-syllabus?university=miyazaki-municipal-u"
+curl -H "Authorization: Bearer <CRON_SECRETの値>" \
+  "https://<あなたのドメイン>/api/cron/sync-syllabus?university=miyazaki-international-u"
+curl -H "Authorization: Bearer <CRON_SECRETの値>" \
+  "https://<あなたのドメイン>/api/cron/sync-syllabus?university=miyazaki-nursing-u"
+curl -H "Authorization: Bearer <CRON_SECRETの値>" \
+  "https://<あなたのドメイン>/api/cron/sync-syllabus?university=minami-kyushu-u"
+curl -H "Authorization: Bearer <CRON_SECRETの値>" \
+  "https://<あなたのドメイン>/api/cron/sync-syllabus?university=kyushu-uhs"
 ```
+
+なお `vercel.json` のcronは大学ごとに年2回ずつ、計12件登録している。
+[Vercelの公式ドキュメント](https://vercel.com/docs/cron-jobs/usage-and-pricing)（2026年7月時点）によれば
+プロジェクトあたりの上限は Hobby・Pro とも100件のため、12件であれば Hobby プランでも問題なく動く。
+Hobby プランの制約は「1日1回まで」「実行タイミングの精度が±59分」の2点のみで、
+このアプリのcronはいずれも年1回（4/1・10/1）しか発火しないため、どちらの制約にも抵触しない。
+（唯一、分の値で10分刻みにずらしている意図はHobbyでは保証されない＝同じ1時間の枠内でどの順番に
+実行されるかは不定だが、各cronは対象大学が異なるだけで互いに依存しないため実害はない。）
 
 以降は学期の変わり目（4/1・10/1）に自動で更新される。
 

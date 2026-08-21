@@ -2,6 +2,10 @@ import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { fetchFullSyllabusCatalog, type RawSyllabusRow } from "@/lib/syllabusSource";
 import { fetchFullSyllabusCatalogMmu } from "@/lib/syllabusSourceMmu";
+import { fetchFullSyllabusCatalogMiu } from "@/lib/syllabusSourceMiu";
+import { fetchFullSyllabusCatalogMpu } from "@/lib/syllabusSourceMpu";
+import { fetchFullSyllabusCatalogNankyudai } from "@/lib/syllabusSourceNankyudai";
+import { fetchFullSyllabusCatalogKyushuIryo } from "@/lib/syllabusSourceKyushuIryo";
 import { universitySupportsSyllabusSync } from "@/lib/universities";
 import { sendPushToUsers } from "@/lib/webPush";
 import type { SemesterName } from "@/lib/semester";
@@ -15,6 +19,10 @@ const CATALOG_FETCHERS: Record<
 > = {
   "miyazaki-u": fetchFullSyllabusCatalog,
   "miyazaki-municipal-u": fetchFullSyllabusCatalogMmu,
+  "miyazaki-international-u": fetchFullSyllabusCatalogMiu,
+  "miyazaki-nursing-u": fetchFullSyllabusCatalogMpu,
+  "minami-kyushu-u": fetchFullSyllabusCatalogNankyudai,
+  "kyushu-uhs": fetchFullSyllabusCatalogKyushuIryo,
 };
 
 export function supportsSyllabusSync(university: string): boolean {

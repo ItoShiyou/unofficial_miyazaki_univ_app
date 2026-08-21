@@ -13,7 +13,11 @@ export interface University {
 export const UNIVERSITIES: University[] = [
   { id: "miyazaki-u", name: "宮崎大学", syllabusSyncSupported: true },
   { id: "miyazaki-municipal-u", name: "宮崎公立大学", syllabusSyncSupported: true },
-  { id: "miyazaki-nursing-u", name: "宮崎県立看護大学", syllabusSyncSupported: false },
+  { id: "miyazaki-nursing-u", name: "宮崎県立看護大学", syllabusSyncSupported: true },
+  { id: "kyushu-uhs", name: "九州医療科学大学", syllabusSyncSupported: true },
+  { id: "minami-kyushu-u", name: "南九州大学", syllabusSyncSupported: true },
+  { id: "miyazaki-international-u", name: "宮崎国際大学", syllabusSyncSupported: true },
+  { id: "miyazaki-sangyokeiei-u", name: "宮崎産業経営大学", syllabusSyncSupported: false },
   { id: "other", name: "その他", syllabusSyncSupported: false },
 ];
 
