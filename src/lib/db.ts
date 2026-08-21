@@ -59,6 +59,8 @@ export interface CourseTask {
 export const EXPENSE_CATEGORIES = [
   "食費",
   "家賃",
+  "光熱費",
+  "通信・サブスク",
   "交通",
   "娯楽",
   "交際費",
