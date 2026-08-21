@@ -187,7 +187,11 @@ export default function KarteFormModal({
 
         {error && <p className="text-xs text-red-600 mt-3">{error}</p>}
 
-        <div className="mt-5 flex gap-2 justify-end">
+        <p className="text-[10px] text-gray-400 mt-3 leading-relaxed">
+          教員個人の外見・人格ではなく、授業の内容についてご記入ください。
+        </p>
+
+        <div className="mt-2 flex gap-2 justify-end">
           <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm">
             キャンセル
           </button>

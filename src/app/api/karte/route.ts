@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 import { currentUser } from "@/lib/currentUser";
+import { containsPersonalAttack } from "@/lib/karteValidation";
 
 export async function GET(req: NextRequest) {
   const syllabusCourseId = req.nextUrl.searchParams.get("syllabusCourseId");
@@ -111,6 +112,17 @@ export async function POST(req: NextRequest) {
   for (const [field, value, max] of textFields) {
     if (typeof value === "string" && value.length > max) {
       return NextResponse.json({ error: `${field} が長すぎます（${max}文字まで）` }, { status: 400 });
+    }
+  }
+  for (const [field, value] of [
+    ["advice", advice],
+    ["comment", comment],
+  ] as const) {
+    if (typeof value === "string" && containsPersonalAttack(value)) {
+      return NextResponse.json(
+        { error: `${field} に教員個人への人格攻撃・外見への言及と受け取れる語句が含まれています。授業の内容についての記述に見直してください` },
+        { status: 400 }
+      );
     }
   }
   for (const [field, value] of [
