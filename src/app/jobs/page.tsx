@@ -68,6 +68,30 @@ export default function JobsPage() {
         </Card>
       </div>
 
+      {/* 実データレビュー：知恵袋に「院試の過去問はどう入手すればいいか」等の
+          実例があり、内部進学者は定期試験との類似等で情報格差があるという
+          指摘も確認できた。ただしES添削と異なり、過去問の公開有無・相談窓口は
+          研究科・学部ごとにばらばら（教育学研究科・看護学研究科は窓口公開、
+          工学研究科等は問い合わせ制）で、正確な窓口情報を学部ごとに出し分ける
+          コンテンツは継続メンテナンスが必要でリスクが高いため作らなかった。
+          誤情報のリスクが無い全学共通の入試情報ページへの導線のみにとどめた。 */}
+      <div className="mb-4">
+        <Card>
+          <p className="text-xs font-medium mb-1">大学院進学を考えたら</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            過去問の公開状況や相談窓口は学部・研究科ごとに異なります。まずは所属学部の教務・学生支援係にご相談ください。
+          </p>
+          <a
+            href="https://www.miyazaki-u.ac.jp/exam/graduate-exam/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-blue-600 mt-2"
+          >
+            宮崎大学 大学院入試情報 →
+          </a>
+        </Card>
+      </div>
+
       {jobs === null && (
         <p className="text-sm text-gray-400 text-center py-10">読み込み中…</p>
       )}
