@@ -17,6 +17,7 @@ interface Karte {
   examFormat: string | null;
   examDifficulty: number | null;
   clarity: number | null;
+  overallEasiness: number | null;
   atmosphere: string | null;
   pace: string | null;
   advice: string | null;
@@ -47,6 +48,7 @@ interface Data {
     assignmentVolume: number | null;
     examDifficulty: number | null;
     clarity: number | null;
+    overallEasiness: number | null;
   };
   overall: number | null;
 }
@@ -171,6 +173,7 @@ export default function KarteDetailPage() {
             <RatingRow label="課題の多さ" value={summary.assignmentVolume} />
             <RatingRow label="試験の難易度" value={summary.examDifficulty} />
             <RatingRow label="授業の分かりやすさ" value={summary.clarity} />
+            <RatingRow label="総合的な楽単度（単位の取りやすさ）" value={summary.overallEasiness} />
           </div>
           {latest && (
             <div className="rounded-2xl border border-gray-200 p-4">

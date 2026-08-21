@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
     assignmentVolume: avg("assignmentVolume"),
     examDifficulty: avg("examDifficulty"),
     clarity: avg("clarity"),
+    overallEasiness: avg("overallEasiness"),
   };
 
   const overall =
@@ -67,6 +68,7 @@ export async function POST(req: NextRequest) {
     examFormat,
     examDifficulty,
     clarity,
+    overallEasiness,
     atmosphere,
     pace,
     advice,
@@ -130,6 +132,7 @@ export async function POST(req: NextRequest) {
     ["assignmentVolume", assignmentVolume],
     ["examDifficulty", examDifficulty],
     ["clarity", clarity],
+    ["overallEasiness", overallEasiness],
   ] as const) {
     if (value !== undefined && value !== null && (typeof value !== "number" || value < 1 || value > 5)) {
       return NextResponse.json({ error: `${field} は1〜5の数値である必要があります` }, { status: 400 });
@@ -148,6 +151,7 @@ export async function POST(req: NextRequest) {
       examFormat,
       examDifficulty,
       clarity,
+      overallEasiness,
       atmosphere,
       pace,
       advice,

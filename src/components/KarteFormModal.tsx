@@ -55,6 +55,7 @@ export default function KarteFormModal({
   const [examFormat, setExamFormat] = useState("");
   const [examDifficulty, setExamDifficulty] = useState(3);
   const [clarity, setClarity] = useState(3);
+  const [overallEasiness, setOverallEasiness] = useState(3);
   const [atmosphere, setAtmosphere] = useState("");
   const [pace, setPace] = useState("");
   const [advice, setAdvice] = useState("");
@@ -79,6 +80,7 @@ export default function KarteFormModal({
           examFormat,
           examDifficulty,
           clarity,
+          overallEasiness,
           atmosphere,
           pace,
           advice,
@@ -138,6 +140,7 @@ export default function KarteFormModal({
           </div>
           <RatingSelect label="試験の難易度" value={examDifficulty} onChange={setExamDifficulty} />
           <RatingSelect label="授業の分かりやすさ" value={clarity} onChange={setClarity} />
+          <RatingSelect label="総合的な楽単度（単位の取りやすさ）" value={overallEasiness} onChange={setOverallEasiness} />
 
           <div>
             <label className="block text-xs text-gray-500 mb-1">授業の雰囲気</label>

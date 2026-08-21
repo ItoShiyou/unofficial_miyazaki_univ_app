@@ -76,6 +76,10 @@ model CourseKarte {
   examFormat         String? // 試験形式
   examDifficulty     Int?    // 1-5 試験の難易度
   clarity            Int?    // 1-5 授業の分かりやすさ
+  // 実データレビューで、「みんなのキャンパス」「Penmark」とも出席・課題・試験難易度の
+  // 個別評価に加え、それらを統合した「楽単度」を直接聞く項目を持つ一方、本アプリには
+  // 総合指標が無いという明確な抜けが判明したため追加した。
+  overallEasiness    Int?    // 1-5 総合的な楽単度（単位の取りやすさ）
   atmosphere         String? // 授業の雰囲気
   pace               String? // 授業の進行速度
   advice             String? // 受講生へのアドバイス
