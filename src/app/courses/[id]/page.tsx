@@ -276,6 +276,21 @@ export default function CourseDetailPage() {
             </span>
           </div>
           <ProgressBar value={absentCount} max={course.absenceLimit} />
+          {warn && (
+            // 実データレビュー：知恵袋に「発熱で欠席、連絡すれば公欠になるか」という
+            // 実例があり、宮崎大学には忌引・感染症等を対象とする「特別欠席（公欠）」
+            // 制度が実在する（学内専用フォーム＋WebClassでの事前連絡が必要）。
+            // 公欠に該当するかどうかの判定は大学側の権限であり誤案内のリスクが
+            // あるため、本アプリでは判定を一切行わず、公式ページへの導線のみ示す。
+            <a
+              href="https://www.miyazaki-u.ac.jp/manabi-jim/general-education/folder1368/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block text-xs text-blue-600 mt-2"
+            >
+              忌引・感染症等の場合は「特別欠席（公欠）」制度を確認する →
+            </a>
+          )}
         </div>
         <div className="flex gap-2">
           <button
