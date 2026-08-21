@@ -235,6 +235,39 @@ export default function OnboardingPage() {
           </div>
         </Card>
       </div>
+
+      {/* 実データレビュー：知恵袋に「サークルに入ったら想像と違い後悔した」等の実例が
+          複数見つかったが、宮崎大学公式のサークル一覧ページに加え、ガクサー・UniBase等の
+          民間サービスが既に宮崎大学専用のサークル紹介ページを運営しており、「探す・一覧を
+          見る」段階の情報ギャップはほぼ埋まっていると判断した。活動実態（雰囲気・上下関係等）
+          という主観的情報まで本アプリが独自データベース化するのは、真正性検証が困難な自称
+          団体を扱うリスクが高いため見送り、外部の公式・既存サービスへの導線提供にとどめた。 */}
+      <div className="px-4 mt-3">
+        <Card>
+          <p className="text-xs font-medium mb-1">サークル・部活動を探す</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            入ってみないと分からない雰囲気もありますが、まずは一覧で探してみましょう。
+          </p>
+          <div className="flex flex-col gap-1 mt-2">
+            <a
+              href="https://www.miyazaki-u.ac.jp/manabi-jim/campus-life-info/club-activities/club.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              宮崎大学公式サークル一覧 →
+            </a>
+            <a
+              href="https://gakucir.com/search/?university=674"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              ガクサー（宮崎大学のサークル紹介） →
+            </a>
+          </div>
+        </Card>
+      </div>
     </main>
   );
 }
