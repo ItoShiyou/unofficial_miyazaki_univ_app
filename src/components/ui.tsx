@@ -73,24 +73,3 @@ export function Card({
     </div>
   );
 }
-
-export function Pill({
-  children,
-  active,
-  onClick,
-}: {
-  children: React.ReactNode;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-        active ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
