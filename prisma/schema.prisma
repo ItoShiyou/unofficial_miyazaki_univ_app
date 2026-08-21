@@ -52,6 +52,12 @@ model SyllabusChange {
   newValue         String?
   detectedAt       DateTime @default(now())
 
+  // 匿名の授業カルテと同じく、この変更検知自体にも「本当にその通りだったか」の
+  // 裏付けが無い（自動抽出・自己申告任せという業界共通の弱点）。実際にその授業を
+  // 見た学生が1タップで裏付けを追加できるようにし、投稿の信頼性を後付けで補強する。
+  confirmCount Int @default(0) // 「今日も同じ内容でした」
+  refuteCount  Int @default(0) // 「もう変わっていました」
+
   @@index([syllabusCourseId])
   @@index([university, year, semester])
 }

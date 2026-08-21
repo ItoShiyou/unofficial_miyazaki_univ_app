@@ -17,6 +17,8 @@ interface SyllabusChangeEntry {
   oldValue: string | null;
   newValue: string | null;
   detectedAt: string;
+  confirmCount: number;
+  refuteCount: number;
 }
 
 const FIELD_LABEL: Record<string, string> = {
@@ -36,9 +38,31 @@ export default function CourseDetailPage() {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDue, setTaskDue] = useState("");
   const [rawSyllabusChanges, setRawSyllabusChanges] = useState<SyllabusChangeEntry[]>([]);
+  const [confirmedChangeIds, setConfirmedChangeIds] = useState<Set<string>>(new Set());
 
   const course = useLiveQuery(() => db.courses.get(id), [id]);
   const syllabusChanges = course?.syllabusCourseId ? rawSyllabusChanges : [];
+
+  async function confirmChange(changeId: string, agree: boolean) {
+    if (confirmedChangeIds.has(changeId)) return;
+    setConfirmedChangeIds((prev) => new Set(prev).add(changeId));
+    try {
+      const res = await fetch(`/api/syllabus/changes/${changeId}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agree }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setRawSyllabusChanges((prev) =>
+        prev.map((c) =>
+          c.id === changeId ? { ...c, confirmCount: data.confirmCount, refuteCount: data.refuteCount } : c
+        )
+      );
+    } catch {
+      // 反映できなくても致命的ではないため、静かに無視する
+    }
+  }
 
   useEffect(() => {
     if (!course?.syllabusCourseId) return;
@@ -189,22 +213,48 @@ export default function CourseDetailPage() {
             <p className="text-sm font-medium text-amber-700 mb-2">
               シラバスの変更が検知されました
             </p>
-            <ul className="space-y-1.5">
-              {syllabusChanges.map((c) => (
-                <li key={c.id} className="text-xs text-amber-700">
-                  {c.field === "removed" ? (
-                    <>この授業はシラバスから掲載終了になっています</>
-                  ) : (
-                    <>
-                      {FIELD_LABEL[c.field] ?? c.field}：{c.oldValue || "（空）"} →{" "}
-                      <span className="font-semibold">{c.newValue || "（空）"}</span>
-                    </>
-                  )}
-                  <span className="text-amber-500">
-                    （{new Date(c.detectedAt).toLocaleDateString("ja-JP")}検知）
-                  </span>
-                </li>
-              ))}
+            <ul className="space-y-2">
+              {syllabusChanges.map((c) => {
+                const confirmed = confirmedChangeIds.has(c.id);
+                return (
+                  <li key={c.id} className="text-xs text-amber-700">
+                    {c.field === "removed" ? (
+                      <>この授業はシラバスから掲載終了になっています</>
+                    ) : (
+                      <>
+                        {FIELD_LABEL[c.field] ?? c.field}：{c.oldValue || "（空）"} →{" "}
+                        <span className="font-semibold">{c.newValue || "（空）"}</span>
+                      </>
+                    )}
+                    <span className="text-amber-500">
+                      （{new Date(c.detectedAt).toLocaleDateString("ja-JP")}検知）
+                    </span>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-[10px] text-amber-600">
+                        今日も同じ {c.confirmCount} ・ もう変わっていた {c.refuteCount}
+                      </span>
+                      {!confirmed ? (
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => confirmChange(c.id, true)}
+                            className="text-[11px] text-amber-700 border border-amber-300 rounded-full px-2 py-0.5 bg-white"
+                          >
+                            今日も同じ
+                          </button>
+                          <button
+                            onClick={() => confirmChange(c.id, false)}
+                            className="text-[11px] text-amber-700 border border-amber-300 rounded-full px-2 py-0.5 bg-white"
+                          >
+                            もう変わった
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-emerald-700">確認ありがとうございました</span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>

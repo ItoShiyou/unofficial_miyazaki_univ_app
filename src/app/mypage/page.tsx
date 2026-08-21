@@ -29,6 +29,8 @@ interface SyllabusChangeEntry {
   oldValue: string | null;
   newValue: string | null;
   detectedAt: string;
+  confirmCount: number;
+  refuteCount: number;
 }
 
 const FIELD_LABEL: Record<string, string> = {
@@ -49,9 +51,31 @@ export default function MyPage() {
   const [editingName, setEditingName] = useState(false);
   const semester = useCurrentSemester();
   const [changes, setChanges] = useState<SyllabusChangeEntry[]>([]);
+  const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
   const [status, setStatus] = useState<SyllabusStatus | null>(null);
   const account = useAccount();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  async function confirmChange(id: string, agree: boolean) {
+    if (confirmedIds.has(id)) return;
+    setConfirmedIds((prev) => new Set(prev).add(id));
+    try {
+      const res = await fetch(`/api/syllabus/changes/${id}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agree }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setChanges((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, confirmCount: data.confirmCount, refuteCount: data.refuteCount } : c
+        )
+      );
+    } catch {
+      // 反映できなくても致命的ではないため、静かに無視する
+    }
+  }
 
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -627,6 +651,7 @@ export default function MyPage() {
                     </p>
                   </>
                 );
+                const confirmed = confirmedIds.has(c.id);
                 return (
                   <li key={c.id} className="rounded-xl border border-gray-200 p-3">
                     {c.syllabusCourseId ? (
@@ -634,6 +659,29 @@ export default function MyPage() {
                     ) : (
                       inner
                     )}
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                      <span className="text-[10px] text-gray-400">
+                        今日も同じ {c.confirmCount} ・ もう変わっていた {c.refuteCount}
+                      </span>
+                      {!confirmed ? (
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => confirmChange(c.id, true)}
+                            className="text-[11px] text-gray-500 border border-gray-200 rounded-full px-2.5 py-1"
+                          >
+                            今日も同じでした
+                          </button>
+                          <button
+                            onClick={() => confirmChange(c.id, false)}
+                            className="text-[11px] text-gray-500 border border-gray-200 rounded-full px-2.5 py-1"
+                          >
+                            もう変わっていた
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-emerald-600">確認ありがとうございました</span>
+                      )}
+                    </div>
                   </li>
                 );
               })}
