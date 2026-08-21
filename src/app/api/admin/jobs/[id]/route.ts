@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { containsSalaryFigure } from "@/lib/jobPostingValidation";
+import { isAuthorized } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
-
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
 
 const VALID_POSTING_TYPES = ["job", "internship", "info_session"] as const;
 

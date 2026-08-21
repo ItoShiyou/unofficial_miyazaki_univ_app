@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAuthorized } from "@/lib/adminAuth";
 
 // 超軽量ヒアリング（1問アンケート）の集計結果を運営が確認するための管理用API。
 export const dynamic = "force-dynamic";
-
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
 
 export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) {

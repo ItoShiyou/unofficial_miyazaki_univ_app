@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
+import { isAuthorized } from "@/lib/adminAuth";
 
 /**
  * パスワードを忘れた利用者に、運営が仮パスワードを発行するエンドポイント。
@@ -26,12 +27,6 @@ function generateTempPassword(): string {
   return Array.from(bytes)
     .map((b) => ALPHABET[b % ALPHABET.length])
     .join("");
-}
-
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false; // 未設定の環境では常に拒否する
-  return req.headers.get("authorization") === `Bearer ${secret}`;
 }
 
 export async function POST(req: NextRequest) {

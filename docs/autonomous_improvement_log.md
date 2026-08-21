@@ -2623,4 +2623,26 @@ Web検索による客観検証の結果、**重大な事実が判明した**。
 
 ---
 
+## サイクル99（管理APIのADMIN_SECRET認証をtiming-safe比較に統一・重複コードも解消・2026-08-21）
+
+### 経緯
+- 並行セッションが新設した管理画面（`/admin`）のADMIN_SECRET運用（`sessionStorage`保持・middleware除外）についてサブエージェントにレビュー依頼した結果、設計自体は個人開発規模で妥当と評価されたが、各管理APIが共通して使っている`isAuthorized`関数の`===`による単純な文字列比較が、タイミング攻撃（比較にかかる時間の差から文字列を推測する攻撃）に理論上わずかに脆弱であるとの指摘を受けた。低コストで対応できる改善のため実装した。
+
+### 役割決め
+- 本体（自分）: `src/lib/adminAuth.ts`の新設、8箇所の管理APIルートへの適用、全エンドポイントでのcurl検証
+
+### 実施した機能
+1. **`src/lib/adminAuth.ts`を新設**：`node:crypto`の`timingSafeEqual`を使った`isAuthorized()`を共通実装。長さが異なるとtimingSafeEqualが例外を投げるため、比較前に長さの一致を確認する形にした。
+2. **8つの管理APIルート**（`issue-temp-password`・`admin/sponsors`・`admin/sponsors/[id]`・`admin/karte`・`admin/karte/[id]`・`admin/jobs`・`admin/jobs/[id]`・`admin/survey`）から、重複していたローカルの`isAuthorized`関数定義を削除し、共通ヘルパーをimportする形に統一した。認証ロジックの重複解消も同時に達成した。
+
+### 検証
+- `npx eslint`（対象9ファイル）/ `npx tsc --noEmit`: エラー0
+- 実際に稼働中のdev serverに対してcurlで全6エンドポイント（sponsors・jobs・karte・survey、正しいSecret／誤ったSecret／ヘッダー無し）を検証：正しいSecretで200、誤ったSecret・ヘッダー無しで401になることを確認
+- 作業前後で並行セッションのファイル（`src/app/admin/page.tsx`等、UI側は今回変更していない）には一切触れていないことを`git status`で確認し、明示的なパス指定でコミットした
+
+### 次サイクルの候補
+1. `docs/pivot_story.md`をベースにしたビジコン提出用プレゼンテーション資料の下書き
+
+---
+
 *このログは自律改善サイクルのたびに追記される。ユーザーが停止を指示した場合、進行中のサイクルの扱いを確認したうえで、最終的な変更点一覧とビジコン向けプレゼンテーションを作成する。*

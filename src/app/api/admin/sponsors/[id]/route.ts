@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAuthorized } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
-
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
 
 // 部分更新（掲載終了時は isActive: false にする、内容修正、表示順変更など）
 export async function PATCH(

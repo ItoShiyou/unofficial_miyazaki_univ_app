@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAuthorized } from "@/lib/adminAuth";
 
 /**
  * 地域協賛枠の管理用API（ADMIN_SECRETによるBearer認証、issue-temp-passwordと同じ方式）。
  * UI画面は用意せず、運営がcurl等で直接操作する運用を前提にしている。
  */
 export const dynamic = "force-dynamic";
-
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
 
 // 一覧（非公開分・期限切れ分も含めて全件。管理側で状況を把握するため）
 // ?sort=clicks / ?sort=impressions / ?sort=reveals で並び替えられる（更新提案の優先順位づけ用）。

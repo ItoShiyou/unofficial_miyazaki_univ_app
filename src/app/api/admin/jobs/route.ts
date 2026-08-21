@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { containsSalaryFigure } from "@/lib/jobPostingValidation";
+import { isAuthorized } from "@/lib/adminAuth";
 
 /**
  * 求人・インターン・説明会掲示板の管理用API（ADMIN_SECRETによるBearer認証、
@@ -8,12 +9,6 @@ import { containsSalaryFigure } from "@/lib/jobPostingValidation";
  * UI画面は用意せず、運営がcurl等で直接操作する運用を前提にしている。
  */
 export const dynamic = "force-dynamic";
-
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
 
 const VALID_POSTING_TYPES = ["job", "internship", "info_session"] as const;
 

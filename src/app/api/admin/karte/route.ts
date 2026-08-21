@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAuthorized } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
-
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
 
 // 通報が入った授業カルテの一覧（非表示中・表示中どちらも含む）。
 // 3件通報での自動非表示は「運営確認待ちの一時的な保留」であり、最終判断ではないため、
