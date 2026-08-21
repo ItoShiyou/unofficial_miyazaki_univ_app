@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { containsSalaryFigure } from "@/lib/jobPostingValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -35,10 +36,29 @@ export async function PATCH(
     "employmentType",
     "workPeriod",
     "targetGrade",
-    "applicationUrl",
     "area",
   ] as const) {
     if (typeof body[key] === "string") data[key] = body[key].trim();
+  }
+
+  // applicationUrlは「アプリ内応募機能を持たない」という設計の要（学生は必ずここへ誘導される）
+  // であるため、他の項目と違って空文字での上書きを許さない。
+  if (typeof body.applicationUrl === "string") {
+    const url = body.applicationUrl.trim();
+    if (!url) {
+      return NextResponse.json({ error: "applicationUrl を空にすることはできません" }, { status: 400 });
+    }
+    data.applicationUrl = url;
+  }
+
+  for (const key of ["description", "employmentType"] as const) {
+    const value = data[key];
+    if (typeof value === "string" && containsSalaryFigure(value)) {
+      return NextResponse.json(
+        { error: `${key} に金額の断定的な記載は避けてください（募集情報等提供としての位置づけを保つため）` },
+        { status: 400 }
+      );
+    }
   }
   if (
     typeof body.postingType === "string" &&

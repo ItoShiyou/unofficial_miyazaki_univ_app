@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { containsSalaryFigure } from "@/lib/jobPostingValidation";
 
 /**
  * 求人・インターン・説明会掲示板の管理用API（ADMIN_SECRETによるBearer認証、
@@ -55,6 +56,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const employmentTypeRaw =
+    typeof body?.employmentType === "string" ? body.employmentType.trim() : "";
+  if (containsSalaryFigure(description) || containsSalaryFigure(employmentTypeRaw)) {
+    return NextResponse.json(
+      { error: "description, employmentType に金額の断定的な記載は避けてください（募集情報等提供としての位置づけを保つため）" },
+      { status: 400 }
+    );
+  }
+
   const postingType =
     typeof body?.postingType === "string" &&
     VALID_POSTING_TYPES.includes(body.postingType as (typeof VALID_POSTING_TYPES)[number])
@@ -80,7 +90,7 @@ export async function POST(req: NextRequest) {
         postingType,
         industry: typeof body?.industry === "string" ? body.industry.trim() : null,
         location: typeof body?.location === "string" ? body.location.trim() : null,
-        employmentType: typeof body?.employmentType === "string" ? body.employmentType.trim() : null,
+        employmentType: employmentTypeRaw || null,
         workPeriod: typeof body?.workPeriod === "string" ? body.workPeriod.trim() : null,
         targetGrade: typeof body?.targetGrade === "string" ? body.targetGrade.trim() : null,
         area: typeof body?.area === "string" ? body.area.trim() : null,
