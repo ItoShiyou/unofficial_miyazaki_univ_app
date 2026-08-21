@@ -35,7 +35,22 @@ export async function GET(req: NextRequest) {
           ? [{ codeRevealCount: "desc" as const }]
           : [{ sortOrder: "asc" as const }, { createdAt: "desc" as const }];
 
-  const sponsors = await prisma.sponsor.findMany({ orderBy });
+  const sponsors = await prisma.sponsor.findMany({
+    orderBy,
+    include: { _count: { select: { eventRsvps: true } } },
+  });
+
+  // イベント枠については、申込数だけでなく「実際に来場した数」も見せる
+  // （ビジコンの検証計画Gate Bが測定項目に挙げる「申込→来場」の転換率のため）。
+  const eventSponsorIds = sponsors.filter((s) => s.eventLabel).map((s) => s.id);
+  const checkinCounts = eventSponsorIds.length
+    ? await prisma.eventRsvp.groupBy({
+        by: ["sponsorId"],
+        where: { sponsorId: { in: eventSponsorIds }, checkedIn: true },
+        _count: true,
+      })
+    : [];
+  const checkinCountBySponsorId = new Map(checkinCounts.map((c) => [c.sponsorId, c._count]));
 
   const withMetrics = sponsors.map((s) => ({
     ...s,
@@ -47,6 +62,8 @@ export async function GET(req: NextRequest) {
       s.impressionCount > 0
         ? Math.round((s.codeRevealCount / s.impressionCount) * 1000) / 10 // %表示（小数点1桁）
         : null,
+    rsvpCount: s._count.eventRsvps,
+    checkinCount: checkinCountBySponsorId.get(s.id) ?? 0,
   }));
 
   const summary = {

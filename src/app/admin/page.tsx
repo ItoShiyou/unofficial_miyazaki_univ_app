@@ -19,6 +19,8 @@ type Sponsor = {
   impressionCount: number;
   clickCount: number;
   codeRevealCount: number;
+  rsvpCount: number;
+  checkinCount: number;
 };
 
 type Job = {
@@ -271,6 +273,12 @@ function SponsorsPanel({ secret }: { secret: string }) {
           <p className="text-[11px] text-gray-400 mt-1.5">
             表示{s.impressionCount}・クリック{s.clickCount}・開封{s.codeRevealCount}
           </p>
+          {s.eventLabel && (
+            <p className="text-[11px] text-violet-600 mt-0.5">
+              イベント申込{s.rsvpCount}件・来場{s.checkinCount}件
+              {s.rsvpCount > 0 && `（転換率${Math.round((s.checkinCount / s.rsvpCount) * 100)}%）`}
+            </p>
+          )}
         </div>
       ))}
       {sponsors?.length === 0 && <p className="text-sm text-gray-400">協賛枠がありません。</p>}

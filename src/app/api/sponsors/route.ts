@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
+import { currentUserId } from "@/lib/currentUser";
 
 // 地域協賛枠の一覧を返す。学生から課金しない代わりの収益源であり、
 // 広告ではなく「宮崎県内の学生生活で使える店舗・企業」として提示する。
@@ -28,11 +29,31 @@ export async function GET(req: NextRequest) {
       .catch(() => {});
   }
 
+  // ログイン中であれば、自分がイベントに申込・来場済みかどうかも一緒に返す
+  // （/sponsorsは未ログインでも見られる公開ページのため、ログインは必須にしない）。
+  const userId = await currentUserId(req);
+  const myRsvpBySponsorId = new Map<string, { checkedIn: boolean }>();
+  if (userId) {
+    const eventSponsorIds = sponsors.filter((s) => s.eventLabel).map((s) => s.id);
+    if (eventSponsorIds.length > 0) {
+      const myRsvps = await prisma.eventRsvp.findMany({
+        where: { userId, sponsorId: { in: eventSponsorIds } },
+      });
+      for (const r of myRsvps) myRsvpBySponsorId.set(r.sponsorId, { checkedIn: r.checkedIn });
+    }
+  }
+
   // couponCodeは「開封」操作を経て初めて渡す（一覧取得時点では見せない）。
   const publicSponsors = sponsors.map((s) => {
     const { couponCode, codeRevealCount, ...rest } = s;
     void codeRevealCount;
-    return { ...rest, hasCoupon: Boolean(couponCode) };
+    const myRsvp = myRsvpBySponsorId.get(s.id) ?? null;
+    return {
+      ...rest,
+      hasCoupon: Boolean(couponCode),
+      rsvped: !!myRsvp,
+      checkedIn: myRsvp?.checkedIn ?? false,
+    };
   });
 
   return NextResponse.json({ sponsors: publicSponsors });

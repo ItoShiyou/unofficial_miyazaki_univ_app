@@ -180,9 +180,28 @@ model Sponsor {
   eventLabel String? // イベント名（例: "県内大学交流会" "OB訪問イベント"）。nullなら通常の協賛枠のまま
   eventAt    DateTime? // 開催日時
 
-  stamps SponsorStamp[]
+  stamps    SponsorStamp[]
+  eventRsvps EventRsvp[]
 
   @@index([isActive, sortOrder])
+}
+
+// イベントへの申込・来場記録。ビジコンの検証計画（Gate B「単発の場に、三者の価値が
+// あるか」）が測定項目に挙げる「申込・来場」をアプリ上で記録するための仕組み。
+// 現状のSponsorモデルは1レコードにつき同時に1件のイベントしか持てない設計のため、
+// 「どの回のイベントか」はsponsorIdだけで一意に定まる（新しいイベントを立てる際は
+// 前のeventAtを上書きするため、過去分のRSVPは自動的に古いイベントの記録として残る）。
+model EventRsvp {
+  id          String    @id @default(uuid())
+  userId      String
+  sponsorId   String
+  sponsor     Sponsor   @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  checkedIn   Boolean   @default(false) // 「来場しました」の自己申告チェックイン
+  checkedInAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, sponsorId])
+  @@index([sponsorId])
 }
 
 // 「地元スタンプ帳」：協賛店舗のクーポンを開封するたびに、利用者ごとに1つ記録する

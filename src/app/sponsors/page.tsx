@@ -16,6 +16,8 @@ type Sponsor = {
   hasCoupon: boolean;
   eventLabel: string | null;
   eventAt: string | null;
+  rsvped: boolean;
+  checkedIn: boolean;
 };
 
 export default function SponsorsPage() {
@@ -39,6 +41,35 @@ export default function SponsorsPage() {
   };
 
   const [upcomingEvents, setUpcomingEvents] = useState<Sponsor[]>([]);
+
+  function rsvp(id: string) {
+    fetch(`/api/sponsors/${id}/rsvp`, { method: "POST" })
+      .then((res) => {
+        if (!res.ok) return;
+        setUpcomingEvents((prev) => prev.map((s) => (s.id === id ? { ...s, rsvped: true } : s)));
+      })
+      .catch(() => {});
+  }
+
+  function cancelRsvp(id: string) {
+    fetch(`/api/sponsors/${id}/rsvp`, { method: "DELETE" })
+      .then((res) => {
+        if (!res.ok) return;
+        setUpcomingEvents((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, rsvped: false, checkedIn: false } : s))
+        );
+      })
+      .catch(() => {});
+  }
+
+  function checkIn(id: string) {
+    fetch(`/api/sponsors/${id}/checkin`, { method: "POST" })
+      .then((res) => {
+        if (!res.ok) return;
+        setUpcomingEvents((prev) => prev.map((s) => (s.id === id ? { ...s, checkedIn: true } : s)));
+      })
+      .catch(() => {});
+  }
 
   useEffect(() => {
     fetch("/api/sponsors")
@@ -108,6 +139,33 @@ export default function SponsorsPage() {
                   {s.name}
                   {s.area ? ` ・ ${s.area}` : ""}
                 </p>
+                {account ? (
+                  s.checkedIn ? (
+                    <p className="text-[11px] text-emerald-600 mt-2">✓ 来場済みとして記録しました</p>
+                  ) : s.rsvped ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[11px] text-violet-600">申込済み</span>
+                      <button
+                        onClick={() => checkIn(s.id)}
+                        className="text-[11px] font-medium text-white bg-violet-600 rounded-full px-2.5 py-1"
+                      >
+                        来場しました
+                      </button>
+                      <button onClick={() => cancelRsvp(s.id)} className="text-[11px] text-gray-400">
+                        申込を取消す
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => rsvp(s.id)}
+                      className="text-[11px] font-medium text-violet-700 bg-white border border-violet-300 rounded-full px-2.5 py-1 mt-2"
+                    >
+                      参加する
+                    </button>
+                  )
+                ) : (
+                  <p className="text-[11px] text-gray-400 mt-2">参加申込にはログインが必要です</p>
+                )}
               </div>
             ))}
           </div>
