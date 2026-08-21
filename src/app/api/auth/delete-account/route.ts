@@ -40,12 +40,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "パスワードが正しくありません。" }, { status: 401 });
   }
 
-  // 友達関係は双方向に存在するため両方消す。招待コード・共有時間割・
-  // 自分自身の順に削除し、最後にUser本体を削除する。
+  // 友達関係は双方向に存在するため両方消す。userIdを持つ全モデルを削除してから
+  // 最後にUser本体を削除する。
+  //
+  // 実データレビューで、AppSurveyResponse・EventRsvp・SponsorStamp・
+  // PushSubscription・WatchedCourse・SyllabusChangeVoteの6モデルがuserId列を
+  // 持ちながら削除対象から漏れていたと判明した（単なる法的リスクだけでなく、
+  // PushSubscription・WatchedCourseが残ると退会済みユーザーの端末にシラバス変更の
+  // プッシュ通知が届き続けるという機能的なバグでもあった）。いずれも保持し続ける
+  // 積極的な理由が無いため、匿名化ではなく完全削除で統一する。
   await prisma.$transaction([
     prisma.friend.deleteMany({ where: { OR: [{ userId }, { friendUserId: userId }] } }),
     prisma.inviteCode.deleteMany({ where: { userId } }),
     prisma.sharedTimetable.deleteMany({ where: { userId } }),
+    prisma.appSurveyResponse.deleteMany({ where: { userId } }),
+    prisma.eventRsvp.deleteMany({ where: { userId } }),
+    prisma.sponsorStamp.deleteMany({ where: { userId } }),
+    prisma.pushSubscription.deleteMany({ where: { userId } }),
+    prisma.watchedCourse.deleteMany({ where: { userId } }),
+    prisma.syllabusChangeVote.deleteMany({ where: { userId } }),
     prisma.user.delete({ where: { id: userId } }),
   ]);
 
