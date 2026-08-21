@@ -76,6 +76,18 @@ export async function runFullSemesterSync(
 
   const liveRows = await fetchCatalog(year, semester);
 
+  // 実データレビューで、大学サイトの構造変更等でパースが壊れても例外にならず、
+  // 取得件数が極端に少ない配列がそのまま返ってくる「静かな全欠落」のケースが
+  // あり得ると判明した。この場合、既存の授業が軒並み「掲載なし（removed）」と
+  // 誤検知され、SyllabusChangeに大量の削除レコードが記録されてしまう。
+  // 前回取得分の20%を下回るほど急減した場合は明らかに異常な取得結果とみなし、
+  // 既存データへの影響が出る前に処理を打ち切る。
+  if (existingRows.length > 0 && liveRows.length < existingRows.length * 0.2) {
+    throw new Error(
+      `取得件数が異常に少ないため中断しました（前回${existingRows.length}件 → 今回${liveRows.length}件）。大学サイトの構造変更等が疑われます`
+    );
+  }
+
   const changes: SyllabusSyncResult["changes"] = [];
   let created = 0;
   let updated = 0;

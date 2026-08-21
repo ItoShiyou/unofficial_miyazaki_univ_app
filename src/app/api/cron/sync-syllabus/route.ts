@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentSemester } from "@/lib/semester";
 import { runFullSemesterSync, supportsSyllabusSync } from "@/lib/syllabusSync";
+import { notifyAdmin } from "@/lib/adminNotify";
 
 // 全件取得は1学期あたり30秒前後かかるため、デフォルトの実行時間上限では
 // 途中で打ち切られる可能性がある。Vercel Hobby/Proの範囲で余裕を持たせる。
@@ -45,8 +46,15 @@ export async function GET(req: NextRequest) {
     const result = await runFullSemesterSync(university, year, semester);
     return NextResponse.json(result);
   } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    // 実データレビューで、このcronは学期に1回しか実行されず、失敗しても
+    // 誰も気づかない「サイレント失敗」のリスクが指摘されたため、運営（自分）へ
+    // 通知する。応答は待たない（失敗しても呼び出し元へのエラー応答自体は成立させる）。
+    notifyAdmin(
+      `⚠️ シラバス同期に失敗しました（大学: ${university}, ${year}年度${semester}）。\n${message}`
+    ).catch(() => {});
     return NextResponse.json(
-      { error: `シラバスの取得に失敗しました: ${e instanceof Error ? e.message : String(e)}` },
+      { error: `シラバスの取得に失敗しました: ${message}` },
       { status: 502 }
     );
   }
