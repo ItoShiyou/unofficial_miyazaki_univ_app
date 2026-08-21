@@ -152,13 +152,19 @@ export default function OnboardingPage() {
         </p>
       )}
 
+      {/* 軽量化レビュー：サイクル131〜139で1件ずつ積み上げたチェックリスト外の
+          静的情報カードが4枚になり、チェックリストとの境界が分かりにくくなって
+          いたため、見出しを追加して「やることリスト」と「知っておきたい情報」を
+          視覚的に区別した（表示内容・機能は変更していない）。 */}
+      <p className="px-4 mt-6 text-xs font-medium text-gray-400">知っておきたい情報</p>
+
       {/* 実データレビュー：日本経済新聞・複数大学の公式ページで新歓期の悪質勧誘
           （サークルを装う宗教・マルチ商法・闇バイト等）が繰り返し注意喚起されて
           いる実在の課題と確認できた。独自にサークル一覧を作ると真正性の検証が
           困難（法人格の無い自称団体で、求人掲示板の企業確認より格段にリスクが
           高い）なため、大学公式の注意喚起ページへの導線を追加する軽量な対応に
           とどめた。 */}
-      <div className="px-4 mt-6">
+      <div className="px-4 mt-2">
         <Card className="border-amber-200 bg-amber-50/50">
           <p className="text-xs font-medium text-amber-800 mb-1">新歓期の勧誘にご注意ください</p>
           <p className="text-xs text-gray-600 leading-relaxed">
