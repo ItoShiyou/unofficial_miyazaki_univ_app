@@ -44,6 +44,30 @@ export default function JobsPage() {
         宮崎県内の企業・自治体・NPO等からの求人・インターン・説明会・ボランティア／地域プロジェクト情報です。参加・応募は各募集元のページへ直接お進みください（本アプリが仲介することはありません）。
       </p>
 
+      {/* 実データレビュー：就活のES添削・自己分析・面接対策について知恵袋等に
+          悩みの実例はあるが、宮崎大学キャリア支援係が既にES添削・模擬面接・
+          自己分析支援を無料の個別相談で提供していることを公式サイトで確認した。
+          先輩の内定体験談機能は「実質的な合否・企業名の断定情報」による炎上・
+          特定リスクや、ワンキャリア等の巨大民間サービスとの競合過多を理由に
+          見送り、公式窓口への導線を示すだけの軽量な対応にとどめた
+          （詳細はdocs/autonomous_improvement_log.mdサイクル146）。 */}
+      <div className="mb-4">
+        <Card className="border-blue-200 bg-blue-50/50">
+          <p className="text-xs font-medium text-blue-800 mb-1">ES添削・面接対策で困ったら</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            宮崎大学キャリア支援係では、エントリーシートの添削や模擬面接、自己分析の相談を無料で個別に受け付けています。1・2年次からの相談も可能です。
+          </p>
+          <a
+            href="https://www.miyazaki-u.ac.jp/applicants/employ/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-blue-600 mt-2"
+          >
+            宮崎大学公式の案内を見る →
+          </a>
+        </Card>
+      </div>
+
       {jobs === null && (
         <p className="text-sm text-gray-400 text-center py-10">読み込み中…</p>
       )}
