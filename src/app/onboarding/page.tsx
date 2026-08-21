@@ -190,7 +190,11 @@ export default function OnboardingPage() {
           留年・休学についても知恵袋に「留年を親に言えない」等の実例があったが、
           学部・入学年度で規程が異なり誤情報が進路に直結するリスクがあるため、
           独自の判定・シミュレーションは一切行わず、公式FAQへの導線を一言追加する
-          だけの軽微な拡張にとどめた（新規カードとしての独立実装は見送った）。 */}
+          だけの軽微な拡張にとどめた（新規カードとしての独立実装は見送った）。
+          障害学生支援についても、既存カードが対人関係・進路・休学のみで障害配慮に
+          触れておらず抜け漏れだったため、実在する「障がい学生支援室」への導線を
+          追加した。妊娠・出産・育児と学業の両立は、宮崎大学固有の制度・実例が
+          確認できず対象学生数も極めて少ないと推定されるため見送った。 */}
       <div className="px-4 mt-3">
         <Card className="border-blue-200 bg-blue-50/50">
           <p className="text-xs font-medium text-blue-800 mb-1">困ったときの相談窓口</p>
@@ -218,6 +222,14 @@ export default function OnboardingPage() {
               className="text-xs text-blue-600"
             >
               休学・復学・退学の手続き（公式FAQ） →
+            </a>
+            <a
+              href="https://www.miyazaki-u.ac.jp/accessibility/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              障がい学生支援室（修学上の配慮・支援） →
             </a>
           </div>
         </Card>
