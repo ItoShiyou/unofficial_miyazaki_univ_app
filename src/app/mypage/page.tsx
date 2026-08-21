@@ -524,6 +524,18 @@ export default function MyPage() {
         </Card>
 
         <Card>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm font-medium">奨学金・学費支援制度</span>
+            <Link href="/scholarships" className="text-xs text-blue-600">
+              開く →
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400">
+            国・宮崎大学・JASSOの奨学金や授業料免除等の制度をまとめて確認できます。
+          </p>
+        </Card>
+
+        <Card>
           <p className="text-sm font-medium mb-2">学期</p>
           <p className="text-xs text-gray-400 mb-2">現在表示中：{semesterLabel(semester)}（{currentCourses.length}科目）</p>
           <div className="space-y-1">
