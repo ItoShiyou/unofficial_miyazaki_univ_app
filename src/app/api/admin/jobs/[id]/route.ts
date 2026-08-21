@@ -60,10 +60,14 @@ export async function PATCH(
       );
     }
   }
-  if (
-    typeof body.postingType === "string" &&
-    VALID_POSTING_TYPES.includes(body.postingType as (typeof VALID_POSTING_TYPES)[number])
-  ) {
+  if (typeof body.postingType === "string") {
+    if (!VALID_POSTING_TYPES.includes(body.postingType as (typeof VALID_POSTING_TYPES)[number])) {
+      // 不正な値を黙って無視すると、200が返って呼び出し側は反映されたと誤解してしまう。
+      return NextResponse.json(
+        { error: `postingType は ${VALID_POSTING_TYPES.join(", ")} のいずれかである必要があります` },
+        { status: 400 }
+      );
+    }
     data.postingType = body.postingType;
   }
   if (typeof body.isActive === "boolean") data.isActive = body.isActive;
