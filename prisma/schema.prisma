@@ -194,3 +194,38 @@ model WatchedCourse {
   @@unique([userId, syllabusCourseId])
   @@index([syllabusCourseId])
 }
+
+// 宮崎県内企業からの求人・インターン・説明会の掲示板。
+// 実データ検証（docs/pivot_story.md 9-1節）に基づき、職業安定法上の
+// 職業紹介事業（学生と企業を「あっせん」する行為）には該当しない、
+// 募集情報等提供（Wantedly等と同じ位置づけ）としての設計に徹する：
+// - 企業が掲載するのみ・学生は閲覧するのみ（アプリ内での応募・マッチングは行わない）
+// - 応募は必ず外部の応募先URLを通じて学生自身が行う（applicationUrlは必須）
+// - 学生のプロフィール・個人情報を企業側へ提供する機能は持たない
+// - 給与等の金額は断定的に記載しない運用とする（アプリ側では自由記述のdescriptionに含めるかは企業の裁量）
+model JobPosting {
+  id             String    @id @default(uuid())
+  companyName    String // 企業・団体名
+  industry       String? // 業種
+  jobType        String // 職種／プログラム名（例: "営業職" "サマーインターン" "会社説明会"）
+  postingType    String   @default("job") // "job"(求人) | "internship"(インターン) | "info_session"(説明会)
+  description    String // 仕事内容・実施内容
+  location       String? // 就業場所・実施場所
+  employmentType String? // 雇用形態（正社員／インターン／アルバイト等）。金額の断定的記載は避ける運用とする
+  workPeriod     String? // 就業期間・実施期間
+  targetGrade    String? // 対象学年・学部
+  applicationUrl String // 応募先の外部URL（必須。アプリ内応募機能は持たない）
+  deadline       DateTime? // 応募締切
+  area           String? // 宮崎県内のエリア（Sponsorモデルと同様の粒度）
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  // Sponsorモデルと同じ理由（実データレビュー済み）で、表示回数・クリック数を
+  // 計測する。ただし本モデルは学生の個人情報を一切扱わないため、
+  // 協賛モデルより計測項目は最小限にとどめる。
+  impressionCount Int @default(0)
+  clickCount      Int @default(0)
+
+  @@index([isActive, sortOrder])
+}
