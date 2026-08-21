@@ -167,6 +167,8 @@ model User {
   // メール送信基盤がないため、運営が本人確認のうえ発行し、本人へ直接伝える運用。
   mustChangePassword    Boolean   @default(false) // 仮パスワードでのログイン中はtrue
   tempPasswordExpiresAt DateTime? // 仮パスワードの有効期限（過ぎたらログイン不可）
+
+  textbookListings TextbookListing[]
 }
 
 // 超軽量ヒアリング（1問アンケート）。長文アンケートは回答率が低いため、
@@ -374,4 +376,26 @@ model JobPosting {
   featured Boolean @default(false)
 
   @@index([isActive, sortOrder])
+}
+
+// 実データレビュー：note等で「教科書代が13科目分で数万円」という具体的な負担の
+// 実例、先輩からの譲渡・メルカリでの争奪という実態が確認できた。一方、相乗り・
+// 家庭教師マッチングは道路運送法上のリスク（白タク該当の懸念）や商用サービスとの
+// 競合過多を理由に見送った（詳細はdocs/autonomous_improvement_log.mdサイクル143）。
+// 教科書譲渡は金銭授受をアプリ内で扱わず、連絡方法は投稿者本人が開示範囲を選ぶ
+// 自由入力とすることで、求人掲示板より軽いリスクで実装できると判断した。
+model TextbookListing {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  university  String // @/lib/universities の id。他大学の投稿は表示しない
+  title       String // 教科書名
+  courseName  String? // 対象科目名（自由入力）
+  price       Int? // 円。null＝無料で譲ります
+  condition   String? // 状態（自由入力。例:「書き込みあり」）
+  contact     String // 連絡方法（本人が開示範囲を選ぶ自由入力。例: LINE ID等）
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([university, isActive, createdAt])
 }

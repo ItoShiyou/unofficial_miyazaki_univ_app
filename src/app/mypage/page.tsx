@@ -536,6 +536,18 @@ export default function MyPage() {
         </Card>
 
         <Card>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm font-medium">教科書の譲渡・売買</span>
+            <Link href="/textbooks" className="text-xs text-blue-600">
+              開く →
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400">
+            同じ大学の学生同士で、使い終わった教科書を譲り合えます。
+          </p>
+        </Card>
+
+        <Card>
           <p className="text-sm font-medium mb-2">学期</p>
           <p className="text-xs text-gray-400 mb-2">現在表示中：{semesterLabel(semester)}（{currentCourses.length}科目）</p>
           <div className="space-y-1">
