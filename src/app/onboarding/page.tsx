@@ -202,6 +202,39 @@ export default function OnboardingPage() {
           </a>
         </Card>
       </div>
+
+      {/* 実データレビュー：知恵袋に「宮崎大学は交通の便が非常に悪い」という
+          実質問があり、原付・車通学が主流という実体験も複数確認できた。ただし
+          学生は既に代替手段で適応済みで深刻な未解決課題とまでは言えないため、
+          リアルタイム運行情報等は作り込まず、外部リンク中心の軽量な情報提供に
+          とどめた（宮崎交通は運行情報APIを公開していないため、遅延情報の
+          スクレイピングによる自前実装は保守コスト・規約リスクの観点で避けた）。 */}
+      <div className="px-4 mt-3">
+        <Card>
+          <p className="text-xs font-medium mb-1">通学・アクセス情報</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            宮崎大学は木花・清武の2キャンパス制で、バス便は多くありません。原付・自転車・自動車での通学が主流です。木花⇔清武間の移動は乗り継ぎが必要な場合が多いため、時間に余裕を持って計画してください。
+          </p>
+          <div className="flex flex-wrap gap-x-4 mt-2">
+            <a
+              href="https://www.miyazaki-u.ac.jp/access/kibana/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              木花キャンパスへのアクセス →
+            </a>
+            <a
+              href="https://www.miyazaki-u.ac.jp/access/kiyotake/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              清武キャンパスへのアクセス →
+            </a>
+          </div>
+        </Card>
+      </div>
     </main>
   );
 }
