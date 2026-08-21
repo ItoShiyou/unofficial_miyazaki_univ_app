@@ -21,6 +21,9 @@ type Sponsor = {
   codeRevealCount: number;
   rsvpCount: number;
   checkinCount: number;
+  qrScanCount: number;
+  feedbackAvg: number | null;
+  feedbackCount: number;
 };
 
 type Job = {
@@ -272,11 +275,13 @@ function SponsorsPanel({ secret }: { secret: string }) {
           </div>
           <p className="text-[11px] text-gray-400 mt-1.5">
             表示{s.impressionCount}・クリック{s.clickCount}・開封{s.codeRevealCount}
+            {s.qrScanCount > 0 && `・QR流入${s.qrScanCount}`}
           </p>
           {s.eventLabel && (
             <p className="text-[11px] text-violet-600 mt-0.5">
               イベント申込{s.rsvpCount}件・来場{s.checkinCount}件
               {s.rsvpCount > 0 && `（転換率${Math.round((s.checkinCount / s.rsvpCount) * 100)}%）`}
+              {s.feedbackCount > 0 && `・満足度${s.feedbackAvg}/5（${s.feedbackCount}件）`}
             </p>
           )}
         </div>

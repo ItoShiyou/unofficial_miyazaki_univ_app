@@ -172,6 +172,11 @@ model Sponsor {
   couponCode      String? // 例: "MIYADAI10"
   codeRevealCount Int     @default(0)
 
+  // QR導線（チラシ・ポスター等に印刷したQRコード）経由の流入計測。
+  // impressionCount(アプリ内表示)とは別に、「オフラインの導線がどれだけ機能したか」を
+  // 協賛企業に示すための指標。/sponsors?qr=<id> へのアクセス時にのみ加算する。
+  qrScanCount Int @default(0)
+
   // 協賛企業・店舗が開催するイベント（提案5「複数大学イベント枠」の実装）。
   // 時間割データをサーバーに送らない設計のため、個々の学生の空きコマを
   // 厳密に突き合わせる「マッチング」はできない。代わりに、Sponsorモデルが
@@ -199,6 +204,12 @@ model EventRsvp {
   checkedIn   Boolean   @default(false) // 「来場しました」の自己申告チェックイン
   checkedInAt DateTime?
   createdAt   DateTime  @default(now())
+
+  // イベント終了後アンケート（満足度1〜5・任意コメント）。checkedIn済みのユーザーのみ回答可能
+  // （来場していない申込に対する回答を防ぎ、Gate Bで見たい「実際に来場した人の声」を守るため）。
+  feedbackRating  Int? // 1〜5
+  feedbackComment String?
+  feedbackAt      DateTime?
 
   @@unique([userId, sponsorId])
   @@index([sponsorId])

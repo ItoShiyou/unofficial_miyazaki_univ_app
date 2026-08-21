@@ -52,6 +52,19 @@ export async function GET(req: NextRequest) {
     : [];
   const checkinCountBySponsorId = new Map(checkinCounts.map((c) => [c.sponsorId, c._count]));
 
+  // イベント終了後アンケートの平均満足度（1〜5）。回答がない協賛枠はnull。
+  const feedbackAgg = eventSponsorIds.length
+    ? await prisma.eventRsvp.groupBy({
+        by: ["sponsorId"],
+        where: { sponsorId: { in: eventSponsorIds }, feedbackRating: { not: null } },
+        _avg: { feedbackRating: true },
+        _count: true,
+      })
+    : [];
+  const feedbackBySponsorId = new Map(
+    feedbackAgg.map((f) => [f.sponsorId, { avg: f._avg.feedbackRating, count: f._count }])
+  );
+
   const withMetrics = sponsors.map((s) => ({
     ...s,
     ctr:
@@ -64,6 +77,10 @@ export async function GET(req: NextRequest) {
         : null,
     rsvpCount: s._count.eventRsvps,
     checkinCount: checkinCountBySponsorId.get(s.id) ?? 0,
+    feedbackAvg: feedbackBySponsorId.get(s.id)?.avg
+      ? Math.round(feedbackBySponsorId.get(s.id)!.avg! * 10) / 10
+      : null,
+    feedbackCount: feedbackBySponsorId.get(s.id)?.count ?? 0,
   }));
 
   const summary = {

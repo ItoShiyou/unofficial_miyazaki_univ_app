@@ -32,14 +32,21 @@ export async function GET(req: NextRequest) {
   // ログイン中であれば、自分がイベントに申込・来場済みかどうかも一緒に返す
   // （/sponsorsは未ログインでも見られる公開ページのため、ログインは必須にしない）。
   const userId = await currentUserId(req);
-  const myRsvpBySponsorId = new Map<string, { checkedIn: boolean }>();
+  const myRsvpBySponsorId = new Map<
+    string,
+    { checkedIn: boolean; feedbackRating: number | null }
+  >();
   if (userId) {
     const eventSponsorIds = sponsors.filter((s) => s.eventLabel).map((s) => s.id);
     if (eventSponsorIds.length > 0) {
       const myRsvps = await prisma.eventRsvp.findMany({
         where: { userId, sponsorId: { in: eventSponsorIds } },
       });
-      for (const r of myRsvps) myRsvpBySponsorId.set(r.sponsorId, { checkedIn: r.checkedIn });
+      for (const r of myRsvps)
+        myRsvpBySponsorId.set(r.sponsorId, {
+          checkedIn: r.checkedIn,
+          feedbackRating: r.feedbackRating,
+        });
     }
   }
 
@@ -53,6 +60,7 @@ export async function GET(req: NextRequest) {
       hasCoupon: Boolean(couponCode),
       rsvped: !!myRsvp,
       checkedIn: myRsvp?.checkedIn ?? false,
+      feedbackGiven: myRsvp?.feedbackRating != null,
     };
   });
 

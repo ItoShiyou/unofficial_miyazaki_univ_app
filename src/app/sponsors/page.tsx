@@ -18,6 +18,7 @@ type Sponsor = {
   eventAt: string | null;
   rsvped: boolean;
   checkedIn: boolean;
+  feedbackGiven: boolean;
 };
 
 export default function SponsorsPage() {
@@ -71,6 +72,24 @@ export default function SponsorsPage() {
       .catch(() => {});
   }
 
+  const [pastEvents, setPastEvents] = useState<Sponsor[]>([]);
+  const [feedbackDrafts, setFeedbackDrafts] = useState<Record<string, number>>({});
+
+  function submitFeedback(id: string) {
+    const rating = feedbackDrafts[id];
+    if (!rating) return;
+    fetch(`/api/sponsors/${id}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rating }),
+    })
+      .then((res) => {
+        if (!res.ok) return;
+        setPastEvents((prev) => prev.map((s) => (s.id === id ? { ...s, feedbackGiven: true } : s)));
+      })
+      .catch(() => {});
+  }
+
   useEffect(() => {
     fetch("/api/sponsors")
       .then((res) => res.json())
@@ -85,8 +104,26 @@ export default function SponsorsPage() {
             .filter((s) => s.eventLabel && s.eventAt && new Date(s.eventAt).getTime() > now)
             .sort((a, b) => new Date(a.eventAt!).getTime() - new Date(b.eventAt!).getTime())
         );
+        setPastEvents(
+          all
+            .filter(
+              (s) =>
+                s.eventLabel &&
+                s.eventAt &&
+                new Date(s.eventAt).getTime() <= now &&
+                s.checkedIn &&
+                !s.feedbackGiven
+            )
+            .sort((a, b) => new Date(b.eventAt!).getTime() - new Date(a.eventAt!).getTime())
+        );
       })
       .catch(() => setSponsors([]));
+
+    // チラシ・ポスターのQRコードから /sponsors?qr=<id> で来た場合、流入を計測する。
+    const qrId = new URLSearchParams(window.location.search).get("qr");
+    if (qrId) {
+      fetch(`/api/sponsors/${qrId}/qr-scan`, { method: "POST" }).catch(() => {});
+    }
   }, []);
 
   return (
@@ -166,6 +203,41 @@ export default function SponsorsPage() {
                 ) : (
                   <p className="text-[11px] text-gray-400 mt-2">参加申込にはログインが必要です</p>
                 )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {pastEvents.length > 0 && (
+        <div className="mb-5">
+          <p className="text-sm font-medium mb-2 px-0.5">来場したイベントの感想</p>
+          <div className="space-y-2">
+            {pastEvents.map((s) => (
+              <div key={s.id} className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-bold">{s.eventLabel}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{s.name}</p>
+                <div className="flex items-center gap-1 mt-2">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setFeedbackDrafts((prev) => ({ ...prev, [s.id]: n }))}
+                      className={`text-lg ${
+                        (feedbackDrafts[s.id] ?? 0) >= n ? "text-amber-500" : "text-gray-300"
+                      }`}
+                      aria-label={`${n}点`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => submitFeedback(s.id)}
+                    disabled={!feedbackDrafts[s.id]}
+                    className="ml-2 text-[11px] font-medium text-white bg-amber-600 rounded-full px-2.5 py-1 disabled:opacity-40"
+                  >
+                    送信
+                  </button>
+                </div>
               </div>
             ))}
           </div>
