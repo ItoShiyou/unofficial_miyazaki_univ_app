@@ -151,6 +151,29 @@ export default function OnboardingPage() {
           お疲れさまでした。あとはいつも通り使うだけです。
         </p>
       )}
+
+      {/* 実データレビュー：日本経済新聞・複数大学の公式ページで新歓期の悪質勧誘
+          （サークルを装う宗教・マルチ商法・闇バイト等）が繰り返し注意喚起されて
+          いる実在の課題と確認できた。独自にサークル一覧を作ると真正性の検証が
+          困難（法人格の無い自称団体で、求人掲示板の企業確認より格段にリスクが
+          高い）なため、大学公式の注意喚起ページへの導線を追加する軽量な対応に
+          とどめた。 */}
+      <div className="px-4 mt-6">
+        <Card className="border-amber-200 bg-amber-50/50">
+          <p className="text-xs font-medium text-amber-800 mb-1">新歓期の勧誘にご注意ください</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            サークルを装った勧誘の中には、大学非公認の団体や宗教・マルチ商法等が紛れていることがあります。個人情報を安易に渡さず、少しでも怪しいと感じたら大学の窓口にご相談ください。
+          </p>
+          <a
+            href="https://www.miyazaki-u.ac.jp/manabi-jim/campus-life-info/club-activities/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-blue-600 mt-2"
+          >
+            宮崎大学公式の案内を見る →
+          </a>
+        </Card>
+      </div>
     </main>
   );
 }
