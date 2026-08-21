@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAuthorized } from "@/lib/adminAuth";
+import { isHttpUrl } from "@/lib/urlValidation";
 
 /**
  * 地域協賛枠の管理用API（ADMIN_SECRETによるBearer認証、issue-temp-passwordと同じ方式）。
@@ -106,6 +107,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const url = typeof body?.url === "string" ? body.url.trim() : "";
+  if (url && !isHttpUrl(url)) {
+    return NextResponse.json(
+      { error: "url はhttp://またはhttps://で始まるURLである必要があります" },
+      { status: 400 }
+    );
+  }
+
   let endsAt: Date | null = null;
   if (typeof body?.endsAt === "string" && body.endsAt) {
     const parsed = new Date(body.endsAt);
@@ -131,7 +140,7 @@ export async function POST(req: NextRequest) {
         category,
         description,
         offer: typeof body?.offer === "string" ? body.offer.trim() : null,
-        url: typeof body?.url === "string" ? body.url.trim() : null,
+        url: url || null,
         imageUrl: typeof body?.imageUrl === "string" ? body.imageUrl.trim() : null,
         area: typeof body?.area === "string" ? body.area.trim() : null,
         couponCode: typeof body?.couponCode === "string" ? body.couponCode.trim() : null,

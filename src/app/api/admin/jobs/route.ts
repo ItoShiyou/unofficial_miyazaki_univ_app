@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { containsSalaryFigure } from "@/lib/jobPostingValidation";
 import { isAuthorized } from "@/lib/adminAuth";
+import { isHttpUrl } from "@/lib/urlValidation";
 
 /**
  * 求人・インターン・説明会掲示板の管理用API（ADMIN_SECRETによるBearer認証、
@@ -55,6 +56,12 @@ export async function POST(req: NextRequest) {
   if (!companyName || !jobType || !description || !applicationUrl) {
     return NextResponse.json(
       { error: "companyName, jobType, description, applicationUrl は必須です" },
+      { status: 400 }
+    );
+  }
+  if (!isHttpUrl(applicationUrl)) {
+    return NextResponse.json(
+      { error: "applicationUrl はhttp://またはhttps://で始まるURLである必要があります" },
       { status: 400 }
     );
   }

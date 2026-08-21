@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { containsSalaryFigure } from "@/lib/jobPostingValidation";
 import { isAuthorized } from "@/lib/adminAuth";
+import { isHttpUrl } from "@/lib/urlValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,12 @@ export async function PATCH(
     const url = body.applicationUrl.trim();
     if (!url) {
       return NextResponse.json({ error: "applicationUrl を空にすることはできません" }, { status: 400 });
+    }
+    if (!isHttpUrl(url)) {
+      return NextResponse.json(
+        { error: "applicationUrl はhttp://またはhttps://で始まるURLである必要があります" },
+        { status: 400 }
+      );
     }
     data.applicationUrl = url;
   }

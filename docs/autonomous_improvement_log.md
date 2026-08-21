@@ -2670,4 +2670,27 @@ Web検索による客観検証の結果、**重大な事実が判明した**。
 
 ---
 
+## サイクル101（求人・協賛の外部リンクにURLスキーム検証を追加・2026-08-21）
+
+### 経緯
+- 求人・協賛の外部リンク（`applicationUrl`・`sponsor.url`）について、tabnabbing対策（`rel="noopener noreferrer"`）は既に実装済みと確認された一方、運営者が誤って`javascript:`スキーム等を登録した場合にリンククリック時にスクリプトが実行されてしまうリスクが指摘された。攻撃経路は無い（唯一の入力者は運営者本人）が、低コストな保険として追加する価値があるとの評価を受け、実装した。
+
+### 役割決め
+- 本体（自分）: `src/lib/urlValidation.ts`の新設、求人・協賛それぞれのPOST/PATCH計4箇所への適用、curlでのエンドツーエンド検証
+
+### 実施した機能
+1. **`src/lib/urlValidation.ts`を新設**：`isHttpUrl()`で`http://`または`https://`で始まるかを検証する共通関数。
+2. **`src/app/api/admin/jobs/route.ts`（POST）・`src/app/api/admin/jobs/[id]/route.ts`（PATCH）**：`applicationUrl`が`http(s)://`で始まらない場合は400エラーで拒否するよう追加（必須項目のため空文字チェックの後に追加）。
+3. **`src/app/api/admin/sponsors/route.ts`（POST）・`src/app/api/admin/sponsors/[id]/route.ts`（PATCH）**：`url`は任意項目のため、値が入っている場合のみ`http(s)://`で始まるかを検証するよう追加。
+
+### 検証
+- `npx eslint`（対象5ファイル）/ `npx tsc --noEmit`: エラー0
+- 実際に稼働中のdev serverにcurlで検証：求人・協賛それぞれのPOST/PATCHで`javascript:alert(1)`が400で拒否されること、`https://`から始まる正常なURLは引き続き成功することを確認。テストデータは全て削除して後片付け済み
+- 作業前後で並行セッションのファイルには一切触れていないことを`git status`で確認し、明示的なパス指定でコミットした
+
+### 次サイクルの候補
+1. `docs/pivot_story.md`をベースにしたビジコン提出用プレゼンテーション資料の下書き
+
+---
+
 *このログは自律改善サイクルのたびに追記される。ユーザーが停止を指示した場合、進行中のサイクルの扱いを確認したうえで、最終的な変更点一覧とビジコン向けプレゼンテーションを作成する。*

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAuthorized } from "@/lib/adminAuth";
+import { isHttpUrl } from "@/lib/urlValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -24,12 +25,21 @@ export async function PATCH(
     "category",
     "description",
     "offer",
-    "url",
     "imageUrl",
     "area",
     "couponCode",
   ] as const) {
     if (typeof body[key] === "string") data[key] = body[key].trim();
+  }
+  if (typeof body.url === "string") {
+    const url = body.url.trim();
+    if (url && !isHttpUrl(url)) {
+      return NextResponse.json(
+        { error: "url はhttp://またはhttps://で始まるURLである必要があります" },
+        { status: 400 }
+      );
+    }
+    data.url = url || null;
   }
   if (body.eventLabel === null) {
     data.eventLabel = null;
