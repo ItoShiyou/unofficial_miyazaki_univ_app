@@ -69,6 +69,30 @@ export default function PrivacyPage() {
             ご自身の情報の確認・削除をご希望の場合、マイページの「アカウントを削除する」から削除できるほか、開発者までご連絡ください。
           </p>
         </Card>
+
+        <Card>
+          <h2 className="text-sm font-bold mb-1.5">5. 授業カルテ（口コミ）の削除請求について</h2>
+          <p className="text-xs text-gray-600 leading-relaxed mb-2">
+            授業カルテは匿名で投稿される授業の口コミです。内容にご自身（教員等）についての記載があり、削除をご希望の場合は、
+            <a
+              href="https://forms.gle/7qhSqMxSQUyGzaPL9"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-blue-600"
+            >
+              こちらのフォーム
+            </a>
+            から、以下の情報を明記のうえご連絡ください。
+          </p>
+          <ul className="text-xs text-gray-600 space-y-1 list-disc pl-4">
+            <li>対象の授業名・年度・学期</li>
+            <li>削除を希望する記載箇所（該当部分の引用等）</li>
+            <li>削除を希望する理由（事実と異なる／名誉毀損・侮辱にあたる等）</li>
+          </ul>
+          <p className="text-xs text-gray-600 leading-relaxed mt-2">
+            内容を確認のうえ対応します。なお、投稿者を特定する情報（発信者情報）の開示は、法令に基づく正式な開示請求の手続きが必要であり、任意のお問い合わせのみでは開示できません。
+          </p>
+        </Card>
       </div>
     </main>
   );
