@@ -64,7 +64,9 @@ const PRE_ACCOUNT_PATHS = ["/login", "/signup", "/browse", "/install"];
 
 export default function BottomNav() {
   const pathname = usePathname();
-  if (PRE_ACCOUNT_PATHS.includes(pathname)) return null;
+  // /admin は運営（学生開発者本人）専用の管理画面で、学生向けナビゲーションの
+  // 対象外（そもそも学生アカウントでのログインを前提にしていない画面のため）。
+  if (PRE_ACCOUNT_PATHS.includes(pathname) || pathname.startsWith("/admin")) return null;
   return (
     <nav className="sticky bottom-0 z-20 flex border-t border-gray-200 bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
       {items.map((item) => {

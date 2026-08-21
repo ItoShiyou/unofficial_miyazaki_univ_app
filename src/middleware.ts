@@ -8,7 +8,11 @@ import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/session";
 // /jobs は求人・インターン・説明会の掲示板（募集情報等提供、docs/pivot_story.md 9-1節）。
 // 企業側の掲載情報のみを扱い学生の個人情報は一切含まないため、/sponsorsと同様に
 // 未ログインの見込みユーザー・企業にも公開する。
-const PUBLIC_PATHS = ["/login", "/signup", "/sponsors", "/install", "/browse", "/jobs", "/privacy"];
+// /admin は運営（学生開発者本人）向けの管理画面。学生アカウントでのログインは
+// 前提にせず、画面側でADMIN_SECRETの入力を求めて各API呼び出しに使う設計のため、
+// ここで学生ログイン必須のゲート対象から外す（画面自体は秘密の入力が無ければ
+// 何も操作できず、既存の管理APIがBearer認証で保護している）。
+const PUBLIC_PATHS = ["/login", "/signup", "/sponsors", "/install", "/browse", "/jobs", "/privacy", "/admin"];
 // これらは独自のBearerトークン認証（CRON_SECRET / ADMIN_SECRET）を各ルート側で行うため、
 // ログインセッションによるゲートの対象外にする。
 // /api/sponsors・/api/jobs は協賛企業・求人企業が未ログインでも掲載内容を確認できるよう公開する。
