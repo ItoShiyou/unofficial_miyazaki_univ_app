@@ -30,12 +30,25 @@ export async function POST(
   }
 
   const { id } = await params;
-  const change = await prisma.syllabusChange
-    .update({
+
+  // 同一ユーザーが同じ変更に対して何度も投票し、カウントを水増ししてしまわないよう、
+  // ユーザーごとに1回までの制約をDBのunique制約（SyllabusChangeVote）で担保する。
+  const existingVote = await prisma.syllabusChangeVote.findUnique({
+    where: { syllabusChangeId_userId: { syllabusChangeId: id, userId } },
+  });
+  if (existingVote) {
+    return NextResponse.json({ error: "この変更には既に投票済みです" }, { status: 409 });
+  }
+
+  const change = await prisma.$transaction(async (tx) => {
+    await tx.syllabusChangeVote.create({
+      data: { syllabusChangeId: id, userId, agree },
+    });
+    return tx.syllabusChange.update({
       where: { id },
       data: agree ? { confirmCount: { increment: 1 } } : { refuteCount: { increment: 1 } },
-    })
-    .catch(() => null);
+    });
+  }).catch(() => null);
   if (!change) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }

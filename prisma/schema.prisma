@@ -58,8 +58,24 @@ model SyllabusChange {
   confirmCount Int @default(0) // 「今日も同じ内容でした」
   refuteCount  Int @default(0) // 「もう変わっていました」
 
+  votes SyllabusChangeVote[]
+
   @@index([syllabusCourseId])
   @@index([university, year, semester])
+}
+
+// 実データレビューで、confirmCount/refuteCountの投稿がレート制限（IPごと1時間30回）
+// のみで、同一ユーザーが何度でも押せてしまう（1人の連打が複数人の裏付けに見えてしまう）
+// 問題が判明したため、ユーザーごとに1回までの制約をDBのunique制約で持たせる。
+model SyllabusChangeVote {
+  id               String        @id @default(uuid())
+  syllabusChangeId String
+  syllabusChange   SyllabusChange @relation(fields: [syllabusChangeId], references: [id], onDelete: Cascade)
+  userId           String
+  agree            Boolean // true="今日も同じ内容でした" / false="もう変わっていました"
+  createdAt        DateTime      @default(now())
+
+  @@unique([syllabusChangeId, userId])
 }
 
 // 授業カルテ（匿名の一次情報）
