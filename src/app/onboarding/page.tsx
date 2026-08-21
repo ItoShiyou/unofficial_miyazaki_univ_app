@@ -174,6 +174,34 @@ export default function OnboardingPage() {
           </a>
         </Card>
       </div>
+
+      {/* 実データレビュー：全国大学生協連の調査で睡眠・メンタルヘルスの明確な順位
+          データは確認できなかったが（正直に記録）、宮崎大学安全衛生保健センターの
+          相談室は実在し、知恵袋にも「相談室がどんな感じか分からず相談できない」
+          という心理的ハードルの実例があった。医療・メンタルヘルス領域は誤情報の
+          リスクが特に高いため、独自のアドバイス生成は行わず、実在する公式窓口の
+          連絡先をそのまま転記するにとどめた。 */}
+      <div className="px-4 mt-3">
+        <Card className="border-blue-200 bg-blue-50/50">
+          <p className="text-xs font-medium text-blue-800 mb-1">困ったときの相談窓口</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            対人関係・進路の悩み・不安・睡眠の問題など、一人で抱え込まずに相談できる窓口が大学にあります。学生は無料で利用できます。
+          </p>
+          <p className="text-xs text-gray-600 mt-2">
+            宮崎大学 安全衛生保健センター「なやみとこころの相談室」
+            <br />
+            木花キャンパス：0985-58-3423　清武キャンパス：0985-85-2392
+          </p>
+          <a
+            href="https://www.miyazaki-u.ac.jp/anzen/about/guide/consultation/mental/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-blue-600 mt-2"
+          >
+            宮崎大学公式の案内を見る →
+          </a>
+        </Card>
+      </div>
     </main>
   );
 }
