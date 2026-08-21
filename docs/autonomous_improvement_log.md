@@ -4309,4 +4309,26 @@ Web検索による客観検証の結果、**重大な事実が判明した**。
 
 ---
 
+## サイクル169（レート制限の抜け漏れを修正・再評価の結果、リスクは軽微だったが一貫性のため追加・2026-08-21）
+
+### 経緯
+サイクル168のコードレビューで見つかったレート制限の抜け漏れ（`friends/[friendUserId]`のDELETE・`push/subscribe`のPOST/DELETE・`sponsors/[id]/checkin`のPOST・`watch`のPOST/DELETE・`textbooks/[id]`のDELETE・`timetable/share`のPOST）を対応した。
+
+### 再評価
+着手前に各エンドポイントの実装を読み直したところ、いずれも`upsert`（ユニーク制約でユーザー1件に収まる）・`update`（真偽値の設定のみ）・`deleteMany`（自分の所有物のみ）で、無制限なデータ増殖・他ユーザーへの迷惑投稿は起こり得ない設計だった。当初のレビューで示唆されたリスクは、実際には「連打によるDB呼び出し増加」程度の軽微なものだったと判明した。とはいえ、他の書き込み系APIと同様のレート制限を敷いておくことは一貫性の観点で価値があるため、そのまま対応した。
+
+### 実施した機能
+- [src/app/api/push/subscribe/route.ts](../src/app/api/push/subscribe/route.ts)（POST/DELETE）、[src/app/api/watch/route.ts](../src/app/api/watch/route.ts)（POST/DELETE）、[src/app/api/timetable/share/route.ts](../src/app/api/timetable/share/route.ts)（POST）、[src/app/api/sponsors/[id]/checkin/route.ts](../src/app/api/sponsors/%5Bid%5D/checkin/route.ts)（POST）、[src/app/api/friends/[friendUserId]/route.ts](../src/app/api/friends/%5BfriendUserId%5D/route.ts)（DELETE）、[src/app/api/textbooks/[id]/route.ts](../src/app/api/textbooks/%5Bid%5D/route.ts)（DELETE）の6箇所に、既存のIP単位`checkRateLimit`パターンを追加した（各30〜60回/10分）。
+
+### 検証
+- `npx tsc --noEmit`・`npx eslint`ともにエラーなし。
+- `curl`で新規テストアカウントを作成し、`/api/watch`に61回連続POSTした結果、59回目で意図通り`429`が返ることを確認した（1回は事前の動作確認呼び出し分）。検証後、テストアカウントを削除済み。
+- `git fetch`/`git log HEAD..origin/main`で並行セッションとの分岐がないことを確認済み。
+
+### 次サイクルの候補
+- 同じレビューで見つかったN+1（`friends`ルートのGET、`syllabus/search`のライブ同期ループ）は実害が小さい（友達数が少ない前提、外部同期処理でレート制限済み）ため、優先度は低いが次サイクル以降で検討する。
+- 新規の実データに基づく機能候補の探索も並行して継続する。
+
+---
+
 *このログは自律改善サイクルのたびに追記される。ユーザーが停止を指示した場合、進行中のサイクルの扱いを確認したうえで、最終的な変更点一覧とビジコン向けプレゼンテーションを作成する。*

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentUserId } from "@/lib/currentUser";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 
 // イベント当日の「来場しました」自己申告チェックイン。ビジコンの検証計画
 // （Gate B）が測定項目に挙げる「来場」をアプリ上で記録する。申込済みであることを
@@ -13,6 +14,10 @@ export async function POST(
   const userId = await currentUserId(req);
   if (!userId) {
     return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  }
+  const { allowed } = checkRateLimit(`sponsor-checkin:${clientIp(req)}`, 30, 10 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json({ error: "しばらく時間をおいて再度お試しください。" }, { status: 429 });
   }
 
   const { id } = await params;

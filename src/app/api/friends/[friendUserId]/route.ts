@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentUserId } from "@/lib/currentUser";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 
 // 友達関係の解除。実データレビューで、比較対象アプリ（すごい時間割・Penmark等）は
 // いずれも友達関係を解除可能な設計になっている一方、本アプリには解除経路が
@@ -13,6 +14,10 @@ export async function DELETE(
   const userId = await currentUserId(req);
   if (!userId) {
     return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  }
+  const { allowed } = checkRateLimit(`unfriend:${clientIp(req)}`, 30, 10 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json({ error: "しばらく時間をおいて再度お試しください。" }, { status: 429 });
   }
   const { friendUserId } = await params;
 

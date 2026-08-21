@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentUserId } from "@/lib/currentUser";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   const userId = await currentUserId(req);
   if (!userId) {
     return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  }
+  const { allowed } = checkRateLimit(`timetable-share:${clientIp(req)}`, 30, 10 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json({ error: "しばらく時間をおいて再度お試しください。" }, { status: 429 });
   }
 
   const body = await req.json().catch(() => null);
