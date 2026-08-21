@@ -100,7 +100,12 @@ export default function JobsPage() {
         ))}
       </div>
 
-      <div className="mt-8 pt-6 border-t border-gray-100">
+      <div className="mt-8 pt-6 border-t border-gray-100 space-y-3">
+        <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5 leading-relaxed">
+          掲載企業・団体様の情報については確認のうえ掲載していますが、本アプリまたは宮崎大学が企業の信頼性・安全性を保証・審査するものではありません。
+          アルバイト・就活を装った詐欺など、実在の求人を装った悪質な事例も報告されています。応募の際は、労働条件・企業情報をご自身でも十分にご確認ください。
+          不審な点があれば、開発者または最寄りの労働基準監督署等にご相談ください。
+        </p>
         <p className="text-xs text-gray-400 text-center leading-relaxed">
           本ページは求人情報の掲示のみを行うものであり、本アプリが学生と企業のあっせん・仲介を行うものではありません。
           <br />
