@@ -180,26 +180,40 @@ export default function OnboardingPage() {
           相談室は実在し、知恵袋にも「相談室がどんな感じか分からず相談できない」
           という心理的ハードルの実例があった。医療・メンタルヘルス領域は誤情報の
           リスクが特に高いため、独自のアドバイス生成は行わず、実在する公式窓口の
-          連絡先をそのまま転記するにとどめた。 */}
+          連絡先をそのまま転記するにとどめた。
+          留年・休学についても知恵袋に「留年を親に言えない」等の実例があったが、
+          学部・入学年度で規程が異なり誤情報が進路に直結するリスクがあるため、
+          独自の判定・シミュレーションは一切行わず、公式FAQへの導線を一言追加する
+          だけの軽微な拡張にとどめた（新規カードとしての独立実装は見送った）。 */}
       <div className="px-4 mt-3">
         <Card className="border-blue-200 bg-blue-50/50">
           <p className="text-xs font-medium text-blue-800 mb-1">困ったときの相談窓口</p>
           <p className="text-xs text-gray-600 leading-relaxed">
-            対人関係・進路の悩み・不安・睡眠の問題など、一人で抱え込まずに相談できる窓口が大学にあります。学生は無料で利用できます。
+            対人関係・進路の悩み・不安・睡眠の問題、休学・留年等の手続き相談まで、一人で抱え込まずに相談できる窓口が大学にあります。学生は無料で利用できます。
           </p>
           <p className="text-xs text-gray-600 mt-2">
             宮崎大学 安全衛生保健センター「なやみとこころの相談室」
             <br />
             木花キャンパス：0985-58-3423　清武キャンパス：0985-85-2392
           </p>
-          <a
-            href="https://www.miyazaki-u.ac.jp/anzen/about/guide/consultation/mental/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block text-xs text-blue-600 mt-2"
-          >
-            宮崎大学公式の案内を見る →
-          </a>
+          <div className="flex flex-col gap-1 mt-2">
+            <a
+              href="https://www.miyazaki-u.ac.jp/anzen/about/guide/consultation/mental/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              宮崎大学公式の案内を見る →
+            </a>
+            <a
+              href="https://www.miyazaki-u.ac.jp/manabi-jim/educational-info/faq/change-of-status/takeoff-school.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              休学・復学・退学の手続き（公式FAQ） →
+            </a>
+          </div>
         </Card>
       </div>
 
