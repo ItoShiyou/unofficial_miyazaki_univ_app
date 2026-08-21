@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 import { notifyAdmin } from "@/lib/adminNotify";
+import { currentUserId } from "@/lib/currentUser";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,11 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const userId = await currentUserId(req);
+  if (!userId) {
+    return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  }
+
   const { allowed, retryAfterMs } = checkRateLimit(`karte-report:${clientIp(req)}`, 10, 60 * 60 * 1000);
   if (!allowed) {
     return NextResponse.json(
@@ -39,15 +45,27 @@ export async function POST(
   }
 
   const { id } = await params;
-  const karte = await prisma.courseKarte
-    .update({
+
+  // 同一ユーザーが同じ投稿に何度も通報し、HIDE_THRESHOLDを連打だけで
+  // 超えさせてしまわないよう、ユーザーごとに1回までの制約をDBのunique制約
+  // （KarteReport）で担保する。
+  const existingReport = await prisma.karteReport.findUnique({
+    where: { courseKarteId_userId: { courseKarteId: id, userId } },
+  });
+  if (existingReport) {
+    return NextResponse.json({ error: "この投稿には既に通報済みです" }, { status: 409 });
+  }
+
+  const karte = await prisma.$transaction(async (tx) => {
+    await tx.karteReport.create({ data: { courseKarteId: id, userId, reason } });
+    return tx.courseKarte.update({
       where: { id },
       data: {
         reportCount: { increment: 1 },
         reportReasons: { push: reason },
       },
-    })
-    .catch(() => null);
+    });
+  }).catch(() => null);
   if (!karte) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }

@@ -112,7 +112,25 @@ model CourseKarte {
   reportReasons String[] @default([])
   hidden        Boolean  @default(false)
 
+  reports KarteReport[]
+
   @@index([syllabusCourseId])
+}
+
+// 実データレビューで、サイクル104のconfirm/refute連打問題と同種の欠陥として、
+// 通報APIが同一ユーザーの連打を防ぐ制約を持たず（IPごとの緩いレート制限のみ）、
+// HIDE_THRESHOLD(3件)がレート制限の上限(10回/時)より小さいため、1人の連打だけで
+// 正当な投稿を不当に非表示化できてしまうと判明したため、ユーザーごとに1回までの
+// 制約をDBのunique制約で持たせる。
+model KarteReport {
+  id            String      @id @default(uuid())
+  courseKarteId String
+  courseKarte   CourseKarte @relation(fields: [courseKarteId], references: [id], onDelete: Cascade)
+  userId        String
+  reason        String
+  createdAt     DateTime    @default(now())
+
+  @@unique([courseKarteId, userId])
 }
 
 // アカウント（メールアドレス＋パスワードでのログイン必須化）

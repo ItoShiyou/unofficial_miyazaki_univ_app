@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
     prisma.pushSubscription.deleteMany({ where: { userId } }),
     prisma.watchedCourse.deleteMany({ where: { userId } }),
     prisma.syllabusChangeVote.deleteMany({ where: { userId } }),
+    prisma.karteReport.deleteMany({ where: { userId } }),
     prisma.user.delete({ where: { id: userId } }),
   ]);
 

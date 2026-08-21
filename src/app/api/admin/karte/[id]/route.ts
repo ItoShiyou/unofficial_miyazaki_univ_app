@@ -18,12 +18,16 @@ export async function PATCH(
   const body = await req.json().catch(() => null);
 
   if (body?.action === "restore") {
-    const karte = await prisma.courseKarte
-      .update({
+    // reportCount/reportReasonsのリセットに合わせて、通報レコード（KarteReport）も
+    // 削除しておく。残したままだと、restore後に同じ利用者が改めて通報しようとしても
+    // unique制約で弾かれ続けてしまい、reportCountとの整合が取れなくなるため。
+    const karte = await prisma.$transaction(async (tx) => {
+      await tx.karteReport.deleteMany({ where: { courseKarteId: id } });
+      return tx.courseKarte.update({
         where: { id },
         data: { hidden: false, reportCount: 0, reportReasons: [] },
-      })
-      .catch(() => null);
+      });
+    }).catch(() => null);
     if (!karte) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
