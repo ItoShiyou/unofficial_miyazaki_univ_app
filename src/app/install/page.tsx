@@ -86,6 +86,9 @@ export default function InstallPage() {
             <li>メニューから「ホーム画面に追加」を選択</li>
             <li>右上の「追加」をタップして完了</li>
           </ol>
+          <p className="text-xs text-gray-400 mt-2">
+            追加時に「Webアプリとして開く」という選択肢が表示された場合は、オンのままにしてください。オフにするとアプリらしい全画面表示にならず、ブラウザのタブとして開いてしまいます。
+          </p>
         </Card>
       )}
 
