@@ -9,9 +9,11 @@ import { useAccount } from "@/lib/useAccount";
 import { universitySupportsSyllabusSync } from "@/lib/universities";
 import { PageHeader, Card } from "@/components/ui";
 
-// 新入生がもっとも情報を求めるのは入学直後の2週間。既存の機能を束ねた
-// チェックリストとして案内することで、入学期という限られた時間帯だけの
-// 体験を作る。学年を問わない汎用UIしか持たない全国区の競合には無い導線。
+// 新入生の入学直後の体験を、既存機能を束ねたチェックリストとして案内する。
+// 実データレビュー（docs/pivot_story.md）で、この機能自体は実データによる
+// 需要検証を経ずに実装されたこと、内容も宮崎大学固有ではなく汎用的な
+// アプリ内リンク集にとどまることが判明したため、「競合には無い差別化導線」
+// という当初のコメントは誇張であり撤回する。
 interface Step {
   key: string;
   title: string;
