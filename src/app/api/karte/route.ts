@@ -4,16 +4,28 @@ import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 import { currentUser } from "@/lib/currentUser";
 import { containsPersonalAttack } from "@/lib/karteValidation";
 
+// 実データレビューで、少人数授業（ゼミ・専門演習等）では自由記述（advice/comment）の
+// 文体・具体的なエピソードから投稿者本人や少人数グループが実質的に特定されてしまう
+// 「k-匿名性の欠如」リスクが指摘された。ログイン必須（アカウント作成にドメイン制限が
+// 無いため実質的な壁としては弱い、サイクル89参照）だけでは対策として不十分なため、
+// 件数が閾値未満の授業は自由記述を非表示にし、星評価等の集計数値のみ返す。
+const FREE_TEXT_MIN_COUNT = 5;
+
 export async function GET(req: NextRequest) {
   const syllabusCourseId = req.nextUrl.searchParams.get("syllabusCourseId");
   if (!syllabusCourseId) {
     return NextResponse.json({ error: "syllabusCourseId is required" }, { status: 400 });
   }
 
-  const kartes = await prisma.courseKarte.findMany({
+  const rawKartes = await prisma.courseKarte.findMany({
     where: { syllabusCourseId, hidden: false },
     orderBy: { createdAt: "desc" },
   });
+
+  const freeTextHidden = rawKartes.length > 0 && rawKartes.length < FREE_TEXT_MIN_COUNT;
+  const kartes = freeTextHidden
+    ? rawKartes.map((k) => ({ ...k, advice: null, comment: null }))
+    : rawKartes;
 
   const course = await prisma.syllabusCourse.findUnique({
     where: { id: syllabusCourseId },
@@ -41,7 +53,13 @@ export async function GET(req: NextRequest) {
       .filter((v): v is number => v !== null)
       .reduce((a, b, _, arr) => a + b / arr.length, 0) || null;
 
-  return NextResponse.json({ course, kartes, summary, overall: overall ? Math.round(overall * 10) / 10 : null });
+  return NextResponse.json({
+    course,
+    kartes,
+    summary,
+    overall: overall ? Math.round(overall * 10) / 10 : null,
+    freeTextHidden,
+  });
 }
 
 export async function POST(req: NextRequest) {

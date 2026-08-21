@@ -41,11 +41,13 @@ function RatingSelect({
 export default function KarteFormModal({
   syllabusCourseId,
   semester,
+  existingCount = 0,
   onClose,
   onSaved,
 }: {
   syllabusCourseId: string;
   semester: SemesterKey;
+  existingCount?: number;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -193,6 +195,11 @@ export default function KarteFormModal({
         <p className="text-[10px] text-gray-400 mt-3 leading-relaxed">
           教員個人の外見・人格ではなく、授業の内容についてご記入ください。
         </p>
+        {existingCount < 4 && (
+          <p className="text-[10px] text-amber-600 mt-1 leading-relaxed">
+            この授業はまだ投稿が少ないため、時期・エピソード等の具体的すぎる記述は避け、投稿者が特定されないようご配慮ください。
+          </p>
+        )}
 
         <div className="mt-2 flex gap-2 justify-end">
           <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm">

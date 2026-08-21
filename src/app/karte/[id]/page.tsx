@@ -51,6 +51,7 @@ interface Data {
     overallEasiness: number | null;
   };
   overall: number | null;
+  freeTextHidden: boolean;
 }
 
 function RatingRow({ label, value }: { label: string; value: number | null }) {
@@ -211,7 +212,11 @@ export default function KarteDetailPage() {
               </div>
               <div className="rounded-2xl border border-gray-200 p-4">
                 <p className="text-xs text-gray-400 mb-1 font-medium">受講生のアドバイス</p>
-                <p className="text-sm">{latest.advice || "情報なし"}</p>
+                <p className="text-sm">
+                  {data.freeTextHidden
+                    ? "投稿件数が少なく個人が特定されるおそれがあるため、非表示にしています"
+                    : latest.advice || "情報なし"}
+                </p>
               </div>
             </>
           )}
@@ -220,7 +225,12 @@ export default function KarteDetailPage() {
 
       {tab === "voices" && (
         <section className="px-4 space-y-2">
-          {kartes.filter((k) => k.comment).length === 0 && (
+          {data.freeTextHidden && (
+            <p className="text-sm text-gray-400">
+              投稿件数が少なく個人が特定されるおそれがあるため、感想欄は非表示にしています。
+            </p>
+          )}
+          {!data.freeTextHidden && kartes.filter((k) => k.comment).length === 0 && (
             <p className="text-sm text-gray-400">まだ感想の投稿がありません。</p>
           )}
           {kartes
@@ -292,6 +302,7 @@ export default function KarteDetailPage() {
         <KarteFormModal
           syllabusCourseId={id}
           semester={{ year: course.year, semester: (course.semester as "前期" | "後期") ?? semester.semester }}
+          existingCount={data?.summary.count ?? 0}
           onClose={() => setPosting(false)}
           onSaved={load}
         />
