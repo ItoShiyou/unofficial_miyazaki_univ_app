@@ -17,6 +17,7 @@ type JobPosting = {
   applicationUrl: string;
   deadline: string | null;
   area: string | null;
+  featured: boolean;
 };
 
 const POSTING_TYPE_LABEL: Record<string, string> = {
@@ -58,13 +59,18 @@ export default function JobsPage() {
 
       <div className="space-y-3">
         {jobs?.map((j) => (
-          <Card key={j.id}>
+          <Card key={j.id} className={j.featured ? "border-amber-300 bg-amber-50/30" : ""}>
             <div className="flex items-start justify-between gap-2">
               <div>
                 <span className="inline-block text-[11px] font-medium text-blue-700 bg-blue-50 rounded-full px-2 py-0.5 mb-1">
                   {POSTING_TYPE_LABEL[j.postingType] ?? "求人"}
                   {j.area ? ` ・ ${j.area}` : ""}
                 </span>
+                {j.featured && (
+                  <span className="inline-block text-[11px] font-medium text-amber-700 bg-amber-100 rounded-full px-2 py-0.5 mb-1 ml-1">
+                    注目
+                  </span>
+                )}
                 <h3 className="text-sm font-bold">{j.companyName}</h3>
                 <p className="text-xs text-gray-500">{j.jobType}</p>
               </div>

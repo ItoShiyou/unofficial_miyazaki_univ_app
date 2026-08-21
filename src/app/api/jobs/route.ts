@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
       isActive: true,
       OR: [{ deadline: null }, { deadline: { gte: now } }],
     },
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    orderBy: [{ featured: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
   // Sponsorモデルと同じ理由（実データレビュー済み、docs/autonomous_improvement_log.md サイクル11・38参照）で、

@@ -67,6 +67,7 @@ export async function PATCH(
     data.postingType = body.postingType;
   }
   if (typeof body.isActive === "boolean") data.isActive = body.isActive;
+  if (typeof body.featured === "boolean") data.featured = body.featured;
   if (typeof body.sortOrder === "number") data.sortOrder = body.sortOrder;
   if (body.deadline === null) {
     data.deadline = null;

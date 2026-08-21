@@ -227,5 +227,12 @@ model JobPosting {
   impressionCount Int @default(0)
   clickCount      Int @default(0)
 
+  // 将来の収益化に備えたフラグ。実データレビューにより、みやざきインターンシップNAVI・
+  // 大学キャリアセンターの実例では企業への課金は行われておらず、この規模では
+  // 「掲載無料＋注目掲載を有料オプション化」（Indeedのスポンサー求人と同じ形）が
+  // 唯一実例のあるモデルだと判明した。現時点では決済機能を持たず、掲載を目立たせる
+  // 表示順の優遇のみに使う（課金導線自体は将来の判断事項）。
+  featured Boolean @default(false)
+
   @@index([isActive, sortOrder])
 }
