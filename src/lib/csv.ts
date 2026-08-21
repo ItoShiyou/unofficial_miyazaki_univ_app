@@ -4,9 +4,14 @@ import { PERIODS } from "@/lib/periods";
 
 const HEADER = ["授業名", "曜日", "時限", "教員", "教室", "欠席上限", "単位数"];
 
+// 実データレビューで、科目名等の自由入力値が`=`/`+`/`-`/`@`で始まる場合、
+// このCSVを他人がExcel/Googleスプレッドジートで開くとセルが数式として解釈され、
+// 外部URLへのデータ流出等につながりうる「CSVインジェクション」のリスクが
+// 指摘されたため、先頭にシングルクォートを付与して数式解釈を防ぐ。
 function csvEscape(v: string): string {
-  if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
-  return v;
+  const escaped = /^[=+\-@]/.test(v) ? `'${v}` : v;
+  if (/[",\n]/.test(escaped)) return `"${escaped.replace(/"/g, '""')}"`;
+  return escaped;
 }
 
 export function exportTimetableCsv(courses: Course[]) {
