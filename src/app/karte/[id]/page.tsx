@@ -124,7 +124,11 @@ export default function KarteDetailPage() {
   return (
     <main className="flex-1 pb-6">
       <div className="flex items-center gap-3 px-4 pt-4 mb-1">
-        <button onClick={() => router.back()} className="text-gray-400 text-lg">
+        <button
+          onClick={() => router.back()}
+          className="text-gray-400 text-lg"
+          aria-label="戻る"
+        >
           ‹
         </button>
         <span className="text-sm text-gray-400">授業カルテ</span>

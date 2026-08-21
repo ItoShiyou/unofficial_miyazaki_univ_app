@@ -44,7 +44,7 @@ export function StarRating({ value, size = 14 }: { value: number | null; size?: 
   }
   const rounded = Math.round(value);
   return (
-    <span className="inline-flex items-center gap-0.5">
+    <span className="inline-flex items-center gap-0.5" aria-label={`5段階中${rounded}`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <svg
           key={i}
@@ -52,6 +52,7 @@ export function StarRating({ value, size = 14 }: { value: number | null; size?: 
           height={size}
           viewBox="0 0 20 20"
           fill={i < rounded ? "#f59e0b" : "#e5e7eb"}
+          aria-hidden="true"
         >
           <path d="M10 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7z" />
         </svg>
