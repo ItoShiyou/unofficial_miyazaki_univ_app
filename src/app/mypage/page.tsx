@@ -512,6 +512,18 @@ export default function MyPage() {
         </Card>
 
         <Card>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm font-medium">お金の記録</span>
+            <Link href="/expenses" className="text-xs text-blue-600">
+              開く →
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400">
+            バイト代・仕送りと支出をこの端末内だけに記録し、月ごとの収支を確認できます。
+          </p>
+        </Card>
+
+        <Card>
           <p className="text-sm font-medium mb-2">学期</p>
           <p className="text-xs text-gray-400 mb-2">現在表示中：{semesterLabel(semester)}（{currentCourses.length}科目）</p>
           <div className="space-y-1">

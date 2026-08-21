@@ -51,6 +51,32 @@ export interface CourseTask {
   createdAt: number;
 }
 
+// 実データレビューで、全国大学生協連「第61回学生生活実態調査」（2024年10-11月・
+// 約1.2万人回答）にて「生活費・お金の悩み」が学生の悩みで最多と確認され、
+// Yahoo!知恵袋にも「学生向けの家計簿アプリってありますか」という実質問が
+// 見つかったことを根拠に追加した。時間割等の個人データと同様、金銭情報は
+// 特に機微なため、サーバーには一切送信せずローカル（IndexedDB）のみで完結させる。
+export const EXPENSE_CATEGORIES = [
+  "食費",
+  "家賃",
+  "交通",
+  "娯楽",
+  "交際費",
+  "教材・書籍",
+  "その他",
+] as const;
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
+export interface MoneyEntry {
+  id: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  type: "expense" | "income";
+  amount: number; // 円
+  category: ExpenseCategory; // type="income"の場合は"その他"を流用（バイト代・仕送り等はmemoで区別）
+  memo?: string;
+  createdAt: number;
+}
+
 export interface ExamSlot {
   id: string;
   courseId?: string; // 登録済みの授業と紐付ける場合（未設定なら手動入力の予定）
@@ -71,6 +97,7 @@ class MiyadaiDB extends Dexie {
   notes!: EntityTable<CourseNote, "id">;
   tasks!: EntityTable<CourseTask, "id">;
   examSlots!: EntityTable<ExamSlot, "id">;
+  moneyEntries!: EntityTable<MoneyEntry, "id">;
 
   constructor() {
     super("miyadai-app");
@@ -104,6 +131,14 @@ class MiyadaiDB extends Dexie {
       notes: "id, courseId, date",
       tasks: "id, courseId, dueDate",
       examSlots: "id, courseId, date, [year+semester]",
+    });
+    this.version(6).stores({
+      courses: "id, weekday, period, [year+semester]",
+      attendances: "id, courseId, date",
+      notes: "id, courseId, date",
+      tasks: "id, courseId, dueDate",
+      examSlots: "id, courseId, date, [year+semester]",
+      moneyEntries: "id, date, type, category",
     });
   }
 }
