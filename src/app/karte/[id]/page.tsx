@@ -226,8 +226,12 @@ export default function KarteDetailPage() {
       {tab === "voices" && (
         <section className="px-4 space-y-2">
           {data.freeTextHidden && (
+            // 実データレビュー：「みんなのキャンパス」等の競合は金銭インセンティブで
+            // 投稿を促しているが、本アプリは決済機能を持たない方針のため転用できない。
+            // 代わりに、レビューサイト一般で使われる「自分も投稿すると読めるようになる」
+            // という相互扶助のフレーミングを一言添える、コストの低い施策にとどめた。
             <p className="text-sm text-gray-400">
-              投稿件数が少なく個人が特定されるおそれがあるため、感想欄は非表示にしています。
+              投稿件数が少なく個人が特定されるおそれがあるため、感想欄は非表示にしています。あなたの投稿も1件としてカウントされ、一定数集まるとこの授業の感想が公開されます。
             </p>
           )}
           {!data.freeTextHidden && kartes.filter((k) => k.comment).length === 0 && (
