@@ -93,6 +93,34 @@ export default function FriendsPage() {
     }
   }
 
+  const [copied, setCopied] = useState(false);
+
+  function inviteMessage(code: string) {
+    return `宮大非公式アプリで友達登録しよう！招待コード: ${code}（24時間有効）`;
+  }
+
+  async function copyInviteCode(code: string) {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // クリップボードAPIが使えない環境では何もしない（コードは画面に表示済みのため手入力は可能）
+    }
+  }
+
+  async function shareInviteCode(code: string) {
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: inviteMessage(code) });
+      } catch {
+        // ユーザーによる共有キャンセルも含めここに来るため、エラー表示はしない
+      }
+    } else {
+      copyInviteCode(code);
+    }
+  }
+
   async function removeFriend(friendUserId: string, friendName: string) {
     if (!window.confirm(`${friendName}さんとの友達関係を解除しますか？`)) return;
     setBusy(true);
@@ -295,6 +323,20 @@ export default function FriendsPage() {
                 <div className="text-center rounded-xl bg-gray-50 py-4">
                   <span className="text-2xl font-bold tracking-widest">{inviteCode}</span>
                   <p className="text-xs text-gray-400 mt-1">24時間有効・1回のみ使用可</p>
+                  <div className="flex gap-2 mt-3 px-4">
+                    <button
+                      onClick={() => shareInviteCode(inviteCode)}
+                      className="flex-1 rounded-lg bg-gray-900 text-white text-xs py-2"
+                    >
+                      共有する
+                    </button>
+                    <button
+                      onClick={() => copyInviteCode(inviteCode)}
+                      className="flex-1 rounded-lg border border-gray-300 text-xs py-2"
+                    >
+                      {copied ? "コピーしました" : "コードをコピー"}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button
