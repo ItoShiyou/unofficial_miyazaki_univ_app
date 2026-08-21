@@ -172,7 +172,24 @@ model Sponsor {
   couponCode      String? // 例: "MIYADAI10"
   codeRevealCount Int     @default(0)
 
+  stamps SponsorStamp[]
+
   @@index([isActive, sortOrder])
+}
+
+// 「地元スタンプ帳」：協賛店舗のクーポンを開封するたびに、利用者ごとに1つ記録する
+// (同じ店舗を何度開封しても増えない、集める楽しさのための1店舗1スタンプ設計)。
+// 協賛企業側には、クリック・開封数以上に「実際に何人の学生と接点を持てたか」という
+// 人数ベースの指標を渡せる。学生には、地元を歩く具体的な理由を作る。
+model SponsorStamp {
+  id          String   @id @default(uuid())
+  userId      String
+  sponsorId   String
+  sponsor     Sponsor  @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  collectedAt DateTime @default(now())
+
+  @@unique([userId, sponsorId])
+  @@index([userId])
 }
 
 // シラバス変更（教員変更・休講等）をブラウザのプッシュ通知で届けるための購読情報。

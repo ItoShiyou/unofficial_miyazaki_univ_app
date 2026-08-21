@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { PageHeader, Card } from "@/components/ui";
+import { useAccount } from "@/lib/useAccount";
 
 type Sponsor = {
   id: string;
@@ -15,8 +17,10 @@ type Sponsor = {
 };
 
 export default function SponsorsPage() {
+  const account = useAccount();
   const [sponsors, setSponsors] = useState<Sponsor[] | null>(null);
   const [revealedCodes, setRevealedCodes] = useState<Record<string, string>>({});
+  const [stampedIds, setStampedIds] = useState<Set<string>>(new Set());
 
   const revealCode = (id: string) => {
     fetch(`/api/sponsors/${id}/reveal-code`, { method: "POST" })
@@ -24,6 +28,9 @@ export default function SponsorsPage() {
       .then((data) => {
         if (data.couponCode) {
           setRevealedCodes((prev) => ({ ...prev, [id]: data.couponCode }));
+        }
+        if (data.stampCollected) {
+          setStampedIds((prev) => new Set(prev).add(id));
         }
       })
       .catch(() => {});
@@ -39,9 +46,16 @@ export default function SponsorsPage() {
   return (
     <main className="flex-1 flex flex-col px-4 pb-8">
       <PageHeader title="地元とつながる" />
-      <p className="text-sm text-gray-500 px-0.5 pb-4">
+      <p className="text-sm text-gray-500 px-0.5 pb-2">
         宮大非公式アプリは、学生からは一切課金していません。ここに並ぶ宮崎県内のお店・企業からの協賛が、アプリの運営を支えています。
       </p>
+      {account && (
+        <p className="px-0.5 pb-4">
+          <Link href="/stamps" className="text-xs text-blue-600">
+            集めた地元スタンプを見る →
+          </Link>
+        </p>
+      )}
 
       {sponsors === null && (
         <p className="text-sm text-gray-400 text-center py-10">読み込み中…</p>
@@ -77,9 +91,14 @@ export default function SponsorsPage() {
             )}
             {s.hasCoupon && (
               revealedCodes[s.id] ? (
-                <p className="text-xs font-mono font-bold text-orange-700 bg-orange-50 rounded-lg px-2.5 py-1.5 mt-2 inline-block">
-                  コード: {revealedCodes[s.id]}
-                </p>
+                <div className="mt-2">
+                  <p className="text-xs font-mono font-bold text-orange-700 bg-orange-50 rounded-lg px-2.5 py-1.5 inline-block">
+                    コード: {revealedCodes[s.id]}
+                  </p>
+                  {stampedIds.has(s.id) && (
+                    <p className="text-[11px] text-emerald-600 mt-1">🏷️ 地元スタンプを1つ獲得しました</p>
+                  )}
+                </div>
               ) : (
                 <button
                   onClick={() => revealCode(s.id)}

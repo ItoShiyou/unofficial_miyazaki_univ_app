@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
+import { currentUserId } from "@/lib/currentUser";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,10 @@ export const dynamic = "force-dynamic";
 //
 // codeRevealCountも協賛企業への効果訴求に使う数値のため、連打による水増しを
 // 防ぐレート制限をかける（clickCountと同じ理由。実データレビューで発見）。
+//
+// ログイン中であれば「地元スタンプ帳」用のスタンプも合わせて記録する。
+// /sponsors自体は未ログインでも閲覧できる公開ページのため、未ログインの場合は
+// クーポン開封自体は通常通り許可し、スタンプの記録だけをスキップする。
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -35,5 +40,17 @@ export async function POST(
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ couponCode: sponsor.couponCode });
+  let stampCollected = false;
+  const userId = await currentUserId(req);
+  if (userId) {
+    const existing = await prisma.sponsorStamp.findUnique({
+      where: { userId_sponsorId: { userId, sponsorId: id } },
+    });
+    if (!existing) {
+      await prisma.sponsorStamp.create({ data: { userId, sponsorId: id } }).catch(() => {});
+      stampCollected = true;
+    }
+  }
+
+  return NextResponse.json({ couponCode: sponsor.couponCode, stampCollected });
 }
