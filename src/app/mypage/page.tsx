@@ -463,6 +463,28 @@ export default function MyPage() {
         </Card>
 
         <Card>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm font-medium">はじめの2週間ガイド</span>
+            <Link href="/onboarding" className="text-xs text-blue-600">
+              開く →
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400">入学・進級直後にやっておくと良いことをチェックリストで確認できます。</p>
+        </Card>
+
+        <Card>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm font-medium">今学期の負荷</span>
+            <Link href="/workload" className="text-xs text-blue-600">
+              開く →
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400">
+            時間割全体の出席の厳しさ・課題の多さを、授業カルテのデータから1画面に集約します。
+          </p>
+        </Card>
+
+        <Card>
           <p className="text-sm font-medium mb-2">学期</p>
           <p className="text-xs text-gray-400 mb-2">現在表示中：{semesterLabel(semester)}（{currentCourses.length}科目）</p>
           <div className="space-y-1">
