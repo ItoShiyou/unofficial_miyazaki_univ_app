@@ -168,6 +168,13 @@ model User {
   mustChangePassword    Boolean   @default(false) // 仮パスワードでのログイン中はtrue
   tempPasswordExpiresAt DateTime? // 仮パスワードの有効期限（過ぎたらログイン不可）
 
+  // セッショントークンはHMAC署名のみのステートレスな設計（DBに保存しない）で、
+  // 単体では失効させる手段が無かった。パスワード変更時にこの値をインクリメントし
+  // トークンに埋め込んだ値と照合することで、変更前に発行された他端末のトークンを
+  // 無効化できるようにする（実データレビューで、盗まれたトークンがパスワード変更後も
+  // 最大180日間有効という設計上の懸念が判明したための対応）。
+  sessionVersion Int @default(0)
+
   textbookListings TextbookListing[]
 }
 

@@ -4281,4 +4281,32 @@ Web検索による客観検証の結果、**重大な事実が判明した**。
 
 ---
 
+## サイクル168（セッショントークンの失効機構を追加・パスワード変更後も古いトークンが有効なままだった設計上の懸念を修正・2026-08-21）
+
+### 経緯
+新規ニーズ探索に加え、今回は本アプリ自体の技術的な質（DBインデックス・レート制限・認証まわり）をコードレビューした。その結果、実際のセキュリティ懸念が見つかったため、需要探索ではなく修正を優先した。
+
+### 見つかった問題
+- `src/lib/session.ts`のセッショントークンは`uid`+`exp`のみを署名したステートレスなHMACトークンで、DBに一切保存されない設計だった。そのため、**パスワード変更後もトークン自体は最大180日間そのまま有効**であり、トークンが盗まれていた場合にパスワードを変更しても盗んだ側のアクセスを止められないという設計上の懸念があった。
+- さらに、多くのAPIルートは軽量な`currentUserId`（DBアクセスなし、署名検証のみ）を直接使っており、**退会（アカウント削除）後もトークンの署名自体は有効なままなので、削除済みユーザーのIDとして認証が通ってしまう**経路が複数存在した（`currentUser`経由のルートは`prisma.user.findUnique`が失敗するため元々安全だったが、`currentUserId`のみを使うルートは対象外だった）。
+
+### 実施した機能
+- [prisma/schema.prisma](../prisma/schema.prisma)の`User`モデルに`sessionVersion Int @default(0)`を追加（マイグレーション`20260821233211_add_session_version`）。
+- [src/lib/session.ts](../src/lib/session.ts): トークンのペイロードに`v`（sessionVersion）を含めるようにし、署名検証のみを行う従来の`verifySessionToken`（middleware用、DBアクセスなし）と、`{uid, v}`を返す新しい`verifySessionTokenPayload`（DB照合が必要な呼び出し元用）に分離した。
+- [src/lib/currentUser.ts](../src/lib/currentUser.ts)の`currentUserId`を、トークンの`v`とDB上の`User.sessionVersion`を照合するよう変更。不一致（パスワード変更等で無効化済み）または該当ユーザーが存在しない（退会済み）場合は認証を拒否する。
+- [src/app/api/auth/change-password/route.ts](../src/app/api/auth/change-password/route.ts)：パスワード変更時に`sessionVersion`をインクリメントし、変更前に発行された他端末のトークンを無効化。今の端末には新バージョン入りのトークンを発行し直すため、ログイン状態は維持される。
+- [src/app/api/admin/issue-temp-password/route.ts](../src/app/api/admin/issue-temp-password/route.ts)：仮パスワード発行（パスワードを忘れた＝端末紛失等の可能性がある場面）でも同様に`sessionVersion`をインクリメントするよう追加。
+- [src/app/api/auth/me/route.ts](../src/app/api/auth/me/route.ts)：`GET`/`PATCH`ともに、DBアクセスなしの`verifySessionToken`を直接使っていたのを、DB照合済みの`currentUserId`に置き換えた。
+
+### 検証
+- `npx tsc --noEmit`・`npx eslint`ともにエラーなし。
+- `curl`でクッキージャーを使った実地検証を実施：①署名済みの旧トークンを退避→パスワード変更→旧トークンで`/api/auth/me`を叩くと**401**になることを確認（新トークンは引き続き200）。②同様にアカウント削除後、削除前のトークンで`/api/auth/me`を叩くと**401**になることを確認。
+- 開発用DBに対して`npx prisma migrate dev`でマイグレーションを適用済み。
+
+### 次サイクルの候補
+- 同じコードレビューで見つかった残りの2点（レート制限の抜け漏れ: `friends/[friendUserId]`のDELETE・`push/subscribe`・`sponsors/[id]/checkin`・`watch`・`textbooks/[id]`のDELETE・`timetable/share`のPOST／`friends`GETのN+1）を次サイクル以降で順次対応する。
+- 新規の実データに基づく機能候補の探索も並行して継続する。
+
+---
+
 *このログは自律改善サイクルのたびに追記される。ユーザーが停止を指示した場合、進行中のサイクルの扱いを確認したうえで、最終的な変更点一覧とビジコン向けプレゼンテーションを作成する。*

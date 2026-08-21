@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/session";
 import { UNIVERSITIES } from "@/lib/universities";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
+import { currentUserId } from "@/lib/currentUser";
 
 export async function GET(req: NextRequest) {
-  const userId = await verifySessionToken(req.cookies.get(SESSION_COOKIE_NAME)?.value);
+  const userId = await currentUserId(req);
   if (!userId) return NextResponse.json({ user: null }, { status: 401 });
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "しばらく時間をおいて再度お試しください。" }, { status: 429 });
   }
 
-  const userId = await verifySessionToken(req.cookies.get(SESSION_COOKIE_NAME)?.value);
+  const userId = await currentUserId(req);
   if (!userId) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
 
   const body = await req.json().catch(() => null);

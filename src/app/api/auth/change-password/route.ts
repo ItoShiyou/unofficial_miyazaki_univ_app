@@ -51,19 +51,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "現在のパスワードが正しくありません。" }, { status: 401 });
   }
 
-  await prisma.user.update({
+  // sessionVersionをインクリメントし、変更前に発行された他端末のトークンを無効化する
+  // （このリクエスト自身には新バージョン入りのトークンを発行し直すので、今の端末は
+  // ログインしたままになる）
+  const updated = await prisma.user.update({
     where: { id: userId },
     data: {
       passwordHash: await hashPassword(newPassword),
       // 仮パスワードでのログイン中だった場合は、ここで通常の状態に戻す
       mustChangePassword: false,
       tempPasswordExpiresAt: null,
+      sessionVersion: { increment: 1 },
     },
   });
 
   // 変更後も操作中の端末はログインしたままにする（セッションを新しく発行し直す）
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(SESSION_COOKIE_NAME, await createSessionToken(userId), {
+  res.cookies.set(SESSION_COOKIE_NAME, await createSessionToken(userId, updated.sessionVersion), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

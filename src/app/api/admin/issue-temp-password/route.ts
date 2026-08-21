@@ -54,6 +54,9 @@ export async function POST(req: NextRequest) {
       passwordHash: await hashPassword(tempPassword),
       mustChangePassword: true,
       tempPasswordExpiresAt: expiresAt,
+      // 仮パスワード発行はパスワードを忘れた（＝端末を紛失した等の可能性もある）場面
+      // のため、念のため既存の全端末のセッションもここで無効化する
+      sessionVersion: { increment: 1 },
     },
   });
 

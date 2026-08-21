@@ -34,15 +34,25 @@ async function hmacKey(): Promise<CryptoKey> {
   );
 }
 
-export async function createSessionToken(userId: string): Promise<string> {
-  const payload = JSON.stringify({ uid: userId, exp: Date.now() + SESSION_MAX_AGE_SECONDS * 1000 });
+export async function createSessionToken(userId: string, sessionVersion: number): Promise<string> {
+  const payload = JSON.stringify({
+    uid: userId,
+    v: sessionVersion,
+    exp: Date.now() + SESSION_MAX_AGE_SECONDS * 1000,
+  });
   const payloadB64 = base64url(payload);
   const key = await hmacKey();
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadB64));
   return `${payloadB64}.${base64url(sig)}`;
 }
 
-export async function verifySessionToken(token: string | undefined | null): Promise<string | null> {
+interface SessionPayload {
+  uid: string;
+  v: number;
+  exp: number;
+}
+
+async function decodeSessionToken(token: string | undefined | null): Promise<SessionPayload | null> {
   if (!token) return null;
   const [payloadB64, sig] = token.split(".");
   if (!payloadB64 || !sig) return null;
@@ -55,13 +65,29 @@ export async function verifySessionToken(token: string | undefined | null): Prom
       new TextEncoder().encode(payloadB64)
     );
     if (!valid) return null;
-    const payload = JSON.parse(new TextDecoder().decode(base64urlDecode(payloadB64))) as {
-      uid: string;
-      exp: number;
-    };
+    const payload = JSON.parse(new TextDecoder().decode(base64urlDecode(payloadB64))) as Partial<SessionPayload>;
+    if (typeof payload.uid !== "string" || typeof payload.exp !== "number") return null;
     if (payload.exp < Date.now()) return null;
-    return payload.uid;
+    // 旧トークン（vを持たない）はバージョン未指定として0扱いにする
+    return { uid: payload.uid, v: payload.v ?? 0, exp: payload.exp };
   } catch {
     return null;
   }
+}
+
+// middleware（Edgeランタイム、DBアクセスなし）でのページ遷移ゲート用。
+// sessionVersionの照合は行わないため、パスワード変更・退会直後の古いトークンでも
+// ここは通過し得る。実際のデータ操作を伴うAPIルートは currentUserId 側で
+// sessionVersion をDB照合するため、認可としてはそちらが本体。
+export async function verifySessionToken(token: string | undefined | null): Promise<string | null> {
+  const payload = await decodeSessionToken(token);
+  return payload?.uid ?? null;
+}
+
+// DBのUser.sessionVersionとの照合が必要な呼び出し元（@/lib/currentUser）向け。
+export async function verifySessionTokenPayload(
+  token: string | undefined | null
+): Promise<{ uid: string; v: number } | null> {
+  const payload = await decodeSessionToken(token);
+  return payload ? { uid: payload.uid, v: payload.v } : null;
 }
