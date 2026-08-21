@@ -27,9 +27,17 @@ export async function GET(req: NextRequest) {
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
+  const now = Date.now();
   const summary = {
     totalJobs: jobs.length,
-    activeJobs: jobs.filter((j) => j.isActive).length,
+    // isActiveだけでなくdeadline超過も考慮する。isActive:trueのまま締切だけ
+    // 過ぎている求人は、公開ページ（/api/jobs）では既に非表示だが、
+    // ここでisActiveのみで数えると管理者から見て「まだ公開中」と誤認させてしまう
+    // （実データレビューで発見。isActive自体を自動でfalseにする処理はまだ無いため、
+    // 表示上の数値だけでも実態に合わせる）。
+    activeJobs: jobs.filter(
+      (j) => j.isActive && (!j.deadline || j.deadline.getTime() >= now)
+    ).length,
     totalImpressions: jobs.reduce((sum, j) => sum + j.impressionCount, 0),
     totalClicks: jobs.reduce((sum, j) => sum + j.clickCount, 0),
   };
