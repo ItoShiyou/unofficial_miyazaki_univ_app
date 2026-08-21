@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui";
 
+// 「✕」で閉じた場合の記録。実データレビューで、閉じた状態がReactのstateにしか
+// 無くページ再読込・別セッションで再表示され続けてしまう漏れが見つかったため、
+// AppSurveyResponseのスキーマ変更（scoreが必須のため「未回答のまま閉じた」を
+// 表現できない）は避け、既存パターン（src/lib/device.ts）に倣い端末内に保持する。
+const DISMISSED_KEY = "miyadai-survey-dismissed";
+
 // 超軽量ヒアリング（1問アンケート）。「使い続けたいと思いますか？」1問＋任意コメントのみ。
 // アカウント作成から3日以上経っていて未回答のユーザーにだけ表示する（判定はサーバー側）。
 export default function AppSurveyCard() {
@@ -10,7 +16,9 @@ export default function AppSurveyCard() {
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(
+    () => typeof window !== "undefined" && localStorage.getItem(DISMISSED_KEY) === "1"
+  );
 
   useEffect(() => {
     fetch("/api/survey")
@@ -18,6 +26,11 @@ export default function AppSurveyCard() {
       .then((data) => setShouldAsk(Boolean(data.shouldAsk)))
       .catch(() => {});
   }, []);
+
+  function dismiss() {
+    localStorage.setItem(DISMISSED_KEY, "1");
+    setDismissed(true);
+  }
 
   if (!shouldAsk || dismissed) return null;
 
@@ -47,7 +60,7 @@ export default function AppSurveyCard() {
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium">このアプリを使い続けたいと思いますか？</p>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={dismiss}
           className="text-xs text-gray-400 shrink-0"
           aria-label="閉じる"
         >
