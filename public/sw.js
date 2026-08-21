@@ -58,3 +58,39 @@ self.addEventListener("fetch", (event) => {
       })
   );
 });
+
+// シラバス変更（教員変更・休講等）のプッシュ通知。
+// ペイロードは src/lib/webPush.ts の sendPushToUsers が送る
+// {title, body, url} 形式のJSON文字列。
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    return;
+  }
+  const { title, body, url } = payload;
+  event.waitUntil(
+    self.registration.showNotification(title || "宮大非公式アプリ", {
+      body: body || "",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { url: url || "/" },
+    })
+  );
+});
+
+// 通知タップで、既に開いているタブがあればそこへフォーカスし、無ければ新規タブを開く。
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = new URL(event.notification.data?.url || "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url === targetUrl && "focus" in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+    })
+  );
+});

@@ -168,3 +168,29 @@ model Sponsor {
 
   @@index([isActive, sortOrder])
 }
+
+// シラバス変更（教員変更・休講等）をブラウザのプッシュ通知で届けるための購読情報。
+// 1台の端末＝1レコード（同じユーザーが複数端末で購読することも想定し、userIdでは一意にしない）。
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String // Push APIの暗号化鍵
+  auth      String // Push APIの認証シークレット
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// 「この授業のシラバス変更を通知してほしい」という利用者の意思表示。
+// 時間割そのもの（曜日・時限・メモ等）はサーバーに送らない設計を維持しつつ、
+// 変更通知の対象を絞り込むために、シラバス由来の授業IDだけをサーバー側に持つ。
+model WatchedCourse {
+  id               String   @id @default(uuid())
+  userId           String
+  syllabusCourseId String
+  createdAt        DateTime @default(now())
+
+  @@unique([userId, syllabusCourseId])
+  @@index([syllabusCourseId])
+}

@@ -14,6 +14,12 @@ import { UNIVERSITIES, universityName, universitySupportsSyllabusSync } from "@/
 import { useAccount } from "@/lib/useAccount";
 import { PageHeader, Card } from "@/components/ui";
 import BonjinBadge from "@/components/BonjinBadge";
+import {
+  getPushSubscriptionState,
+  subscribeToPush,
+  unsubscribeFromPush,
+  watchCourse,
+} from "@/lib/pushClient";
 
 interface SyllabusChangeEntry {
   id: string;
@@ -63,6 +69,42 @@ export default function MyPage() {
   const [editingUniversity, setEditingUniversity] = useState(false);
   const [savingUniversity, setSavingUniversity] = useState(false);
   const [universityError, setUniversityError] = useState<string | null>(null);
+
+  const [pushState, setPushState] = useState<"subscribed" | "unsubscribed" | "unsupported" | null>(null);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getPushSubscriptionState().then(setPushState);
+  }, []);
+
+  async function togglePush() {
+    setPushError(null);
+    setPushBusy(true);
+    try {
+      if (pushState === "subscribed") {
+        await unsubscribeFromPush();
+        setPushState("unsubscribed");
+      } else {
+        const ok = await subscribeToPush();
+        if (!ok) {
+          setPushError("通知が許可されませんでした。ブラウザの通知設定をご確認ください。");
+          return;
+        }
+        setPushState("subscribed");
+        // 購読前から時間割に登録済みだった、シラバス連携済みの授業も遡って通知対象にする
+        const allCourses = await db.courses.toArray();
+        const syllabusCourseIds = [
+          ...new Set(allCourses.map((c) => c.syllabusCourseId).filter((id): id is string => !!id)),
+        ];
+        await Promise.all(syllabusCourseIds.map((id) => watchCourse(id)));
+      }
+    } catch {
+      setPushError("通信エラーが発生しました。時間をおいて再度お試しください。");
+    } finally {
+      setPushBusy(false);
+    }
+  }
 
   async function saveUniversity(university: string) {
     setUniversityError(null);
@@ -515,6 +557,27 @@ export default function MyPage() {
             </>
           )}
         </Card>
+
+        {pushState && pushState !== "unsupported" && (
+          <Card>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-sm font-medium">シラバス変更のプッシュ通知</p>
+              <button
+                onClick={togglePush}
+                disabled={pushBusy}
+                className={`shrink-0 rounded-full text-xs font-medium px-3 py-1.5 disabled:opacity-50 ${
+                  pushState === "subscribed" ? "bg-gray-100 text-gray-600" : "bg-blue-600 text-white"
+                }`}
+              >
+                {pushBusy ? "処理中..." : pushState === "subscribed" ? "通知をオフにする" : "通知をオンにする"}
+              </button>
+            </div>
+            <p className="text-xs text-gray-400">
+              オンにすると、時間割に登録した授業（シラバス連携済みのもの）の教員変更・休講等をこの端末にプッシュ通知でお知らせします。登録した授業ごとに個別に通知するため、履修していない授業の変更は届きません。
+            </p>
+            {pushError && <p className="text-xs text-red-600 mt-2">{pushError}</p>}
+          </Card>
+        )}
 
         {changes.length > 0 && (
           <Card>

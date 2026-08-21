@@ -6,6 +6,7 @@ import { PERIODS, periodLabel } from "@/lib/periods";
 import type { SemesterKey } from "@/lib/semester";
 import { useAccount } from "@/lib/useAccount";
 import { universitySupportsSyllabusSync } from "@/lib/universities";
+import { watchCourse, unwatchCourse } from "@/lib/pushClient";
 
 interface SyllabusHit {
   id: string;
@@ -132,6 +133,11 @@ export default function CourseFormModal({
         credits: credits === "" ? undefined : credits,
         syllabusCourseId,
       });
+      // シラバス連携先が変わった場合は、古い方の通知登録を外しておく
+      // （プッシュ通知が有効な端末でのみ意味を持つ操作。無効な環境では何もしない）
+      if (course.syllabusCourseId && course.syllabusCourseId !== syllabusCourseId) {
+        unwatchCourse(course.syllabusCourseId).catch(() => {});
+      }
     } else {
       const palette = COURSE_COLORS[Math.floor(Math.random() * COURSE_COLORS.length)];
       await db.courses.add({
@@ -151,6 +157,9 @@ export default function CourseFormModal({
         createdAt: Date.now(),
       });
     }
+    if (syllabusCourseId) {
+      watchCourse(syllabusCourseId).catch(() => {});
+    }
     onClose();
   }
 
@@ -167,6 +176,9 @@ export default function CourseFormModal({
       .equals(course.id)
       .modify({ courseId: undefined });
     await db.courses.delete(course.id);
+    if (course.syllabusCourseId) {
+      unwatchCourse(course.syllabusCourseId).catch(() => {});
+    }
     onClose();
   }
 

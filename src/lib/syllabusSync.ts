@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { fetchFullSyllabusCatalog, type RawSyllabusRow } from "@/lib/syllabusSource";
 import { fetchFullSyllabusCatalogMmu } from "@/lib/syllabusSourceMmu";
 import { universitySupportsSyllabusSync } from "@/lib/universities";
+import { sendPushToUsers } from "@/lib/webPush";
 import type { SemesterName } from "@/lib/semester";
 
 // 大学ごとの一覧取得関数のレジストリ。新しい大学を追加する場合は
@@ -152,6 +153,10 @@ export async function runFullSemesterSync(
     await prisma.syllabusChange.createMany({
       data: changes.map((c) => ({ ...c, university, year, semester })),
     });
+    // 時間割データそのものはサーバーに送らない設計のため、「誰が履修しているか」は
+    // 分からない。代わりに、利用者自身が明示的に「通知してほしい」と登録した
+    // WatchedCourseだけを頼りに、変更があった授業を見ている人にだけプッシュする。
+    await notifyWatchers(changes).catch(() => {});
   }
 
   return {
@@ -164,4 +169,48 @@ export async function runFullSemesterSync(
     removed: removed.length,
     changes,
   };
+}
+
+const FIELD_LABEL: Record<string, string> = {
+  teacher: "担当教員",
+  schedule: "曜日・時限",
+  removed: "掲載状況",
+};
+
+async function notifyWatchers(changes: SyllabusSyncResult["changes"]): Promise<void> {
+  const courseIds = [...new Set(changes.map((c) => c.syllabusCourseId).filter((id): id is string => !!id))];
+  if (courseIds.length === 0) return;
+
+  const watchers = await prisma.watchedCourse.findMany({
+    where: { syllabusCourseId: { in: courseIds } },
+  });
+  if (watchers.length === 0) return;
+
+  const watchersByCourseId = new Map<string, string[]>();
+  for (const w of watchers) {
+    watchersByCourseId.set(w.syllabusCourseId, [...(watchersByCourseId.get(w.syllabusCourseId) ?? []), w.userId]);
+  }
+
+  // 同じ授業で複数件の変更が起きても、通知は1件にまとめる（連続でうるさくしない）
+  const changesByCourseId = new Map<string, typeof changes>();
+  for (const c of changes) {
+    if (!c.syllabusCourseId) continue;
+    changesByCourseId.set(c.syllabusCourseId, [...(changesByCourseId.get(c.syllabusCourseId) ?? []), c]);
+  }
+
+  await Promise.all(
+    [...changesByCourseId.entries()].map(async ([courseId, courseChanges]) => {
+      const userIds = watchersByCourseId.get(courseId);
+      if (!userIds || userIds.length === 0) return;
+      const summary = courseChanges
+        .map((c) => FIELD_LABEL[c.field] ?? c.field)
+        .filter((v, i, arr) => arr.indexOf(v) === i)
+        .join("・");
+      await sendPushToUsers(userIds, {
+        title: `${courseChanges[0].courseName}のシラバスが変更されました`,
+        body: `${summary}が更新されました。アプリで詳しく確認してください。`,
+        url: `/karte/${courseId}`,
+      });
+    })
+  );
 }
