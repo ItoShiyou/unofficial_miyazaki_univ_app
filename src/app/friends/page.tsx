@@ -105,9 +105,11 @@ export default function FriendsPage() {
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
+      setError("");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // クリップボードAPIが使えない環境では何もしない（コードは画面に表示済みのため手入力は可能）
+      // ボタンを押しても無反応に見えるのを防ぐため、画面上のコードを手入力してもらう案内を出す
+      setError("コピーできませんでした。上に表示されているコードを直接お伝えください。");
     }
   }
 
