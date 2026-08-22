@@ -185,6 +185,28 @@ export default function MyPage() {
     }
   }
 
+  const [appShareCopied, setAppShareCopied] = useState(false);
+
+  async function shareApp() {
+    const url = window.location.origin;
+    const text = "宮大非公式アプリ：時間割・授業カルテ・休講速報などをまとめて確認できます。";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "宮大非公式アプリ", text, url });
+      } catch {
+        // ユーザーによる共有キャンセルも含めここに来るため、エラー表示はしない
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        setAppShareCopied(true);
+        setTimeout(() => setAppShareCopied(false), 2000);
+      } catch {
+        // クリップボードAPIが使えない環境では何もしない（共有シート非対応・コピー不可の場合、URLは画面外だが致命的ではない）
+      }
+    }
+  }
+
   async function handleLogout() {
     setLoggingOut(true);
     try {
@@ -487,6 +509,19 @@ export default function MyPage() {
             </Link>
           </div>
           <p className="text-xs text-gray-400">招待コードで友達を追加し、時間割を比較できます。</p>
+        </Card>
+
+        <Card>
+          <p className="text-sm font-medium mb-1">まだ使っていない友達がいたら</p>
+          <p className="text-xs text-gray-400 mb-2">
+            このアプリを友達に教えることもできます（友達登録とは別に、アプリ自体を知らせたいときに）。
+          </p>
+          <button
+            onClick={shareApp}
+            className="w-full rounded-lg bg-gray-900 text-white text-xs py-2"
+          >
+            {appShareCopied ? "リンクをコピーしました" : "アプリを紹介する"}
+          </button>
         </Card>
 
         <Card>
