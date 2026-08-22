@@ -88,7 +88,7 @@ export default function KartePage() {
       <div className="px-4 mb-3">
         <input
           className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm"
-          placeholder="授業名で検索"
+          placeholder="授業名・教員名で検索"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

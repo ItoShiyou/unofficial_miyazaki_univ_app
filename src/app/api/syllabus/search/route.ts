@@ -87,7 +87,11 @@ export async function GET(req: NextRequest) {
       university,
       year,
       semester,
-      ...(q ? { name: { contains: q } } : {}),
+      // 授業名だけでなく担当教員名も検索対象にする。「同じ教員の別の授業を探す」
+      // というのが楽単探しの定番テクニックとして複数の学生向け記事で紹介されており、
+      // 需要が実在すると判断した。teacherは既存フィールドで新規データ収集は不要
+      // （実データレビュー、サイクル198）。
+      ...(q ? { OR: [{ name: { contains: q } }, { teacher: { contains: q } }] } : {}),
       ...(weekday ? { weekday } : {}),
       ...(period ? { period } : {}),
     },
