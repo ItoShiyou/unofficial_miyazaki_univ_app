@@ -127,7 +127,8 @@ export type IconName =
   | "coin"
   | "briefcase"
   | "shield"
-  | "book";
+  | "book"
+  | "flag";
 
 export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   const common = {
@@ -266,6 +267,12 @@ export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
         <svg {...common}>
           <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" />
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        </svg>
+      );
+    case "flag":
+      return (
+        <svg {...common}>
+          <path d="M5 21V4m0 1h11l-1.5 3L16 11H5" />
         </svg>
       );
     default:

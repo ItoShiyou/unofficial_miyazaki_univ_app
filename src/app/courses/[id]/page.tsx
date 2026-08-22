@@ -10,6 +10,7 @@ import { periodLabel } from "@/lib/periods";
 import { useAccount } from "@/lib/useAccount";
 import CourseFormModal from "@/components/CourseFormModal";
 import { ProgressBar } from "@/components/ui";
+import StudySectionNav from "@/components/StudySectionNav";
 
 interface SyllabusChangeEntry {
   id: string;
@@ -173,6 +174,10 @@ export default function CourseDetailPage() {
         <button onClick={() => setEditing(true)} className="text-gray-400 text-lg">
           ⋯
         </button>
+      </div>
+
+      <div className="px-4 mb-4">
+        <StudySectionNav />
       </div>
 
       <div className="px-4 mb-4">

@@ -75,6 +75,13 @@ function Icon({ name, active }: { name: string; active: boolean }) {
 // BottomNav以外に無いため、意図的にこの一覧に含めない（対象外のまま）。
 const PRE_ACCOUNT_PATHS = ["/login", "/signup", "/browse", "/install"];
 
+const STUDY_PATHS = ["/timetable", "/records", "/exams", "/simulator", "/courses"];
+const LIFE_PATHS = ["/life", "/expenses", "/scholarships", "/textbooks"];
+
+function isPathInSection(pathname: string, paths: readonly string[]) {
+  return paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+}
+
 export default function BottomNav() {
   const pathname = usePathname();
   // /admin は運営（学生開発者本人）専用の管理画面で、学生向けナビゲーションの
@@ -83,11 +90,19 @@ export default function BottomNav() {
   return (
     <nav className="sticky bottom-0 z-20 flex border-t border-gray-200 bg-white/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
       {items.map((item) => {
-        const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        const active =
+          item.href === "/"
+            ? pathname === "/"
+            : item.href === "/timetable"
+              ? isPathInSection(pathname, STUDY_PATHS)
+              : item.href === "/life"
+                ? isPathInSection(pathname, LIFE_PATHS)
+                : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? "page" : undefined}
             className="flex-1 flex flex-col items-center gap-0.5 py-2"
           >
             <Icon name={item.icon} active={active} />

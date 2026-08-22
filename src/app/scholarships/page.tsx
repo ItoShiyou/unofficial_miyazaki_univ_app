@@ -1,4 +1,5 @@
-import { PageHeader, Card } from "@/components/ui";
+import { PageHeader, Card, IconChip, Icon, type Tone } from "@/components/ui";
+import LifeSectionNav from "@/components/LifeSectionNav";
 
 // 実データレビュー：奨学金実態調査（ガクシー、2023）で学生・保護者の7割が
 // 「もらえる奨学金が多数ある事実を知らない」と回答、Yahoo!知恵袋にも
@@ -57,35 +58,65 @@ const ENTRIES: ScholarshipEntry[] = [
   },
 ];
 
+function providerTone(provider: string): Tone {
+  if (provider.startsWith("国")) return "blue";
+  if (provider.startsWith("宮崎大学")) return "emerald";
+  if (provider.startsWith("JASSO")) return "violet";
+  return "gray";
+}
+
+// Tailwindはクラス名を静的解析するため、`bg-${tone}-50`のような動的な文字列
+// 生成では該当クラスがビルドに含まれない。トーンごとに完全な文字列を用意する。
+const BADGE_CLASS: Record<Tone, string> = {
+  blue: "bg-blue-50 text-blue-700",
+  emerald: "bg-emerald-50 text-emerald-700",
+  amber: "bg-amber-50 text-amber-700",
+  rose: "bg-rose-50 text-rose-700",
+  violet: "bg-violet-50 text-violet-700",
+  cyan: "bg-cyan-50 text-cyan-700",
+  gray: "bg-gray-100 text-gray-600",
+};
+
 export default function ScholarshipsPage() {
   return (
     <main className="flex-1 flex flex-col px-4 pb-8">
       <PageHeader title="奨学金・学費支援制度" />
+      <div className="mb-4">
+        <LifeSectionNav />
+      </div>
       <p className="text-sm text-gray-500 px-0.5 pb-4">
         経済的な理由で学業を諦めることがないよう、実在が確認できた奨学金・学費支援制度をまとめました。時期はあくまで目安です。正確な申請期間・要件は必ず公式ページでご確認ください。
       </p>
 
       <div className="space-y-3">
-        {ENTRIES.map((e) => (
-          <Card key={e.name}>
-            <span className="inline-block text-[11px] font-medium text-blue-700 bg-blue-50 rounded-full px-2 py-0.5 mb-1">
-              {e.provider}
-            </span>
-            <h3 className="text-sm font-bold">{e.name}</h3>
-            <p className="text-xs text-gray-600 mt-1.5">{e.description}</p>
-            <p className="text-[11px] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5 mt-2">
-              申請時期の目安：{e.timing}
-            </p>
-            <a
-              href={e.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-xs text-blue-600 mt-2"
-            >
-              公式ページで詳細・正確な締切を確認する →
-            </a>
-          </Card>
-        ))}
+        {ENTRIES.map((e) => {
+          const tone = providerTone(e.provider);
+          return (
+            <Card key={e.name} className="flex gap-3">
+              <IconChip tone={tone}><Icon name="cap" /></IconChip>
+              <div className="min-w-0 flex-1">
+                <span
+                  className={`inline-block text-[11px] font-medium rounded-full px-2 py-0.5 mb-1 ${BADGE_CLASS[tone]}`}
+                >
+                  {e.provider}
+                </span>
+                <h3 className="text-sm font-bold">{e.name}</h3>
+                <p className="text-xs text-gray-600 mt-1.5">{e.description}</p>
+                <p className="text-[11px] text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5 mt-2">
+                  申請時期の目安：{e.timing}
+                </p>
+                <a
+                  href={e.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-1 rounded-full text-xs font-medium px-3 py-1.5 mt-2 ${BADGE_CLASS[tone]}`}
+                >
+                  公式ページで確認する →
+                </a>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       <p className="text-xs text-gray-400 text-center leading-relaxed mt-6 pt-4 border-t border-gray-100">

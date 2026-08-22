@@ -7,8 +7,9 @@ import { db, type ExamSlot } from "@/lib/db";
 import { todayLocalDate } from "@/lib/date";
 import { useCurrentSemester } from "@/lib/useSemester";
 import { semesterLabel } from "@/lib/semester";
-import { PageHeader } from "@/components/ui";
+import { PageHeader, IconChip, Icon } from "@/components/ui";
 import ExamFormModal from "@/components/ExamFormModal";
+import StudySectionNav from "@/components/StudySectionNav";
 
 export default function ExamsPage() {
   const semester = useCurrentSemester();
@@ -55,12 +56,15 @@ export default function ExamsPage() {
         right={
           <button
             onClick={openNew}
-            className="text-sm font-medium text-blue-600"
+            className="rounded-full bg-rose-50 text-rose-700 text-sm font-medium px-3 py-1.5"
           >
             ＋追加
           </button>
         }
       />
+      <div className="px-4 mb-4">
+        <StudySectionNav />
+      </div>
       <p className="px-4 text-sm text-gray-400 -mt-1 mb-4">{semesterLabel(semester)}</p>
 
       <section className="px-4">
@@ -80,7 +84,7 @@ export default function ExamsPage() {
                 <li key={exam.id}>
                   <button
                     onClick={() => openEdit(exam)}
-                    className={`w-full text-left rounded-2xl border p-4 ${
+                    className={`w-full text-left rounded-2xl border p-4 flex gap-3 ${
                       isToday
                         ? "border-amber-300 bg-amber-50"
                         : isPast
@@ -88,26 +92,31 @@ export default function ExamsPage() {
                         : "border-gray-200 bg-white"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-500">
-                        {exam.date}
-                        {isToday && <span className="ml-1.5 text-amber-600 font-medium">今日</span>}
-                      </span>
-                      {(exam.startTime || exam.endTime) && (
-                        <span className="text-xs text-gray-400">
-                          {exam.startTime ?? ""}
-                          {exam.startTime && exam.endTime ? "〜" : ""}
-                          {exam.endTime ?? ""}
+                    <IconChip tone={isToday ? "amber" : "rose"}>
+                      <Icon name="flag" />
+                    </IconChip>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-gray-500">
+                          {exam.date}
+                          {isToday && <span className="ml-1.5 text-amber-600 font-medium">今日</span>}
                         </span>
+                        {(exam.startTime || exam.endTime) && (
+                          <span className="text-xs text-gray-400">
+                            {exam.startTime ?? ""}
+                            {exam.startTime && exam.endTime ? "〜" : ""}
+                            {exam.endTime ?? ""}
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-medium text-sm">{exam.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {[course?.name, exam.room].filter(Boolean).join(" ・ ") || undefined}
+                      </p>
+                      {exam.note && (
+                        <p className="text-xs text-gray-500 mt-1.5 whitespace-pre-wrap">{exam.note}</p>
                       )}
                     </div>
-                    <p className="font-medium text-sm">{exam.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {[course?.name, exam.room].filter(Boolean).join(" ・ ") || undefined}
-                    </p>
-                    {exam.note && (
-                      <p className="text-xs text-gray-500 mt-1.5 whitespace-pre-wrap">{exam.note}</p>
-                    )}
                   </button>
                 </li>
               );

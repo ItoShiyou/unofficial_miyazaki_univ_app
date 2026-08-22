@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader, Card } from "@/components/ui";
+import { PageHeader, Card, IconChip, Icon } from "@/components/ui";
+import LifeSectionNav from "@/components/LifeSectionNav";
 
 type TextbookListing = {
   id: string;
@@ -80,15 +81,20 @@ export default function TextbooksPage() {
   return (
     <main className="flex-1 flex flex-col px-4 pb-8">
       <PageHeader title="教科書の譲渡・売買" />
+      <div className="mb-4">
+        <LifeSectionNav />
+      </div>
       <p className="text-sm text-gray-500 px-0.5 pb-4">
         同じ大学の学生同士で、使い終わった教科書を譲り合えます。金銭のやり取り・受け渡しは投稿者同士で直接行ってください（本アプリは仲介しません）。連絡方法は自分で開示してよい範囲を入力してください。
       </p>
 
       <button
         onClick={() => setShowForm((v) => !v)}
-        className="mb-4 rounded-xl border border-gray-300 text-sm py-2.5 text-gray-700"
+        className={`mb-4 rounded-full text-sm font-medium py-2.5 ${
+          showForm ? "border border-gray-300 text-gray-700" : "bg-violet-600 text-white"
+        }`}
       >
-        {showForm ? "投稿フォームを閉じる" : "+ 教科書を出品する"}
+        {showForm ? "投稿フォームを閉じる" : "＋ 教科書を出品する"}
       </button>
 
       {/* 実データレビュー：既存の一覧は検索・絞り込みが一切無く、九州の複数大学生協が
@@ -194,26 +200,29 @@ export default function TextbooksPage() {
 
       <div className="space-y-3">
         {filteredListings.map((l) => (
-          <Card key={l.id}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="text-sm font-bold">{l.title}</h3>
-                {l.courseName && <p className="text-xs text-gray-500">{l.courseName}</p>}
+          <Card key={l.id} className="flex gap-3">
+            <IconChip tone="violet"><Icon name="book" /></IconChip>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold">{l.title}</h3>
+                  {l.courseName && <p className="text-xs text-gray-500">{l.courseName}</p>}
+                </div>
+                <span className="text-sm font-bold text-emerald-700 flex-shrink-0">
+                  {l.price != null ? `¥${l.price.toLocaleString()}` : "無料"}
+                </span>
               </div>
-              <span className="text-sm font-bold text-emerald-700 flex-shrink-0">
-                {l.price != null ? `¥${l.price.toLocaleString()}` : "無料"}
-              </span>
+              {l.condition && <p className="text-xs text-gray-600 mt-1.5">{l.condition}</p>}
+              <p className="text-xs text-gray-500 mt-2">連絡先: {l.contact}</p>
+              {l.mine && (
+                <button
+                  onClick={() => handleDelete(l.id)}
+                  className="mt-2 rounded-full bg-rose-50 text-rose-600 text-xs font-medium px-2.5 py-1"
+                >
+                  削除する
+                </button>
+              )}
             </div>
-            {l.condition && <p className="text-xs text-gray-600 mt-1.5">{l.condition}</p>}
-            <p className="text-xs text-gray-500 mt-2">連絡先: {l.contact}</p>
-            {l.mine && (
-              <button
-                onClick={() => handleDelete(l.id)}
-                className="mt-2 text-xs text-red-600"
-              >
-                削除する
-              </button>
-            )}
           </Card>
         ))}
       </div>

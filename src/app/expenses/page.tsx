@@ -5,6 +5,7 @@ import { useState } from "react";
 import { db, type MoneyEntry, type ExpenseCategory } from "@/lib/db";
 import { PageHeader, Card } from "@/components/ui";
 import MoneyEntryFormModal from "@/components/MoneyEntryFormModal";
+import LifeSectionNav from "@/components/LifeSectionNav";
 
 // 実データレビュー（全国大学生協連「第61回学生生活実態調査」で「生活費・お金の
 // 悩み」が学生の悩みで最多、Yahoo!知恵袋にも「学生向け家計簿アプリ」の実質問あり）
@@ -75,6 +76,9 @@ export default function ExpensesPage() {
           </button>
         }
       />
+      <div className="px-4 mb-4">
+        <LifeSectionNav />
+      </div>
       <p className="px-4 text-sm text-gray-400 -mt-1 mb-3">
         収入・支出をこの端末内だけに記録します。サーバーには送信されません。
       </p>

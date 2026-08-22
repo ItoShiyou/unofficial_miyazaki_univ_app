@@ -10,19 +10,25 @@ import { PERIODS, periodTimeTable, periodLabel } from "@/lib/periods";
 import { useAccount } from "@/lib/useAccount";
 import CourseFormModal from "@/components/CourseFormModal";
 import CancellationReportsSection from "@/components/CancellationReportsSection";
+import StudySectionNav from "@/components/StudySectionNav";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 
 function currentWeekDates(): Date[] {
   const now = new Date();
-  const day = now.getDay(); // 0=Sun
+  const day = now.getDay();
   const mondayOffset = day === 0 ? -6 : 1 - day;
   const monday = new Date(now);
   monday.setDate(now.getDate() + mondayOffset);
+
   return Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return d;
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    return date;
   });
+}
+
+function formatPeriodTime(time: string | undefined) {
+  return (time ?? "").split("–").filter(Boolean);
 }
 
 export default function TimetablePage() {
@@ -34,8 +40,7 @@ export default function TimetablePage() {
   >(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const weekDates = currentWeekDates();
-  const todayIdx = (new Date().getDay() + 6) % 7; // 0=Mon
-
+  const todayIdx = (new Date().getDay() + 6) % 7;
   const courses =
     useLiveQuery(
       () =>
@@ -45,24 +50,44 @@ export default function TimetablePage() {
           .toArray(),
       [semester.year, semester.semester]
     ) ?? [];
-
-  // 実データレビュー：知恵袋に「後期の履修は前期から自動的に引き継がれるのか」
-  // という混同の実例が複数見つかった。学期ごとの時間割データ分離自体は正しく
-  // 機能しているが、「なぜ後期は空になっているのか」が伝わらないと不安に
-  // 感じる学生がいると考え、他の学期に登録実績がある（＝アプリを使い始めて
-  // いる）場合に限って一言添える軽量な対応にとどめた。
   const hasAnyCourses = useLiveQuery(() => db.courses.count(), []) ?? 0;
+  const totalCredits = courses.reduce((sum, course) => sum + (course.credits ?? 0), 0);
+  const todaysCourses =
+    todayIdx < 6
+      ? courses
+          .filter((course) => course.weekday === WEEKDAYS[todayIdx])
+          .sort((a, b) => a.period - b.period)
+      : [];
 
-  const totalCredits = courses.reduce((sum, c) => sum + (c.credits ?? 0), 0);
-  const todaysCourses = todayIdx < 6 ? courses.filter((c) => c.weekday === WEEKDAYS[todayIdx]) : [];
+  const currentPeriod = (() => {
+    if (todayIdx >= 6) return null;
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-  function changeSemester(dir: 1 | -1) {
-    const next = adjacentSemester(semester, dir);
-    saveSemester(next);
+    return (
+      PERIODS.find((period) => {
+        const times = (periodTimes[period] ?? "").match(/\d{1,2}:\d{2}/g);
+        if (!times || times.length < 2) return false;
+        const [start, end] = times.map((time) => {
+          const [hours, minutes] = time.split(":").map(Number);
+          return hours * 60 + minutes;
+        });
+        return nowMinutes >= start && nowMinutes < end;
+      }) ?? null
+    );
+  })();
+
+  const nextCourse =
+    todaysCourses.find((course) => course.period === currentPeriod) ??
+    todaysCourses.find((course) => currentPeriod === null || course.period > currentPeriod) ??
+    null;
+
+  function changeSemester(direction: 1 | -1) {
+    saveSemester(adjacentSemester(semester, direction));
   }
 
-  function findCourse(w: Weekday, p: number) {
-    return courses.find((c) => c.weekday === w && c.period === p);
+  function findCourse(weekday: Weekday, period: number) {
+    return courses.find((course) => course.weekday === weekday && course.period === period);
   }
 
   async function handleImportFile(file: File) {
@@ -82,203 +107,239 @@ export default function TimetablePage() {
   }
 
   return (
-    <main className="flex-1 pb-4">
-      <div className="flex items-center justify-between px-4 pt-4">
-        <h1 className="text-xl font-bold">時間割</h1>
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            className="text-gray-400 text-xl px-2"
-          >
-            ···
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 mt-1 w-48 rounded-xl border border-gray-200 bg-white shadow-lg z-20 overflow-hidden text-sm">
-              <button
-                onClick={() => exportTimetableCsv(courses)}
-                className="w-full text-left px-4 py-2.5 hover:bg-gray-50"
+    <main className="flex-1 pb-8">
+      <div className="px-4 pt-4">
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.14em] text-sky-700">ACADEMIC</p>
+            <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-slate-950">時間割</h1>
+            <p className="mt-1 text-sm text-slate-500">今週の授業と、次にすることを確認</p>
+          </div>
+          <div className="relative pt-1">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-label="時間割の管理メニューを開く"
+              aria-expanded={menuOpen}
+              className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-xl leading-none text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+            >
+              <span aria-hidden="true">···</span>
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1 shadow-xl shadow-slate-950/10">
+                <button
+                  type="button"
+                  onClick={() => exportTimetableCsv(courses)}
+                  className="w-full px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  CSVをエクスポート
+                </button>
+                <label className="block w-full cursor-pointer px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                  CSVをインポート
+                  <input
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) handleImportFile(file);
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <div className="mt-4">
+          <StudySectionNav />
+        </div>
+
+        <section className="mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-sky-600 to-blue-700 p-4 text-white shadow-lg shadow-sky-900/15">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-sky-100">{todayIdx < 6 ? `今日・${WEEKDAYS[todayIdx]}曜日` : "今週の授業"}</p>
+              <h2 className="mt-1 text-lg font-bold">
+                {nextCourse ? nextCourse.name : todayIdx < 6 ? "今日の授業は終了しました" : "ゆっくり週末を過ごしましょう"}
+              </h2>
+              <p className="mt-1 text-sm text-sky-100">
+                {nextCourse
+                  ? `${currentPeriod === nextCourse.period ? "ただいま" : "次は"} ${periodLabel(nextCourse.period, account?.university)}${nextCourse.room ? `・${nextCourse.room}` : ""}`
+                  : todaysCourses.length > 0
+                    ? `${todaysCourses.length}コマの予定を確認済み`
+                    : "予定はありません"}
+              </p>
+            </div>
+            {nextCourse ? (
+              <Link
+                href={`/courses/${nextCourse.id}`}
+                className="shrink-0 rounded-xl bg-white/15 px-3 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/30 transition hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                CSVエクスポート
-              </button>
-              <label className="block w-full text-left px-4 py-2.5 hover:bg-gray-50 cursor-pointer">
-                CSVインポート
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleImportFile(f);
-                    e.target.value = "";
-                  }}
-                />
-              </label>
+                詳細
+              </Link>
+            ) : (
               <Link
                 href="/simulator"
-                onClick={() => setMenuOpen(false)}
-                className="block w-full text-left px-4 py-2.5 hover:bg-gray-50"
+                className="shrink-0 rounded-xl bg-white/15 px-3 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/30 transition hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                履修シミュレーター
+                履修を組む
               </Link>
-              <Link
-                href="/exams"
-                onClick={() => setMenuOpen(false)}
-                className="block w-full text-left px-4 py-2.5 hover:bg-gray-50"
-              >
-                テスト期間の予定
-              </Link>
-              {/* UI/UX見直し：下部タブの「時間割」「記録」が同じ授業・出席関連の
-                  機能で重複していたため、記録（欠席記録）は独立タブをやめ、
-                  時間割ページのこのメニューから開く導線に統合した。空いたタブ枠は
-                  「くらし」（お金・奨学金・教科書）に割り当てた。 */}
-              <Link
-                href="/records"
-                onClick={() => setMenuOpen(false)}
-                className="block w-full text-left px-4 py-2.5 hover:bg-gray-50"
-              >
-                欠席記録
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between px-4 mt-1">
-        <div className="flex items-center gap-1 text-sm text-gray-500">
-          <button onClick={() => changeSemester(-1)} className="px-1">
-            ‹
-          </button>
-          <span className="font-medium text-gray-700">{semesterLabel(semester)}</span>
-          <button onClick={() => changeSemester(1)} className="px-1">
-            ›
-          </button>
-        </div>
-        {totalCredits > 0 && (
-          <span className="text-xs text-gray-400">合計 {totalCredits} 単位</span>
-        )}
-      </div>
-
-      <div className="grid grid-cols-6 text-center text-[11px] text-gray-400 px-4 mt-3">
-        {weekDates.map((d, i) => (
-          <div key={i} className="flex flex-col items-center gap-1">
-            <span>{WEEKDAYS[i]}</span>
-            <span
-              className={`w-6 h-6 flex items-center justify-center rounded-full ${
-                i === todayIdx ? "bg-gray-900 text-white" : ""
-              }`}
-            >
-              {d.getMonth() + 1}/{d.getDate()}
-            </span>
+            )}
           </div>
-        ))}
+          <div className="mt-4 flex gap-2 text-xs">
+            <span className="rounded-full bg-white/15 px-2.5 py-1 text-sky-50">登録 {courses.length}件</span>
+            {totalCredits > 0 && <span className="rounded-full bg-white/15 px-2.5 py-1 text-sky-50">{totalCredits}単位</span>}
+            {todaysCourses.length > 0 && <span className="rounded-full bg-white/15 px-2.5 py-1 text-sky-50">今日 {todaysCourses.length}コマ</span>}
+          </div>
+        </section>
+
+        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="flex items-center justify-between gap-2 px-1">
+            <p className="text-xs font-semibold tracking-wide text-slate-500">表示する学期</p>
+            {totalCredits > 0 && <p className="text-xs font-medium text-slate-500">合計 {totalCredits} 単位</p>}
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => changeSemester(-1)}
+              aria-label="前の学期を表示"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+            >
+              ‹
+            </button>
+            <span className="text-sm font-bold text-slate-800">{semesterLabel(semester)}</span>
+            <button
+              type="button"
+              onClick={() => changeSemester(1)}
+              aria-label="次の学期を表示"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+            >
+              ›
+            </button>
+          </div>
+        </section>
       </div>
 
-      <div className="px-2 mt-2">
-        <table className="w-full border-collapse text-xs">
-          <tbody>
-            {PERIODS.map((p) => (
-              <tr key={p}>
-                <td className="w-9 text-center text-gray-400 align-top pt-2">
-                  <div className="text-xs font-medium">{p}</div>
-                  <div className="text-[8px] leading-tight whitespace-nowrap">
-                    {periodTimes[p].split("–").map((t, i) => (
-                      <div key={i}>{t}</div>
-                    ))}
+      <section aria-labelledby="weekly-timetable-heading" className="mt-5">
+        <div className="flex items-end justify-between px-4">
+          <div>
+            <h2 id="weekly-timetable-heading" className="text-base font-bold text-slate-900">週間スケジュール</h2>
+            <p className="mt-0.5 text-xs text-slate-500">授業をタップして編集・空きコマをタップして追加</p>
+          </div>
+          <span className="text-xs font-medium text-slate-400">横にスクロール</span>
+        </div>
+
+        <div className="mt-3 overflow-x-auto px-4 pb-2 [scrollbar-width:thin]">
+          <div className="min-w-[38rem] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="grid grid-cols-[3.5rem_repeat(6,minmax(5.75rem,1fr))] border-b border-slate-200 bg-slate-50">
+              <div className="sticky left-0 z-20 border-r border-slate-200 bg-slate-50 px-2 py-3 text-center text-[10px] font-semibold tracking-wide text-slate-400">時限</div>
+              {weekDates.map((date, index) => {
+                const isToday = index === todayIdx;
+                return (
+                  <div key={date.toISOString()} className="border-r border-slate-100 px-1 py-2 last:border-r-0">
+                    <div className={`mx-auto grid h-10 w-10 place-items-center rounded-xl text-center ${isToday ? "bg-sky-600 text-white shadow-sm" : "text-slate-600"}`}>
+                      <span className="text-[10px] font-semibold leading-none">{WEEKDAYS[index]}</span>
+                      <span className="text-xs font-bold leading-none">{date.getDate()}</span>
+                    </div>
                   </div>
-                </td>
-                {WEEKDAYS.slice(0, 6).map((w) => {
-                  const course = findCourse(w, p);
-                  return (
-                    <td key={w} className="p-0.5 align-top h-16">
+                );
+              })}
+            </div>
+
+            <div className="grid grid-cols-[3.5rem_repeat(6,minmax(5.75rem,1fr))]">
+              {PERIODS.flatMap((period) => {
+                const isCurrentPeriod = period === currentPeriod;
+                const time = formatPeriodTime(periodTimes[period]);
+                const cells = [
+                  <div
+                    key={`time-${period}`}
+                    className={`sticky left-0 z-10 flex min-h-[5.45rem] flex-col items-center border-b border-r border-slate-200 px-1 pt-3 text-center ${isCurrentPeriod ? "bg-sky-50" : "bg-white"}`}
+                  >
+                    <span className={`text-xs font-bold ${isCurrentPeriod ? "text-sky-700" : "text-slate-700"}`}>{period}</span>
+                    <span className="mt-1 text-[9px] leading-tight text-slate-400">{time.map((part) => <span key={part} className="block">{part}</span>)}</span>
+                    {isCurrentPeriod && <span className="mt-1 rounded-full bg-sky-600 px-1.5 py-0.5 text-[9px] font-bold text-white">いま</span>}
+                  </div>,
+                ];
+
+                WEEKDAYS.slice(0, 6).forEach((weekday, weekdayIndex) => {
+                  const course = findCourse(weekday, period);
+                  const isTodayColumn = weekdayIndex === todayIdx;
+                  cells.push(
+                    <div
+                      key={`${weekday}-${period}`}
+                      className={`min-h-[5.45rem] border-b border-r border-slate-100 p-1.5 last:border-r-0 ${isTodayColumn ? "bg-sky-50/40" : "bg-white"}`}
+                    >
                       <button
-                        onClick={() =>
-                          setModalTarget({ weekday: w, period: p, course })
-                        }
-                        className="w-full h-16 rounded-xl flex flex-col items-center justify-center overflow-hidden p-1"
-                        style={
+                        type="button"
+                        onClick={() => setModalTarget({ weekday, period, course })}
+                        aria-label={course ? `${weekday}曜${period}限 ${course.name}を編集` : `${weekday}曜${period}限に授業を追加`}
+                        className={`group flex min-h-[4.7rem] w-full flex-col justify-between rounded-xl p-2 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 ${
                           course
-                            ? { backgroundColor: course.color }
-                            : { backgroundColor: "#f8fafc", border: "1px dashed #e2e8f0" }
-                        }
+                            ? "shadow-sm ring-1 ring-inset ring-black/5 hover:-translate-y-0.5 hover:shadow-md"
+                            : "border border-dashed border-slate-200 bg-slate-50/70 hover:border-sky-300 hover:bg-sky-50"
+                        } ${isCurrentPeriod && isTodayColumn ? "ring-2 ring-sky-500 ring-offset-1" : ""}`}
+                        style={course ? { backgroundColor: course.color } : undefined}
                       >
                         {course ? (
                           <>
-                            <span
-                              className="font-semibold leading-tight text-center break-words text-[11px] line-clamp-2"
-                              style={{ color: course.textColor }}
-                            >
-                              {course.name}
-                            </span>
-                            {course.room && (
-                              <span className="text-[10px]" style={{ color: course.textColor, opacity: 0.75 }}>
-                                {course.room}
-                              </span>
-                            )}
+                            <span className="line-clamp-2 text-[12px] font-bold leading-snug" style={{ color: course.textColor }}>{course.name}</span>
+                            <span className="mt-1 truncate text-[10px] font-medium" style={{ color: course.textColor, opacity: 0.78 }}>{course.room || "授業詳細を見る"}</span>
                           </>
                         ) : (
-                          <span className="text-gray-300 text-lg">+</span>
+                          <span className="flex h-full items-center justify-center gap-1 text-[11px] font-medium text-slate-400 transition group-hover:text-sky-600"><span className="text-lg font-light leading-none">＋</span>追加</span>
                         )}
                       </button>
-                    </td>
+                    </div>
                   );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                });
+                return cells;
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-5 px-4">
+        <CancellationReportsSection todaysCourses={todaysCourses} />
       </div>
 
-      <CancellationReportsSection todaysCourses={todaysCourses} />
+      <section className="mt-6 px-4" aria-labelledby="course-list-heading">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 id="course-list-heading" className="text-base font-bold text-slate-900">登録済みの授業</h2>
+            <p className="mt-0.5 text-xs text-slate-500">タップして授業の記録・課題・詳細へ</p>
+          </div>
+          {courses.length > 0 && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{courses.length}件</span>}
+        </div>
 
-      <div className="mt-6 px-4">
-        <h2 className="text-sm font-medium text-gray-500 mb-2">登録済み授業一覧</h2>
-        <ul className="space-y-1.5">
-          {courses
-            .slice()
-            .sort(
-              (a, b) =>
-                WEEKDAYS.indexOf(a.weekday) - WEEKDAYS.indexOf(b.weekday) ||
-                a.period - b.period
-            )
-            .map((c) => (
-              <li
-                key={c.id}
-                className="flex items-stretch gap-1.5 rounded-xl border border-gray-200 overflow-hidden"
-              >
-                <Link
-                  href={`/courses/${c.id}`}
-                  className="flex-1 flex items-center justify-between px-3 py-2.5 min-w-0"
-                >
-                  <span className="flex items-center gap-2 min-w-0">
-                    <span
-                      className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: c.textColor }}
-                    />
-                    <span className="truncate">{c.name}</span>
-                  </span>
-                  <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
-                    {c.weekday}{periodLabel(c.period, account?.university)}
-                  </span>
-                </Link>
-                {c.syllabusCourseId && (
-                  <Link
-                    href={`/karte/${c.syllabusCourseId}`}
-                    className="flex-shrink-0 flex items-center px-3 text-xs text-blue-600 border-l border-gray-200 bg-gray-50"
-                  >
-                    カルテ
+        {courses.length > 0 ? (
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {courses
+              .slice()
+              .sort((a, b) => WEEKDAYS.indexOf(a.weekday) - WEEKDAYS.indexOf(b.weekday) || a.period - b.period)
+              .map((course) => (
+                <li key={course.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md">
+                  <Link href={`/courses/${course.id}`} className="flex items-center gap-3 px-3 py-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky-600">
+                    <span className="h-10 w-1 shrink-0 rounded-full" style={{ backgroundColor: course.textColor }} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-slate-800">{course.name}</span>
+                      <span className="mt-0.5 block text-xs text-slate-500">{course.weekday}曜・{periodLabel(course.period, account?.university)}{course.room ? `　${course.room}` : ""}</span>
+                    </span>
+                    <span className="text-slate-300" aria-hidden="true">›</span>
                   </Link>
-                )}
-              </li>
-            ))}
-          {courses.length === 0 && (
-            <p className="text-sm text-gray-400">
-              マス目の「+」をタップして授業を追加してください。
-              {hasAnyCourses > 0 &&
-                "時間割は学期ごとに別々に管理されるため、前の学期の授業は自動で引き継がれません。"}
-            </p>
-          )}
-        </ul>
-      </div>
+                </li>
+              ))}
+          </ul>
+        ) : (
+          <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-center">
+            <p className="text-sm font-semibold text-slate-700">まだ授業が登録されていません</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">時間割の「＋ 追加」から登録するか、履修タブで授業を探して追加できます。</p>
+            {hasAnyCourses > 0 && <p className="mt-2 text-xs text-slate-500">時間割は学期ごとに分けて管理されます。別の学期の授業は学期切替から確認できます。</p>}
+            <Link href="/simulator" className="mt-3 inline-flex rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700">履修を組む</Link>
+          </div>
+        )}
+      </section>
 
       {modalTarget && (
         <CourseFormModal

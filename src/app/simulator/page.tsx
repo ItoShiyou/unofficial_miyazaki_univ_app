@@ -8,6 +8,7 @@ import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
 import { PERIODS, periodLabel } from "@/lib/periods";
 import { useAccount } from "@/lib/useAccount";
+import StudySectionNav from "@/components/StudySectionNav";
 
 interface SyllabusHit {
   id: string;
@@ -104,6 +105,9 @@ export default function SimulatorPage() {
         <button onClick={() => router.back()} className="text-sm text-gray-400">
           キャンセル
         </button>
+      </div>
+      <div className="px-4 mb-4">
+        <StudySectionNav />
       </div>
       <p className="px-4 text-xs text-gray-400 mb-4">{semesterLabel(semester)}</p>
 

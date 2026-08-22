@@ -6,7 +6,8 @@ import Link from "next/link";
 import { db, type Course } from "@/lib/db";
 import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
-import { PageHeader, ProgressBar } from "@/components/ui";
+import { PageHeader, ProgressBar, IconChip, Icon } from "@/components/ui";
+import StudySectionNav from "@/components/StudySectionNav";
 
 export default function RecordsPage() {
   const [tab, setTab] = useState<"current" | "past">("current");
@@ -46,12 +47,15 @@ export default function RecordsPage() {
   return (
     <main className="flex-1 pb-4">
       <PageHeader title="欠席記録" />
+      <div className="px-4 mb-4">
+        <StudySectionNav />
+      </div>
 
       <div className="flex gap-2 px-4 mb-3">
         <button
           onClick={() => setTab("current")}
           className={`flex-1 py-2 rounded-full text-sm font-medium ${
-            tab === "current" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+            tab === "current" ? "bg-sky-600 text-white" : "bg-gray-100 text-gray-500"
           }`}
         >
           履修中
@@ -59,7 +63,7 @@ export default function RecordsPage() {
         <button
           onClick={() => setTab("past")}
           className={`flex-1 py-2 rounded-full text-sm font-medium ${
-            tab === "past" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+            tab === "past" ? "bg-sky-600 text-white" : "bg-gray-100 text-gray-500"
           }`}
         >
           過去の授業
@@ -78,15 +82,18 @@ export default function RecordsPage() {
               <Link
                 key={c.id}
                 href={`/courses/${c.id}`}
-                className="block rounded-2xl border border-gray-200 p-4"
+                className="flex gap-3 rounded-2xl border border-gray-200 p-4"
               >
-                <div className="flex items-center justify-between mb-2 gap-2">
-                  <span className="font-medium truncate min-w-0">{c.name}</span>
-                  <span className="text-xs text-gray-400 shrink-0">
-                    あと{Math.max(c.absenceLimit - count, 0)}回 / 全{c.absenceLimit}回
-                  </span>
+                <IconChip tone="cyan"><Icon name="checklist" /></IconChip>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between mb-2 gap-2">
+                    <span className="font-medium truncate min-w-0">{c.name}</span>
+                    <span className="text-xs text-gray-400 shrink-0">
+                      あと{Math.max(c.absenceLimit - count, 0)}回 / 全{c.absenceLimit}回
+                    </span>
+                  </div>
+                  <ProgressBar value={count} max={c.absenceLimit} />
                 </div>
-                <ProgressBar value={count} max={c.absenceLimit} />
               </Link>
             );
           })}
@@ -106,13 +113,16 @@ export default function RecordsPage() {
                     <Link
                       key={c.id}
                       href={`/courses/${c.id}`}
-                      className="block rounded-2xl border border-gray-200 p-4"
+                      className="flex gap-3 rounded-2xl border border-gray-200 p-4"
                     >
-                      <div className="flex items-center justify-between mb-2 gap-2">
-                        <span className="font-medium truncate min-w-0">{c.name}</span>
-                        <span className="text-xs text-gray-400 shrink-0">欠席 {count}回</span>
+                      <IconChip tone="gray"><Icon name="checklist" /></IconChip>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between mb-2 gap-2">
+                          <span className="font-medium truncate min-w-0">{c.name}</span>
+                          <span className="text-xs text-gray-400 shrink-0">欠席 {count}回</span>
+                        </div>
+                        <ProgressBar value={count} max={c.absenceLimit} />
                       </div>
-                      <ProgressBar value={count} max={c.absenceLimit} />
                     </Link>
                   );
                 })}

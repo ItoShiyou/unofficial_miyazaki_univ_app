@@ -1,4 +1,5 @@
 import { PageHeader, Card, IconChip, NavLinkButton, Icon } from "@/components/ui";
+import LifeSectionNav from "@/components/LifeSectionNav";
 
 // UI/UX見直し：下部タブの再編成（ユーザー要望）に伴い新設したハブページ。
 // 「お金の記録」「奨学金・学費支援制度」「教科書の譲渡・売買」は元々マイページの
@@ -9,6 +10,9 @@ export default function LifePage() {
   return (
     <main className="flex-1 pb-6">
       <PageHeader title="くらし" />
+      <div className="px-4 mb-4">
+        <LifeSectionNav />
+      </div>
       <p className="px-4 text-sm text-gray-400 -mt-1 mb-4">
         お金・奨学金・教科書など、日々の生活に関わる機能をまとめています。
       </p>
