@@ -46,6 +46,13 @@ export default function TimetablePage() {
       [semester.year, semester.semester]
     ) ?? [];
 
+  // 実データレビュー：知恵袋に「後期の履修は前期から自動的に引き継がれるのか」
+  // という混同の実例が複数見つかった。学期ごとの時間割データ分離自体は正しく
+  // 機能しているが、「なぜ後期は空になっているのか」が伝わらないと不安に
+  // 感じる学生がいると考え、他の学期に登録実績がある（＝アプリを使い始めて
+  // いる）場合に限って一言添える軽量な対応にとどめた。
+  const hasAnyCourses = useLiveQuery(() => db.courses.count(), []) ?? 0;
+
   const totalCredits = courses.reduce((sum, c) => sum + (c.credits ?? 0), 0);
   const todaysCourses = todayIdx < 6 ? courses.filter((c) => c.weekday === WEEKDAYS[todayIdx]) : [];
 
@@ -255,6 +262,8 @@ export default function TimetablePage() {
           {courses.length === 0 && (
             <p className="text-sm text-gray-400">
               マス目の「+」をタップして授業を追加してください。
+              {hasAnyCourses > 0 &&
+                "時間割は学期ごとに別々に管理されるため、前の学期の授業は自動で引き継がれません。"}
             </p>
           )}
         </ul>
