@@ -111,8 +111,14 @@ export default function MyPage() {
         await unsubscribeFromPush();
         setPushState("unsubscribed");
       } else {
-        const ok = await subscribeToPush();
-        if (!ok) {
+        const result = await subscribeToPush();
+        if (result === "denied") {
+          setPushError(
+            "通知がブロックされています。もう一度ボタンを押しても確認画面は出ません。ブラウザまたは端末の「サイトの設定」からこのアプリの通知を許可に変更し、ページを再読み込みしてください。"
+          );
+          return;
+        }
+        if (result !== "ok") {
           setPushError("通知が許可されませんでした。ブラウザの通知設定をご確認ください。");
           return;
         }
