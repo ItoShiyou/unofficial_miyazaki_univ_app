@@ -128,7 +128,13 @@ export type IconName =
   | "briefcase"
   | "shield"
   | "book"
-  | "flag";
+  | "flag"
+  | "food"
+  | "home"
+  | "bolt"
+  | "wifi"
+  | "car"
+  | "spark";
 
 export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   const common = {
@@ -273,6 +279,52 @@ export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
       return (
         <svg {...common}>
           <path d="M5 21V4m0 1h11l-1.5 3L16 11H5" />
+        </svg>
+      );
+    case "food":
+      return (
+        <svg {...common}>
+          <path d="M7 3v7a2 2 0 1 1-4 0V3" />
+          <path d="M5 10v11" />
+          <path d="M16 3c-1.5 0-3 1.8-3 5s1.5 5 3 5v8" />
+        </svg>
+      );
+    case "home":
+      return (
+        <svg {...common}>
+          <path d="M3 11.5 12 4l9 7.5" />
+          <path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
+        </svg>
+      );
+    case "bolt":
+      return (
+        <svg {...common}>
+          <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
+        </svg>
+      );
+    case "wifi":
+      return (
+        <svg {...common}>
+          <path d="M3 8.5a15 15 0 0 1 18 0" />
+          <path d="M6.5 12.5a10 10 0 0 1 11 0" />
+          <path d="M10 16.5a5 5 0 0 1 4 0" />
+          <circle cx="12" cy="20" r="0.5" fill="currentColor" />
+        </svg>
+      );
+    case "car":
+      return (
+        <svg {...common}>
+          <path d="M4 16V11l2-5h12l2 5v5" />
+          <path d="M4 16h16M6 16v2M18 16v2" />
+          <circle cx="7.5" cy="16" r="1.3" fill="currentColor" stroke="none" />
+          <circle cx="16.5" cy="16" r="1.3" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case "spark":
+      return (
+        <svg {...common}>
+          <path d="M12 3v18M3 12h18" />
+          <path d="M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5" opacity=".45" />
         </svg>
       );
     default:

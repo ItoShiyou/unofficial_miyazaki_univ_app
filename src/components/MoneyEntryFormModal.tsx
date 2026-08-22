@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { db, newId, EXPENSE_CATEGORIES, type MoneyEntry, type ExpenseCategory } from "@/lib/db";
 import { todayLocalDate } from "@/lib/date";
+import { Icon } from "@/components/ui";
+import { CATEGORY_META } from "@/lib/expenseMeta";
 
 export default function MoneyEntryFormModal({
   entry,
@@ -65,7 +67,7 @@ export default function MoneyEntryFormModal({
             <button
               onClick={() => setType("expense")}
               className={`flex-1 rounded-lg py-2 text-sm font-medium ${
-                type === "expense" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+                type === "expense" ? "bg-rose-600 text-white" : "bg-gray-100 text-gray-500"
               }`}
             >
               支出
@@ -73,7 +75,7 @@ export default function MoneyEntryFormModal({
             <button
               onClick={() => setType("income")}
               className={`flex-1 rounded-lg py-2 text-sm font-medium ${
-                type === "income" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+                type === "income" ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-500"
               }`}
             >
               収入（バイト代・仕送り等）
@@ -95,17 +97,25 @@ export default function MoneyEntryFormModal({
           {type === "expense" && (
             <div>
               <label className="block text-xs text-gray-500 mb-1">カテゴリ</label>
-              <select
-                className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2"
-                value={category}
-                onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-              >
-                {EXPENSE_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <div className="flex flex-wrap gap-1.5">
+                {EXPENSE_CATEGORIES.map((c) => {
+                  const meta = CATEGORY_META[c];
+                  const active = category === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCategory(c)}
+                      className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium ${
+                        active ? "border-gray-900 bg-gray-50 ring-1 ring-gray-900" : "border-gray-200 text-gray-600"
+                      }`}
+                    >
+                      <Icon name={meta.icon} size={14} />
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -145,7 +155,7 @@ export default function MoneyEntryFormModal({
           </button>
           <button
             onClick={handleSave}
-            className="rounded-lg px-4 py-2 bg-gray-900 text-white text-sm font-medium"
+            className="rounded-lg px-4 py-2 bg-amber-500 text-white text-sm font-medium"
           >
             保存
           </button>
