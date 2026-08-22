@@ -48,6 +48,17 @@ export default function ExpensesPage() {
   }
   const categoryRows = Array.from(byCategory.entries()).sort((a, b) => b[1] - a[1]);
 
+  // 実データレビュー：既存ページは単月のスナップショット表示のみで、前月との比較が
+  // 一切なかった。マネーフォワードME等の商用家計簿アプリは「先月比」「使いすぎ警告」を
+  // 標準搭載しており、業界標準機能との差が明確だった。全期間のMoneyEntryは既に
+  // 端末内にあるため、新規データ収集なしで前月の支出合計を集計するだけで実現できる
+  // （追加ライブラリも不要、サイクル199）。
+  const prevMonthKey = adjacentMonth(monthKey, -1);
+  const prevMonthExpense = allEntries
+    .filter((e) => e.date.startsWith(prevMonthKey) && e.type === "expense")
+    .reduce((s, e) => s + e.amount, 0);
+  const expenseDiff = prevMonthExpense > 0 ? totalExpense - prevMonthExpense : null;
+
   return (
     <main className="flex-1 pb-6">
       <PageHeader
@@ -88,6 +99,11 @@ export default function ExpensesPage() {
             <div>
               <p className="text-[11px] text-gray-400">支出</p>
               <p className="text-sm font-bold text-red-600">¥{totalExpense.toLocaleString()}</p>
+              {expenseDiff !== null && (
+                <p className={`text-[10px] mt-0.5 ${expenseDiff > 0 ? "text-red-500" : "text-emerald-600"}`}>
+                  先月比{expenseDiff > 0 ? "+" : ""}¥{expenseDiff.toLocaleString()}
+                </p>
+              )}
             </div>
             <div>
               <p className="text-[11px] text-gray-400">収支</p>
