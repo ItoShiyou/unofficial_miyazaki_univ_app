@@ -14,25 +14,30 @@ function RatingSelect({
   onChange,
 }: {
   label: string;
-  value: number;
-  onChange: (v: number) => void;
+  value: number | null;
+  onChange: (v: number | null) => void;
 }) {
   return (
     <div>
-      <label className="block text-xs text-gray-500 mb-1">{label}</label>
-      <div className="flex gap-1">
+      <label className="block text-xs text-gray-500 mb-1">{label}（任意）</label>
+      <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
             type="button"
-            onClick={() => onChange(n)}
+            // 実データレビュー：コードレビューで、評価が初期値3にプリセットされている
+            // ため「未入力に見えない」＝全項目入力必須と誤認させる要因になっていると
+            // 判明した（サイクル204）。同じ数字を再度タップすると未選択に戻せるようにし、
+            // 「評価しない」という選択を明示的に取れるようにした。
+            onClick={() => onChange(value === n ? null : n)}
             className={`w-8 h-8 rounded-full text-xs font-medium ${
-              n <= value ? "bg-amber-400 text-white" : "bg-gray-100 text-gray-400"
+              value !== null && n <= value ? "bg-amber-400 text-white" : "bg-gray-100 text-gray-400"
             }`}
           >
             {n}
           </button>
         ))}
+        {value === null && <span className="text-[10px] text-gray-400 ml-1">未選択</span>}
       </div>
     </div>
   );
@@ -52,12 +57,12 @@ export default function KarteFormModal({
   onSaved: () => void;
 }) {
   const [attendanceMethod, setAttendanceMethod] = useState("");
-  const [attendanceStrictness, setAttendanceStrictness] = useState(3);
-  const [assignmentVolume, setAssignmentVolume] = useState(3);
+  const [attendanceStrictness, setAttendanceStrictness] = useState<number | null>(null);
+  const [assignmentVolume, setAssignmentVolume] = useState<number | null>(null);
   const [examFormat, setExamFormat] = useState("");
-  const [examDifficulty, setExamDifficulty] = useState(3);
-  const [clarity, setClarity] = useState(3);
-  const [overallEasiness, setOverallEasiness] = useState(3);
+  const [examDifficulty, setExamDifficulty] = useState<number | null>(null);
+  const [clarity, setClarity] = useState<number | null>(null);
+  const [overallEasiness, setOverallEasiness] = useState<number | null>(null);
   const [atmosphere, setAtmosphere] = useState("");
   const [pace, setPace] = useState("");
   const [advice, setAdvice] = useState("");
@@ -117,7 +122,7 @@ export default function KarteFormModal({
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">出席確認方法</label>
+            <label className="block text-xs text-gray-500 mb-1">出席確認方法（任意）</label>
             <input
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               placeholder="例: 毎回リアクションペーパー"
@@ -131,7 +136,7 @@ export default function KarteFormModal({
           <RatingSelect label="課題の多さ" value={assignmentVolume} onChange={setAssignmentVolume} />
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1">試験形式</label>
+            <label className="block text-xs text-gray-500 mb-1">試験形式（任意）</label>
             <input
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               placeholder="例: 期末試験（記述式）"
@@ -145,7 +150,7 @@ export default function KarteFormModal({
           <RatingSelect label="総合的な楽単度（単位の取りやすさ）" value={overallEasiness} onChange={setOverallEasiness} />
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1">授業の雰囲気</label>
+            <label className="block text-xs text-gray-500 mb-1">授業の雰囲気（任意）</label>
             <input
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               value={atmosphere}
@@ -154,7 +159,7 @@ export default function KarteFormModal({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">授業の進行速度</label>
+            <label className="block text-xs text-gray-500 mb-1">授業の進行速度（任意）</label>
             <input
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               value={pace}
@@ -163,7 +168,7 @@ export default function KarteFormModal({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">受講生へのアドバイス</label>
+            <label className="block text-xs text-gray-500 mb-1">受講生へのアドバイス（任意）</label>
             <textarea
               rows={2}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
@@ -176,7 +181,7 @@ export default function KarteFormModal({
             </p>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">実際に受けてみてどうだったか</label>
+            <label className="block text-xs text-gray-500 mb-1">実際に受けてみてどうだったか（任意）</label>
             <textarea
               rows={3}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
