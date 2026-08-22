@@ -35,3 +35,17 @@ export function computeGpa(courses: Course[]): GpaResult {
     gradedCourseCount: graded.length,
   };
 }
+
+/**
+ * 「不可」を除いた、実際に取得（合格）した単位数の合計。
+ * computeGpaのcreditsCountedはGPA計算対象の単位数（不可も含む）であり、
+ * 「卒業に必要な単位数への進捗」を表すには不適切なため別関数にした
+ * （サイクル207: 自己申告の目標単位数に対する進捗バー機能向け）。
+ */
+export function computeEarnedCredits(courses: Course[]): number {
+  return courses
+    .filter((c): c is Course & { grade: Grade; credits: number } =>
+      !!c.grade && c.grade !== "不可" && typeof c.credits === "number" && c.credits > 0
+    )
+    .reduce((sum, c) => sum + c.credits, 0);
+}

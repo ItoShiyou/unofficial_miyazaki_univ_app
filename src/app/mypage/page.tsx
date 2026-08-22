@@ -7,9 +7,9 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
-import { useDisplayName, setDisplayName } from "@/lib/device";
+import { useDisplayName, setDisplayName, useTargetCredits, setTargetCredits } from "@/lib/device";
 import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
-import { computeGpa } from "@/lib/gpa";
+import { computeGpa, computeEarnedCredits } from "@/lib/gpa";
 import { UNIVERSITIES, universityName, universitySupportsSyllabusSync } from "@/lib/universities";
 import { useAccount } from "@/lib/useAccount";
 import { PageHeader, Card } from "@/components/ui";
@@ -301,10 +301,20 @@ export default function MyPage() {
 
   const cumulativeGpa = computeGpa(courses);
   const currentSemesterGpa = computeGpa(currentCourses);
+  const earnedCredits = computeEarnedCredits(courses);
+  const targetCredits = useTargetCredits();
+  const [editingTarget, setEditingTarget] = useState(false);
+  const [targetDraft, setTargetDraft] = useState(String(targetCredits ?? ""));
 
   function saveName() {
     setDisplayName(draftName.trim());
     setEditingName(false);
+  }
+
+  function saveTargetCredits() {
+    const n = Number(targetDraft);
+    setTargetCredits(Number.isFinite(n) && n > 0 ? n : null);
+    setEditingTarget(false);
   }
 
   async function handleImportFile(file: File) {
@@ -617,6 +627,72 @@ export default function MyPage() {
           <p className="text-xs text-gray-400">
             成績・単位数が入力済みの科目（{cumulativeGpa.gradedCourseCount}科目・
             {cumulativeGpa.creditsCounted}単位）から算出。各授業の詳細ページで成績を入力できます。
+          </p>
+        </Card>
+
+        {/* 実データレビュー：知恵袋に「卒業に124単位必要」を前提にあと何単位か
+            不安に思う投稿が複数あり、他大学の単位管理アプリ（UnitTracking等）にも
+            自己申告した必要単位数に対する進捗表示機能がある。大学・学部・学科・
+            入学年度別のカリキュラム判定は一切行わず、学生が自分で入力した目標値との
+            単純な引き算・割り算のみにとどめることで、卒業要件判定を見送った
+            サイクル134の判断（誤判定リスク）とは別種の、リスクの低い機能にした。
+            不可（不合格）の科目は取得単位に含めない（サイクル207）。 */}
+        <Card>
+          <p className="text-sm font-medium mb-2">卒業要件単位数（自己申告）</p>
+          {targetCredits === null && !editingTarget ? (
+            <button
+              onClick={() => {
+                setTargetDraft("");
+                setEditingTarget(true);
+              }}
+              className="w-full rounded-xl border border-gray-300 text-sm py-2.5 text-gray-600"
+            >
+              目標単位数を設定する
+            </button>
+          ) : editingTarget ? (
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={targetDraft}
+                onChange={(e) => setTargetDraft(e.target.value)}
+                placeholder="例: 124"
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <button
+                onClick={saveTargetCredits}
+                className="rounded-lg bg-gray-900 text-white text-sm px-4"
+              >
+                保存
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm text-gray-600">
+                  {earnedCredits} / {targetCredits}単位
+                </span>
+                <button
+                  onClick={() => {
+                    setTargetDraft(String(targetCredits));
+                    setEditingTarget(true);
+                  }}
+                  className="text-xs text-blue-600"
+                >
+                  変更する
+                </button>
+              </div>
+              <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-emerald-500"
+                  style={{ width: `${Math.min(100, (earnedCredits / targetCredits!) * 100)}%` }}
+                />
+              </div>
+            </>
+          )}
+          <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
+            自分で入力した目標に対する単純な進捗表示です。学部・学科・入学年度によって卒業要件は異なるため、正式な判定は「わかば」等の大学公式システムでご確認ください。
           </p>
         </Card>
 
