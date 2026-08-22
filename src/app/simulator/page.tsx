@@ -60,23 +60,32 @@ export default function SimulatorPage() {
     return c ? { name: c.name, preview: false } : null;
   }
 
+  // 実データレビュー：コードレビューで、集中講義・オンデマンド授業等シラバスに
+  // 固定の曜日・時限が無い科目（weekday/periodがnull）を選ぶと、重複チェックが
+  // 常にfalseになり誤判定するうえ、保存時にはnullがそれぞれ「月」「1限」へ黙って
+  // デフォルト割当されることが判明した。既にその枠に別の授業が登録されていても
+  // 警告なく保存でき、時間割データが壊れる実害があったため、固定の曜日・時限が
+  // 無い科目はこの画面では保存できないようにした（サイクル213）。
+  const noFixedSchedule = selected != null && (selected.weekday === null || selected.period === null);
+
   const conflict =
     selected &&
+    !noFixedSchedule &&
     courses.some((c) => c.weekday === selected.weekday && c.period === selected.period);
 
   const totalSlots = WEEKDAYS.slice(0, 6).length * PERIODS.length;
-  const emptySlots = totalSlots - courses.length - (selected && !conflict ? 1 : 0);
+  const emptySlots = totalSlots - courses.length - (selected && !conflict && !noFixedSchedule ? 1 : 0);
 
   async function handleSave() {
-    if (!selected || conflict) return;
+    if (!selected || conflict || noFixedSchedule || !selected.weekday || !selected.period) return;
     const palette = COURSE_COLORS[Math.floor(Math.random() * COURSE_COLORS.length)];
     await db.courses.add({
       id: newId(),
       name: selected.name,
       teacher: selected.teacher ?? undefined,
       room: selected.room ?? undefined,
-      weekday: (selected.weekday ?? "月") as Weekday,
-      period: selected.period ?? 1,
+      weekday: selected.weekday,
+      period: selected.period,
       year: semester.year,
       semester: semester.semester,
       absenceLimit: 5,
@@ -181,6 +190,11 @@ export default function SimulatorPage() {
           この時間には既に授業が登録されています。時限を変更してください。
         </p>
       )}
+      {noFixedSchedule && (
+        <p className="px-4 text-xs text-red-500 mt-1">
+          この授業は固定の曜日・時限が無いため（集中講義・オンデマンド授業等）、履修シミュレーターでは登録できません。時間割ページから手動で登録してください。
+        </p>
+      )}
 
       <div className="px-4 mt-4 flex items-center justify-between">
         <span className="text-sm text-gray-500">空きコマ数</span>
@@ -205,7 +219,7 @@ export default function SimulatorPage() {
       <div className="px-4 mt-6">
         <button
           onClick={handleSave}
-          disabled={!selected || !!conflict}
+          disabled={!selected || !!conflict || noFixedSchedule}
           className="w-full rounded-xl bg-gray-900 text-white text-sm py-3 font-medium disabled:opacity-40"
         >
           この条件で保存
