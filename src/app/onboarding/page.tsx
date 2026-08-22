@@ -319,6 +319,30 @@ export default function OnboardingPage() {
           </div>
         </Card>
       </div>
+
+      {/* 実データレビュー：知恵袋に「学内での落とし物、どこに届ければいいか
+          分からない」という実例があった（物が見つからないこと自体より、届出窓口が
+          分かりにくいことが困りごとの中心）。宮崎大学は既に公式の「落とし物情報」
+          ページで部門別の拾得物を発見日付付きで公開しており、二重管理になる独自の
+          投稿型掲示板は作らなかった。個人情報を含む物品（鍵・学生証等）の学生間投稿は
+          なりすまし窃盗等の悪用リスクがある実例（Togetterまとめ）も確認済みのため、
+          公式ページへの導線のみにとどめた。 */}
+      <div className="px-4 mt-3">
+        <Card>
+          <p className="text-xs font-medium mb-1">忘れ物・落とし物</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            学内で忘れ物・落とし物をしたときは、まず大学公式の落とし物情報ページをご確認ください。
+          </p>
+          <a
+            href="https://www.miyazaki-u.ac.jp/manabi-jim/lost-property/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-blue-600 mt-2"
+          >
+            宮崎大学 落とし物情報 →
+          </a>
+        </Card>
+      </div>
     </main>
   );
 }
