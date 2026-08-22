@@ -343,6 +343,31 @@ export default function OnboardingPage() {
           </a>
         </Card>
       </div>
+
+      {/* 実データレビュー：知恵袋に「学校から推奨されたPCを購入すべきか」等の
+          実例が複数あり、生協PC（サポート充実だが割高）vs量販店/BTO（安いが
+          保証薄い）という悩みは全国的に実在する。教科書譲渡掲示板と同じ設計
+          （連絡先自由入力・金銭授受はアプリ外）をPCに転用することも検討したが、
+          PCは動作不良・バッテリー劣化・個人情報残存等、対面確認なしの譲渡と
+          相性が悪く、大学生協が既に4年保証付き推奨PC・持ち込みPC点検会という
+          公式の受け皿を用意しているため、独自の譲渡掲示板は作らず外部リンクの
+          みとした。 */}
+      <div className="px-4 mt-3">
+        <Card>
+          <p className="text-xs font-medium mb-1">ノートPC選びで困ったら</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            大学生協が推奨パソコン（4年保証付き）を案内しています。生協以外で購入したパソコンの持ち込み点検会もあります。
+          </p>
+          <a
+            href="https://coop.kyushu-bauc.or.jp/miya-coop/newlife/contents/contents_177.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-blue-600 mt-2"
+          >
+            宮崎大学生協 推奨パソコン案内 →
+          </a>
+        </Card>
+      </div>
     </main>
   );
 }
