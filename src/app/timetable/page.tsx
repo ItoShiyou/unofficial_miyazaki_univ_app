@@ -127,6 +127,17 @@ export default function TimetablePage() {
               >
                 テスト期間の予定
               </Link>
+              {/* UI/UX見直し：下部タブの「時間割」「記録」が同じ授業・出席関連の
+                  機能で重複していたため、記録（欠席記録）は独立タブをやめ、
+                  時間割ページのこのメニューから開く導線に統合した。空いたタブ枠は
+                  「くらし」（お金・奨学金・教科書）に割り当てた。 */}
+              <Link
+                href="/records"
+                onClick={() => setMenuOpen(false)}
+                className="block w-full text-left px-4 py-2.5 hover:bg-gray-50"
+              >
+                欠席記録
+              </Link>
             </div>
           )}
         </div>

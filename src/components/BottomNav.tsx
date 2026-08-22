@@ -3,11 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// UI/UX見直し（ユーザー要望）：従来の「時間割」「記録」は同じ授業・出席関連の
+// 機能で重複していたため統合し（記録は時間割ページのメニューから開く導線に変更）、
+// 空いたタブに「くらし」（お金・奨学金・教科書、旧マイページのカード群）を新設した。
+// これにより下部タブが「学習（時間割・カルテ）」「生活（くらし）」
+// 「アカウント（マイページ）」に機能ごと明確に分かれる構成にした。
 const items = [
   { href: "/", label: "ホーム", icon: "home" },
   { href: "/timetable", label: "時間割", icon: "calendar" },
-  { href: "/records", label: "記録", icon: "check" },
   { href: "/karte", label: "カルテ", icon: "book" },
+  { href: "/life", label: "くらし", icon: "wallet" },
   { href: "/mypage", label: "マイページ", icon: "user" },
 ] as const;
 
@@ -48,6 +53,14 @@ function Icon({ name, active }: { name: string; active: boolean }) {
         <svg {...common}>
           <circle cx="12" cy="8" r="3.5" />
           <path d="M4.5 20c1.5-3.5 5-5 7.5-5s6 1.5 7.5 5" />
+        </svg>
+      );
+    case "wallet":
+      return (
+        <svg {...common}>
+          <rect x="3" y="6" width="18" height="13" rx="2" />
+          <path d="M3 9h18" />
+          <circle cx="16" cy="13.5" r="1.2" fill={color} stroke="none" />
         </svg>
       );
     default:

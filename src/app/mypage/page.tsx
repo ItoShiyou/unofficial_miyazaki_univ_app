@@ -562,42 +562,8 @@ export default function MyPage() {
           </p>
         </Card>
 
-        <Card>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium">お金の記録</span>
-            <Link href="/expenses" className="text-xs text-blue-600">
-              開く →
-            </Link>
-          </div>
-          <p className="text-xs text-gray-400">
-            バイト代・仕送りと支出をこの端末内だけに記録し、月ごとの収支を確認できます。
-          </p>
-        </Card>
-
-        <Card>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium">奨学金・学費支援制度</span>
-            <Link href="/scholarships" className="text-xs text-blue-600">
-              開く →
-            </Link>
-          </div>
-          <p className="text-xs text-gray-400">
-            国・宮崎大学・JASSOの奨学金や授業料免除等の制度をまとめて確認できます。
-          </p>
-        </Card>
-
-        <Card>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium">教科書の譲渡・売買</span>
-            <Link href="/textbooks" className="text-xs text-blue-600">
-              開く →
-            </Link>
-          </div>
-          <p className="text-xs text-gray-400">
-            同じ大学の学生同士で、使い終わった教科書を譲り合えます。
-          </p>
-        </Card>
-
+        {/* UI/UX見直し：お金の記録・奨学金・教科書譲渡は下部タブ「くらし」
+            （/life）に移設したため、マイページからは重複するカードを削除した。 */}
         <Card>
           <p className="text-sm font-medium mb-2">学期</p>
           <p className="text-xs text-gray-400 mb-2">現在表示中：{semesterLabel(semester)}（{currentCourses.length}科目）</p>
