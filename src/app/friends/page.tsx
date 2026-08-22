@@ -6,8 +6,9 @@ import { db, WEEKDAYS, type Weekday } from "@/lib/db";
 import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
 import { useDisplayName, setDisplayName } from "@/lib/device";
+import { useAccount } from "@/lib/useAccount";
 import { PageHeader } from "@/components/ui";
-import { PERIODS } from "@/lib/periods";
+import { PERIODS, currentPeriod, periodLabel } from "@/lib/periods";
 
 const DAYS = WEEKDAYS.slice(0, 5);
 
@@ -20,6 +21,7 @@ interface FriendEntry {
 export default function FriendsPage() {
   const semester = useCurrentSemester();
   const name = useDisplayName();
+  const account = useAccount();
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [showAdd, setShowAdd] = useState(false);
@@ -179,6 +181,21 @@ export default function FriendsPage() {
 
   const friend = friends[effectiveIdx];
 
+  // 実データレビュー：競合の学生専用時間割アプリ「Penmark」（慶大生の8割が利用）が
+  // 「空きコマが同じ友達を探す」機能を公式に持っており、市場で需要が実証済みと
+  // 判断した。既存の「友達と比較」機能は1人ずつ週間時間割を並べて見る設計で、
+  // 「今この瞬間、誰が空いているか」をひと目で確認する機能は無かった。位置情報等の
+  // 新規データは不要で、既存の共有時間割データ（/api/friends）だけで実現できるため
+  // プライバシー面の追加リスクも無い（サイクル195）。
+  const now = new Date();
+  const todayIdx = (now.getDay() + 6) % 7; // 0=Mon
+  const today = todayIdx < 5 ? WEEKDAYS[todayIdx] : null;
+  const nowPeriod = today ? currentPeriod(account?.university, now) : null;
+  const freeFriends =
+    today && nowPeriod
+      ? friends.filter((f) => !f.timetable.some((c) => c.weekday === today && c.period === nowPeriod))
+      : [];
+
   function ownAt(w: Weekday, p: number) {
     return courses.find((c) => c.weekday === w && c.period === p);
   }
@@ -231,6 +248,23 @@ export default function FriendsPage() {
         <p className="px-4 text-sm text-gray-400">
           まだ友達がいません。右上の「+」から招待コードを共有・入力してください。
         </p>
+      )}
+
+      {friends.length > 0 && today && nowPeriod && (
+        <div className="px-4 mb-4">
+          <div className="rounded-xl border border-gray-200 px-4 py-3">
+            <p className="text-xs text-gray-500 mb-1.5">
+              今空いている友達（{periodLabel(nowPeriod, account?.university)}）
+            </p>
+            {freeFriends.length > 0 ? (
+              <p className="text-sm">
+                {freeFriends.map((f) => f.name).join("・")}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400">今は授業中の友達ばかりのようです</p>
+            )}
+          </div>
+        </div>
       )}
 
       {friend && (

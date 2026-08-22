@@ -61,3 +61,20 @@ export function slotFromRawPeriod(raw: number): Period {
   const slot = Math.ceil(raw / 2);
   return Math.min(Math.max(slot, 1), 5) as Period;
 }
+
+/**
+ * 現在時刻がどの時限に該当するかを返す。授業時間外（休み時間・放課後・週末等）は
+ * nullを返す。「今空いている友達」表示（friends/page.tsx）向けに追加した。
+ */
+export function currentPeriod(university?: string, now: Date = new Date()): Period | null {
+  const table = periodTimeTable(university);
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  for (const p of PERIODS) {
+    const [start, end] = table[p].split("–").map((t) => {
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    });
+    if (minutes >= start && minutes < end) return p;
+  }
+  return null;
+}
