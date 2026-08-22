@@ -92,6 +92,31 @@ export default function JobsPage() {
         </Card>
       </div>
 
+      {/* 実データレビュー：マイナビ「Uターン・地元就職調査」で、地元就職を
+          希望しない理由の1位が「志望する企業がないから」36.8%——実態は
+          「宮崎県内にどんな企業があるか分からない」という情報ギャップだと
+          判明済み（docs/autonomous_improvement_log.mdサイクル137）。ただし
+          自律改善ループが実在企業の一覧を推測・捏造することは許されないため
+          （サイクル137の判断を踏襲）、独自の企業カタログは作らず、実在確認
+          済みの宮崎県公式の相談窓口（UIJターン就職サポーター制度）への
+          導線のみを追加した。 */}
+      <div className="mb-4">
+        <Card>
+          <p className="text-xs font-medium mb-1">宮崎県内の企業をもっと知りたいなら</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            「志望企業がない」と感じる理由の多くは、実は「宮崎県内にどんな企業があるか知らない」という情報不足だと言われています。宮崎県が無料の相談窓口を用意しています。
+          </p>
+          <a
+            href="https://www.pref.miyazaki.lg.jp/rodoseisaku/shigoto/rodo/20210412184930.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-blue-600 mt-2"
+          >
+            宮崎県 UIJターン就職サポーター制度 →
+          </a>
+        </Card>
+      </div>
+
       {jobs === null && (
         <p className="text-sm text-gray-400 text-center py-10">読み込み中…</p>
       )}
