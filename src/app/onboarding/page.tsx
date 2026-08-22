@@ -243,12 +243,17 @@ export default function OnboardingPage() {
           スクレイピングによる自前実装は保守コスト・規約リスクの観点で避けた）。
           学割証・学生定期については、証明書自動発行機（IC学生証利用）や宮崎交通
           の学生向け6ヶ月定期「CAM・PASS mini」等の公式手段が既に整備されており、
-          本アプリが代替・仲介する必要はないと判断し、リンクの追記のみとした。 */}
+          本アプリが代替・仲介する必要はないと判断し、リンクの追記のみとした。
+          任意保険についても、若年層の保険料負担に関する知恵袋の相談は多数あるが
+          宮崎大学固有の課題ではなく、保険業法上アプリが商品比較・推奨を行うのは
+          リスクが高いため、独自アドバイスは行わず「大学が任意保険加入を必須と
+          案内している」という事実（大学公式ページに明記）と、大学生協保険サービス
+          への外部リンクのみを追加した。 */}
       <div className="px-4 mt-3">
         <Card>
           <p className="text-xs font-medium mb-1">通学・アクセス情報</p>
           <p className="text-xs text-gray-600 leading-relaxed">
-            宮崎大学は木花・清武の2キャンパス制で、バス便は多くありません。原付・自転車・自動車での通学が主流です。木花⇔清武間の移動は乗り継ぎが必要な場合が多いため、時間に余裕を持って計画してください。学割証・通学証明書は学内の証明書自動発行機（IC学生証利用）で発行できます。
+            宮崎大学は木花・清武の2キャンパス制で、バス便は多くありません。原付・自転車・自動車での通学が主流です。木花⇔清武間の移動は乗り継ぎが必要な場合が多いため、時間に余裕を持って計画してください。学割証・通学証明書は学内の証明書自動発行機（IC学生証利用）で発行できます。原付・自動車で通学する場合は、大学から自賠責保険に加え任意保険への加入が案内されています。
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
             <a
@@ -282,6 +287,22 @@ export default function OnboardingPage() {
               className="text-xs text-blue-600"
             >
               宮崎交通の学生定期「CAM・PASS mini」 →
+            </a>
+            <a
+              href="https://www.miyazaki-u.ac.jp/manabi-jim/campus-life-info/commute/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              宮崎大学 通学についての公式案内（保険加入等） →
+            </a>
+            <a
+              href="https://hoken.univcoop.or.jp/auto/index.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              大学生協保険サービス（自動車・バイク） →
             </a>
           </div>
         </Card>
