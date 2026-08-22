@@ -105,6 +105,10 @@ export async function GET(req: NextRequest) {
       assignmentVolume: true,
       examDifficulty: true,
       clarity: true,
+      // overallEasiness（総合的な楽単度）はCourseKarteに以前から存在するが、
+      // 一覧の集計・ソートに反映されておらず「収集したデータが使われていない」
+      // 実装漏れだったため追加した（サイクル196）。
+      overallEasiness: true,
     },
     _count: true,
   });
@@ -112,12 +116,14 @@ export async function GET(req: NextRequest) {
 
   const coursesWithRating = courses.map((c) => {
     const r = ratingByCourseId.get(c.id);
-    if (!r) return { ...c, overall: null, karteCount: 0 };
+    if (!r) return { ...c, overall: null, easiness: null, karteCount: 0 };
     const avgs = [r._avg.attendanceStrictness, r._avg.assignmentVolume, r._avg.examDifficulty, r._avg.clarity].filter(
       (v): v is number => v !== null
     );
     const overall = avgs.length ? Math.round((avgs.reduce((a, b) => a + b, 0) / avgs.length) * 10) / 10 : null;
-    return { ...c, overall, karteCount: r._count };
+    const easiness =
+      r._avg.overallEasiness !== null ? Math.round(r._avg.overallEasiness * 10) / 10 : null;
+    return { ...c, overall, easiness, karteCount: r._count };
   });
 
   return NextResponse.json({ courses: coursesWithRating });

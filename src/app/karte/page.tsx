@@ -17,15 +17,17 @@ interface SyllabusCourse {
   weekday: string | null;
   period: number | null;
   overall: number | null;
+  easiness: number | null;
   karteCount: number;
 }
 
-type SortKey = "name" | "rating" | "count";
+type SortKey = "name" | "rating" | "count" | "easiness";
 
 const SORT_LABEL: Record<SortKey, string> = {
   name: "名前順",
   rating: "評価が高い順",
   count: "レビューが多い順",
+  easiness: "楽単度が高い順",
 };
 
 export default function KartePage() {
@@ -70,6 +72,8 @@ export default function KartePage() {
       arr.sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1));
     } else if (sort === "count") {
       arr.sort((a, b) => b.karteCount - a.karteCount);
+    } else if (sort === "easiness") {
+      arr.sort((a, b) => (b.easiness ?? -1) - (a.easiness ?? -1));
     }
     return arr;
   }, [courses, sort]);
@@ -170,6 +174,9 @@ export default function KartePage() {
             <p className="text-xs text-gray-400 mt-1">
               {c.teacher} {c.room && `・${c.room}`} {c.weekday && c.period && `・${c.weekday}${periodLabel(c.period, account?.university)}`}
             </p>
+            {c.easiness !== null && (
+              <p className="text-xs text-emerald-600 mt-1">楽単度 {c.easiness.toFixed(1)}</p>
+            )}
           </Link>
         ))}
         {searched && sortedCourses.length === 0 && (
