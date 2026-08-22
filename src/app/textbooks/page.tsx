@@ -16,6 +16,7 @@ type TextbookListing = {
 
 export default function TextbooksPage() {
   const [listings, setListings] = useState<TextbookListing[] | null>(null);
+  const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [courseName, setCourseName] = useState("");
@@ -71,6 +72,11 @@ export default function TextbooksPage() {
     load();
   }
 
+  const q = query.trim().toLowerCase();
+  const filteredListings = (listings ?? []).filter(
+    (l) => !q || l.title.toLowerCase().includes(q) || (l.courseName ?? "").toLowerCase().includes(q)
+  );
+
   return (
     <main className="flex-1 flex flex-col px-4 pb-8">
       <PageHeader title="教科書の譲渡・売買" />
@@ -84,6 +90,20 @@ export default function TextbooksPage() {
       >
         {showForm ? "投稿フォームを閉じる" : "+ 教科書を出品する"}
       </button>
+
+      {/* 実データレビュー：既存の一覧は検索・絞り込みが一切無く、九州の複数大学生協が
+          「講義名・書籍名」で検索できる教科書検索システムを共通して提供している実態
+          から、科目名検索は教科書探しに標準的なニーズと判断した。API変更・新規データ
+          収集は不要で、既にクライアントに渡っているtitle/courseNameへの単純な文字列
+          フィルタで実現できる（サイクル201）。 */}
+      {listings !== null && listings.length > 0 && (
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="mb-3 w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm"
+          placeholder="教科書名・科目名で検索"
+        />
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="mb-4">
@@ -166,8 +186,14 @@ export default function TextbooksPage() {
         </Card>
       )}
 
+      {listings !== null && listings.length > 0 && filteredListings.length === 0 && (
+        <Card>
+          <p className="text-sm text-gray-500 text-center py-6">該当する教科書が見つかりません。</p>
+        </Card>
+      )}
+
       <div className="space-y-3">
-        {listings?.map((l) => (
+        {filteredListings.map((l) => (
           <Card key={l.id}>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
