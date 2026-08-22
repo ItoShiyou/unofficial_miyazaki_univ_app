@@ -194,7 +194,12 @@ export default function OnboardingPage() {
           障害学生支援についても、既存カードが対人関係・進路・休学のみで障害配慮に
           触れておらず抜け漏れだったため、実在する「障がい学生支援室」への導線を
           追加した。妊娠・出産・育児と学業の両立は、宮崎大学固有の制度・実例が
-          確認できず対象学生数も極めて少ないと推定されるため見送った。 */}
+          確認できず対象学生数も極めて少ないと推定されるため見送った。
+          留学生（111人在籍）についても、在留資格・アルバイトの時間制限・国民健康
+          保険等は国際連携センターが既に公式に案内している一方、本アプリ内にその
+          ページへの導線が一切無い抜け漏れが見つかったため追加した。UI全体の
+          多言語化はサイクル175で見送り済みのため、日本語のまま導線を追加するに
+          とどめた（サイクル211）。 */}
       <div className="px-4 mt-3">
         <Card className="border-blue-200 bg-blue-50/50">
           <p className="text-xs font-medium text-blue-800 mb-1">困ったときの相談窓口</p>
@@ -230,6 +235,14 @@ export default function OnboardingPage() {
               className="text-xs text-blue-600"
             >
               障がい学生支援室（修学上の配慮・支援） →
+            </a>
+            <a
+              href="https://www.miyazaki-u.ac.jp/kokusai/study/post-1.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600"
+            >
+              留学生のための各種手続き（在留資格・アルバイト・国民健康保険等） →
             </a>
           </div>
         </Card>
