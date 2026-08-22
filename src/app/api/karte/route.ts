@@ -4,12 +4,11 @@ import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 import { currentUser } from "@/lib/currentUser";
 import { containsPersonalAttack } from "@/lib/karteValidation";
 
-// 実データレビューで、少人数授業（ゼミ・専門演習等）では自由記述（advice/comment）の
-// 文体・具体的なエピソードから投稿者本人や少人数グループが実質的に特定されてしまう
-// 「k-匿名性の欠如」リスクが指摘された。ログイン必須（アカウント作成にドメイン制限が
-// 無いため実質的な壁としては弱い、サイクル89参照）だけでは対策として不十分なため、
-// 件数が閾値未満の授業は自由記述を非表示にし、星評価等の集計数値のみ返す。
-const FREE_TEXT_MIN_COUNT = 5;
+// 元々は少人数授業（ゼミ・専門演習等）でのk-匿名性欠如（自由記述の文体・
+// エピソードから投稿者本人が特定されるリスク）に配慮し、閾値未満の授業では
+// 自由記述を非表示にしていた（サイクル89）。ユーザー（運営）から「1件でも
+// 感想を表示して構わない」と明示的な指示があったため、この保護は解除する。
+const FREE_TEXT_MIN_COUNT = 1;
 
 export async function GET(req: NextRequest) {
   const syllabusCourseId = req.nextUrl.searchParams.get("syllabusCourseId");
