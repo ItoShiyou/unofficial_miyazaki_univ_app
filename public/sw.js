@@ -1,11 +1,14 @@
 // キャッシュ名を変更すると、activate時に古いキャッシュが破棄される。
 // 認証導入前のv1はAPIレスポンスまでキャッシュしていたため、v2で必ず作り直す。
-const CACHE_NAME = "miyadai-app-v2";
+// v3では、未訪問ページの初回オフラインアクセス時にブラウザ標準の
+// 「インターネット未接続」エラー画面になってしまう穴を塞ぐため、
+// offline.htmlをapp shellに追加した（実データレビュー、サイクル209）。
+const CACHE_NAME = "miyadai-app-v3";
 
 // 事前キャッシュはログイン状態に依存しないものだけに限定する。
 // "/" や "/timetable" を事前キャッシュすると、未ログイン時にインストールした場合に
 // ログインページのHTMLが "/" として保存され、ログイン後もそれが表示されてしまう。
-const APP_SHELL = ["/manifest.json", "/icon-192.png", "/icon-512.png"];
+const APP_SHELL = ["/manifest.json", "/icon-192.png", "/icon-512.png", "/offline.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -54,7 +57,16 @@ self.addEventListener("fetch", (event) => {
         // キャッシュに無い場合(初回アクセスや未キャッシュページ)はundefinedになり、
         // respondWithにResponse以外を渡すとエラーになるためフォールバックを用意する。
         const cached = await caches.match(event.request);
-        return cached ?? Response.error();
+        if (cached) return cached;
+        // ページ遷移（アドレスバー・リンク等での画面表示）で、かつキャッシュにも
+        // 無い場合は、ブラウザ標準の素っ気ないオフラインエラーの代わりに
+        // 自前のoffline.htmlを返す。fetch/画像等のサブリソースは対象外にする
+        // （そちらまでHTMLを返すと壊れた表示になるため）。
+        if (event.request.mode === "navigate") {
+          const offline = await caches.match("/offline.html");
+          if (offline) return offline;
+        }
+        return Response.error();
       })
   );
 });

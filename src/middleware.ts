@@ -49,7 +49,11 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Next.js内部アセット・PWA関連の静的ファイル・広告配信の審査用ファイルは除外する
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon-192.png|icon-512.png|apple-touch-icon.png|ads.txt).*)",
+    // Next.js内部アセット・PWA関連の静的ファイル・広告配信の審査用ファイルは除外する。
+    // offline.htmlはService Workerが未ログイン状態でも事前キャッシュするオフライン
+    // フォールバックページのため、他の静的ファイルと同様にログインゲートの対象外にする
+    // （除外しないとSWが取得するのが自前のoffline.htmlではなくログインへのリダイレクトに
+    // なってしまい、フォールバックとして機能しなくなる。サイクル209）。
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|offline.html|icon-192.png|icon-512.png|apple-touch-icon.png|ads.txt).*)",
   ],
 };
