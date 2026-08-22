@@ -12,7 +12,7 @@ import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 import { computeGpa, computeEarnedCredits } from "@/lib/gpa";
 import { UNIVERSITIES, universityName, universitySupportsSyllabusSync } from "@/lib/universities";
 import { useAccount } from "@/lib/useAccount";
-import { PageHeader, Card } from "@/components/ui";
+import { PageHeader, Card, IconChip, NavLinkButton } from "@/components/ui";
 import BonjinBadge from "@/components/BonjinBadge";
 import AppSurveyCard from "@/components/AppSurveyCard";
 import {
@@ -43,6 +43,164 @@ const FIELD_LABEL: Record<string, string> = {
 interface SyllabusStatus {
   total: number;
   lastFetchedAt: string | null;
+}
+
+// マイページの各カードに添えるピクトグラム。文字だけの一覧に視覚的な目印と
+// 遊びを加えるための最小限のアイコンセット（BottomNavと同じ線画スタイル）。
+type IconName =
+  | "user"
+  | "tag"
+  | "users"
+  | "megaphone"
+  | "checklist"
+  | "chart"
+  | "calendar"
+  | "cap"
+  | "target"
+  | "file"
+  | "sync"
+  | "bell"
+  | "history"
+  | "trash"
+  | "coin"
+  | "briefcase"
+  | "shield";
+
+function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
+  const common = {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none" as const,
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+  switch (name) {
+    case "user":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M4.5 20c1.5-3.5 5-5 7.5-5s6 1.5 7.5 5" />
+        </svg>
+      );
+    case "tag":
+      return (
+        <svg {...common}>
+          <path d="M12 3h6a2 2 0 0 1 2 2v6l-9 9-8-8z" />
+          <circle cx="16" cy="8" r="1" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case "users":
+      return (
+        <svg {...common}>
+          <circle cx="9" cy="8" r="3" />
+          <path d="M2.5 20c1.2-3 4-4.5 6.5-4.5s5.3 1.5 6.5 4.5" />
+          <path d="M15.5 5.5c1.4.3 2.5 1.6 2.5 3s-1.1 2.7-2.5 3" />
+          <path d="M16 15.8c2 .4 3.6 1.8 4.5 4.2" />
+        </svg>
+      );
+    case "megaphone":
+      return (
+        <svg {...common}>
+          <path d="M3 10v4a1 1 0 0 0 1 1h2l8 4V5l-8 4H4a1 1 0 0 0-1 1Z" />
+          <path d="M18 9a4 4 0 0 1 0 6" />
+        </svg>
+      );
+    case "checklist":
+      return (
+        <svg {...common}>
+          <rect x="4" y="4" width="16" height="16" rx="3" />
+          <path d="M8 12.5l2.5 2.5L16 9.5" />
+        </svg>
+      );
+    case "chart":
+      return (
+        <svg {...common}>
+          <path d="M4 20V10M12 20V4M20 20v-7" />
+          <path d="M2 20h20" />
+        </svg>
+      );
+    case "calendar":
+      return (
+        <svg {...common}>
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M3 10h18M8 3v4M16 3v4" />
+        </svg>
+      );
+    case "cap":
+      return (
+        <svg {...common}>
+          <path d="M2 9l10-4 10 4-10 4-10-4Z" />
+          <path d="M6 11v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5" />
+        </svg>
+      );
+    case "target":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="8" />
+          <circle cx="12" cy="12" r="4" />
+          <circle cx="12" cy="12" r="0.5" fill="currentColor" />
+        </svg>
+      );
+    case "file":
+      return (
+        <svg {...common}>
+          <path d="M6 3h9l3 3v15H6z" />
+          <path d="M9 9h6M9 13h6M9 17h4" />
+        </svg>
+      );
+    case "sync":
+      return (
+        <svg {...common}>
+          <path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" />
+          <path d="M17 3v4h-4M7 21v-4h4" />
+        </svg>
+      );
+    case "bell":
+      return (
+        <svg {...common}>
+          <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z" />
+          <path d="M9.5 18a2.5 2.5 0 0 0 5 0" />
+        </svg>
+      );
+    case "history":
+      return (
+        <svg {...common}>
+          <path d="M12 8v5l3 2" />
+          <circle cx="12" cy="12" r="9" />
+        </svg>
+      );
+    case "trash":
+      return (
+        <svg {...common}>
+          <path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" />
+        </svg>
+      );
+    case "coin":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M9.5 15.5c0 1.1 1.1 2 2.5 2s2.5-.7 2.5-1.8c0-2.5-5-1.2-5-3.6 0-1.1 1.1-1.8 2.5-1.8s2.5.9 2.5 2" />
+        </svg>
+      );
+    case "briefcase":
+      return (
+        <svg {...common}>
+          <rect x="3" y="7" width="18" height="12" rx="2" />
+          <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18" />
+        </svg>
+      );
+    case "shield":
+      return (
+        <svg {...common}>
+          <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+        </svg>
+      );
+    default:
+      return null;
+  }
 }
 
 export default function MyPage() {
@@ -345,7 +503,10 @@ export default function MyPage() {
         <AppSurveyCard />
 
         <Card>
-          <p className="text-xs text-gray-400 mb-2">アカウント</p>
+          <div className="flex items-center gap-2 mb-2">
+            <IconChip tone="blue"><Icon name="user" /></IconChip>
+            <p className="text-xs text-gray-400">アカウント</p>
+          </div>
           {account ? (
             <div className="space-y-1 mb-3">
               <p className="text-sm font-medium">{account.email}</p>
@@ -371,21 +532,21 @@ export default function MyPage() {
                       setUniversityError(null);
                     }}
                     disabled={savingUniversity}
-                    className="text-xs text-gray-400"
+                    className="rounded-full bg-gray-100 text-gray-500 text-xs px-3 py-1.5"
                   >
                     キャンセル
                   </button>
                 </div>
               ) : (
-                <p className="text-xs text-gray-500">
-                  {universityName(account.university)}
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-gray-500">{universityName(account.university)}</p>
                   <button
                     onClick={() => setEditingUniversity(true)}
-                    className="ml-2 text-blue-600"
+                    className="rounded-full bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-1"
                   >
                     変更
                   </button>
-                </p>
+                </div>
               )}
             </div>
           ) : (
@@ -472,7 +633,7 @@ export default function MyPage() {
                 setPasswordDone(false);
                 setShowPasswordForm(true);
               }}
-              className="block text-xs text-blue-600 mb-3"
+              className="rounded-full bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 mb-3"
             >
               パスワードを変更
             </button>
@@ -481,14 +642,17 @@ export default function MyPage() {
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="text-xs text-red-600 disabled:opacity-50"
+            className="rounded-full bg-rose-50 text-rose-600 text-xs font-medium px-3 py-1.5 disabled:opacity-50"
           >
             {loggingOut ? "ログアウト中..." : "ログアウト"}
           </button>
         </Card>
 
         <Card>
-          <p className="text-xs text-gray-400 mb-2">ニックネーム</p>
+          <div className="flex items-center gap-2 mb-2">
+            <IconChip tone="violet"><Icon name="tag" /></IconChip>
+            <p className="text-xs text-gray-400">ニックネーム</p>
+          </div>
           {editingName ? (
             <div className="flex gap-2">
               <input
@@ -508,7 +672,7 @@ export default function MyPage() {
                   setDraftName(savedName);
                   setEditingName(true);
                 }}
-                className="text-xs text-blue-600"
+                className="rounded-full bg-violet-50 text-violet-700 text-xs font-medium px-2.5 py-1"
               >
                 編集
               </button>
@@ -519,22 +683,26 @@ export default function MyPage() {
 
         <Card>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium">友達と比較</span>
-            <Link href="/friends" className="text-xs text-blue-600">
-              開く →
-            </Link>
+            <div className="flex items-center gap-2">
+              <IconChip tone="violet"><Icon name="users" /></IconChip>
+              <span className="text-sm font-medium">友達と比較</span>
+            </div>
+            <NavLinkButton href="/friends" tone="violet">開く</NavLinkButton>
           </div>
           <p className="text-xs text-gray-400">招待コードで友達を追加し、時間割を比較できます。</p>
         </Card>
 
-        <Card>
-          <p className="text-sm font-medium mb-1">まだ使っていない友達がいたら</p>
-          <p className="text-xs text-gray-400 mb-2">
+        <Card className="!bg-amber-50 !border-amber-100">
+          <div className="flex items-center gap-2 mb-1">
+            <IconChip tone="amber"><Icon name="megaphone" /></IconChip>
+            <p className="text-sm font-medium">まだ使っていない友達がいたら</p>
+          </div>
+          <p className="text-xs text-amber-800/70 mb-3">
             このアプリを友達に教えることもできます（友達登録とは別に、アプリ自体を知らせたいときに）。
           </p>
           <button
             onClick={shareApp}
-            className="w-full rounded-lg bg-gray-900 text-white text-xs py-2"
+            className="w-full rounded-full bg-amber-500 text-white text-sm font-medium py-2.5 active:bg-amber-600"
           >
             {appShareCopied ? "リンクをコピーしました" : "アプリを紹介する"}
           </button>
@@ -542,20 +710,22 @@ export default function MyPage() {
 
         <Card>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium">はじめの2週間ガイド</span>
-            <Link href="/onboarding" className="text-xs text-blue-600">
-              開く →
-            </Link>
+            <div className="flex items-center gap-2">
+              <IconChip tone="blue"><Icon name="checklist" /></IconChip>
+              <span className="text-sm font-medium">はじめの2週間ガイド</span>
+            </div>
+            <NavLinkButton href="/onboarding" tone="blue">開く</NavLinkButton>
           </div>
           <p className="text-xs text-gray-400">入学・進級直後にやっておくと良いことをチェックリストで確認できます。</p>
         </Card>
 
         <Card>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium">今学期の負荷</span>
-            <Link href="/workload" className="text-xs text-blue-600">
-              開く →
-            </Link>
+            <div className="flex items-center gap-2">
+              <IconChip tone="rose"><Icon name="chart" /></IconChip>
+              <span className="text-sm font-medium">今学期の負荷</span>
+            </div>
+            <NavLinkButton href="/workload" tone="rose">開く</NavLinkButton>
           </div>
           <p className="text-xs text-gray-400">
             時間割全体の出席の厳しさ・課題の多さを、授業カルテのデータから1画面に集約します。
@@ -565,7 +735,10 @@ export default function MyPage() {
         {/* UI/UX見直し：お金の記録・奨学金・教科書譲渡は下部タブ「くらし」
             （/life）に移設したため、マイページからは重複するカードを削除した。 */}
         <Card>
-          <p className="text-sm font-medium mb-2">学期</p>
+          <div className="flex items-center gap-2 mb-2">
+            <IconChip tone="cyan"><Icon name="calendar" /></IconChip>
+            <p className="text-sm font-medium">学期</p>
+          </div>
           <p className="text-xs text-gray-400 mb-2">現在表示中：{semesterLabel(semester)}（{currentCourses.length}科目）</p>
           <div className="space-y-1">
             {Array.from(semesterCounts.entries()).map(([label, count]) => (
@@ -581,17 +754,20 @@ export default function MyPage() {
         </Card>
 
         <Card>
-          <p className="text-sm font-medium mb-2">成績・GPA</p>
+          <div className="flex items-center gap-2 mb-2">
+            <IconChip tone="emerald"><Icon name="cap" /></IconChip>
+            <p className="text-sm font-medium">成績・GPA</p>
+          </div>
           <div className="grid grid-cols-2 gap-3 mb-2">
-            <div className="rounded-xl bg-gray-50 p-3">
-              <p className="text-xs text-gray-400 mb-1">{semesterLabel(semester)}</p>
-              <p className="text-xl font-bold">
+            <div className="rounded-xl bg-emerald-50 p-3">
+              <p className="text-xs text-emerald-700/70 mb-1">{semesterLabel(semester)}</p>
+              <p className="text-xl font-bold text-emerald-700">
                 {currentSemesterGpa.gpa != null ? currentSemesterGpa.gpa.toFixed(2) : "―"}
               </p>
             </div>
-            <div className="rounded-xl bg-gray-50 p-3">
-              <p className="text-xs text-gray-400 mb-1">通算</p>
-              <p className="text-xl font-bold">
+            <div className="rounded-xl bg-emerald-50 p-3">
+              <p className="text-xs text-emerald-700/70 mb-1">通算</p>
+              <p className="text-xl font-bold text-emerald-700">
                 {cumulativeGpa.gpa != null ? cumulativeGpa.gpa.toFixed(2) : "―"}
               </p>
             </div>
@@ -610,7 +786,10 @@ export default function MyPage() {
             サイクル134の判断（誤判定リスク）とは別種の、リスクの低い機能にした。
             不可（不合格）の科目は取得単位に含めない（サイクル207）。 */}
         <Card>
-          <p className="text-sm font-medium mb-2">卒業要件単位数（自己申告）</p>
+          <div className="flex items-center gap-2 mb-2">
+            <IconChip tone="emerald"><Icon name="target" /></IconChip>
+            <p className="text-sm font-medium">卒業要件単位数（自己申告）</p>
+          </div>
           {targetCredits === null && !editingTarget ? (
             <button
               onClick={() => {
@@ -650,7 +829,7 @@ export default function MyPage() {
                     setTargetDraft(String(targetCredits));
                     setEditingTarget(true);
                   }}
-                  className="text-xs text-blue-600"
+                  className="rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-1"
                 >
                   変更する
                 </button>
@@ -669,15 +848,18 @@ export default function MyPage() {
         </Card>
 
         <Card>
-          <p className="text-sm font-medium mb-2">時間割データ</p>
+          <div className="flex items-center gap-2 mb-2">
+            <IconChip tone="gray"><Icon name="file" /></IconChip>
+            <p className="text-sm font-medium">時間割データ</p>
+          </div>
           <div className="flex gap-2">
             <button
               onClick={() => exportTimetableCsv(currentCourses)}
-              className="flex-1 rounded-lg border border-gray-300 text-sm py-2"
+              className="flex-1 rounded-full border border-gray-300 text-sm py-2"
             >
               CSVエクスポート
             </button>
-            <label className="flex-1 rounded-lg border border-gray-300 text-sm py-2 text-center cursor-pointer">
+            <label className="flex-1 rounded-full border border-gray-300 text-sm py-2 text-center cursor-pointer">
               CSVインポート
               <input
                 type="file"
@@ -694,7 +876,10 @@ export default function MyPage() {
         </Card>
 
         <Card>
-          <p className="text-sm font-medium mb-1">シラバス連携</p>
+          <div className="flex items-center gap-2 mb-1">
+            <IconChip tone="blue"><Icon name="sync" /></IconChip>
+            <p className="text-sm font-medium">シラバス連携</p>
+          </div>
           {account && !universitySupportsSyllabusSync(account.university) ? (
             <p className="text-xs text-gray-400">
               {universityName(account.university)}は、まだシラバス連携（自動取得・変更検知）に対応していません。時間割・授業カルテは手動で入力・登録してご利用いただけます。対応拡大のご要望は開発者までお寄せください。
@@ -729,7 +914,10 @@ export default function MyPage() {
         {pushState && pushState !== "unsupported" && (
           <Card>
             <div className="flex items-center justify-between mb-1">
-              <p className="text-sm font-medium">シラバス変更のプッシュ通知</p>
+              <div className="flex items-center gap-2">
+                <IconChip tone="blue"><Icon name="bell" /></IconChip>
+                <p className="text-sm font-medium">シラバス変更のプッシュ通知</p>
+              </div>
               <button
                 onClick={togglePush}
                 disabled={pushBusy}
@@ -749,7 +937,10 @@ export default function MyPage() {
 
         {changes.length > 0 && (
           <Card>
-            <p className="text-sm font-medium mb-1">シラバスの変更履歴</p>
+            <div className="flex items-center gap-2 mb-1">
+              <IconChip tone="amber"><Icon name="history" /></IconChip>
+              <p className="text-sm font-medium">シラバスの変更履歴</p>
+            </div>
             <p className="text-xs text-gray-400 mb-3">
               {semesterLabel(semester)}で検知された変更（新しい順・最大50件）
             </p>
@@ -812,7 +1003,10 @@ export default function MyPage() {
         )}
 
         <Card>
-          <p className="text-xs text-gray-400 mb-2">アカウントの削除</p>
+          <div className="flex items-center gap-2 mb-2">
+            <IconChip tone="rose"><Icon name="trash" /></IconChip>
+            <p className="text-xs text-gray-400">アカウントの削除</p>
+          </div>
           {showDeleteForm ? (
             <form onSubmit={handleDeleteAccount} className="space-y-2">
               <p className="text-xs text-red-600 leading-relaxed">
@@ -852,28 +1046,36 @@ export default function MyPage() {
           ) : (
             <button
               onClick={() => setShowDeleteForm(true)}
-              className="text-xs text-red-600"
+              className="rounded-full bg-rose-50 text-rose-600 text-xs font-medium px-3 py-1.5"
             >
               アカウントを削除する
             </button>
           )}
         </Card>
 
-        <p className="text-center pt-2">
-          <Link href="/sponsors" className="text-xs text-gray-400 underline">
-            地元とつながる（協賛企業一覧）
+        <div className="flex flex-wrap justify-center gap-2 pt-2">
+          <Link
+            href="/sponsors"
+            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium px-3 py-1.5"
+          >
+            <Icon name="coin" size={14} />
+            地元とつながる
           </Link>
-        </p>
-        <p className="text-center pt-1">
-          <Link href="/jobs" className="text-xs text-gray-400 underline">
-            宮崎の企業から（求人・インターン・説明会）
+          <Link
+            href="/jobs"
+            className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 text-cyan-700 text-xs font-medium px-3 py-1.5"
+          >
+            <Icon name="briefcase" size={14} />
+            求人・説明会
           </Link>
-        </p>
-        <p className="text-center pt-1">
-          <Link href="/privacy" className="text-xs text-gray-400 underline">
+          <Link
+            href="/privacy"
+            className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 text-gray-500 text-xs font-medium px-3 py-1.5"
+          >
+            <Icon name="shield" size={14} />
             プライバシーポリシー
           </Link>
-        </p>
+        </div>
         <p className="text-[11px] text-gray-300 text-center pt-2 leading-relaxed px-6">
           宮大非公式アプリ（開発版）。大学・大学当局とは一切関係のない、学生有志による個人開発のアプリです。学籍番号や大学配布のパスワードは取り扱いません。
         </p>

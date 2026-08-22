@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export function PageHeader({
   title,
   right,
@@ -72,5 +74,69 @@ export function Card({
     <div className={`rounded-2xl border border-gray-200 bg-white p-4 ${className}`}>
       {children}
     </div>
+  );
+}
+
+const TONE_CHIP: Record<string, string> = {
+  blue: "bg-blue-50 text-blue-600",
+  emerald: "bg-emerald-50 text-emerald-600",
+  amber: "bg-amber-50 text-amber-600",
+  rose: "bg-rose-50 text-rose-600",
+  violet: "bg-violet-50 text-violet-600",
+  cyan: "bg-cyan-50 text-cyan-600",
+  gray: "bg-gray-100 text-gray-500",
+};
+
+export type Tone = keyof typeof TONE_CHIP;
+
+// カードの見出し用ピクトグラム。色つきの角丸チップにアイコンを乗せることで、
+// 文字だけが並ぶ単調な一覧に視覚的な目印と遊びを加える。
+export function IconChip({
+  tone = "blue",
+  children,
+}: {
+  tone?: Tone;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center justify-center w-9 h-9 rounded-xl shrink-0 ${TONE_CHIP[tone]}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+const TONE_BUTTON: Record<string, string> = {
+  blue: "bg-blue-50 text-blue-700 active:bg-blue-100",
+  emerald: "bg-emerald-50 text-emerald-700 active:bg-emerald-100",
+  amber: "bg-amber-50 text-amber-700 active:bg-amber-100",
+  rose: "bg-rose-50 text-rose-700 active:bg-rose-100",
+  violet: "bg-violet-50 text-violet-700 active:bg-violet-100",
+  cyan: "bg-cyan-50 text-cyan-700 active:bg-cyan-100",
+  gray: "bg-gray-100 text-gray-600 active:bg-gray-200",
+};
+
+// 「開く →」等の小さな青文字リンクは視認性・タップ領域の両方で不十分だったため、
+// 色付きの背景を持つピル型ボタンに統一する（タップしやすい余白を確保）。
+export function NavLinkButton({
+  href,
+  tone = "blue",
+  children,
+}: {
+  href: string;
+  tone?: Tone;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`inline-flex items-center gap-1 rounded-full pl-3 pr-2.5 py-1.5 text-xs font-medium shrink-0 ${TONE_BUTTON[tone]}`}
+    >
+      {children}
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </Link>
   );
 }
