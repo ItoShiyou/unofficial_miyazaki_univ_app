@@ -12,7 +12,7 @@ import { exportTimetableCsv, importTimetableCsv } from "@/lib/csv";
 import { computeGpa, computeEarnedCredits } from "@/lib/gpa";
 import { UNIVERSITIES, universityName, universitySupportsSyllabusSync } from "@/lib/universities";
 import { useAccount } from "@/lib/useAccount";
-import { PageHeader, Card, IconChip, NavLinkButton, Icon } from "@/components/ui";
+import { PageHeader, Card, IconChip, Icon } from "@/components/ui";
 import BonjinBadge from "@/components/BonjinBadge";
 import AppSurveyCard from "@/components/AppSurveyCard";
 import {
@@ -523,17 +523,9 @@ export default function MyPage() {
           <p className="text-xs text-gray-400 mt-2">友達との時間割比較で表示される名前です。</p>
         </Card>
 
-        <Card>
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <IconChip tone="violet"><Icon name="users" /></IconChip>
-              <span className="text-sm font-medium">友達と比較</span>
-            </div>
-            <NavLinkButton href="/friends" tone="violet">開く</NavLinkButton>
-          </div>
-          <p className="text-xs text-gray-400">招待コードで友達を追加し、時間割を比較できます。</p>
-        </Card>
-
+        {/* IA見直し（ユーザー要望）：友達と比較・はじめの2週間ガイド・今学期の負荷は
+            マイページ経由でしか辿り着けず発見しにくいという指摘を受け、ホーム画面
+            上部のショートカットに移設した（マイページからは重複カードを削除）。 */}
         <Card className="!bg-amber-50 !border-amber-100">
           <div className="flex items-center gap-2 mb-1">
             <IconChip tone="amber"><Icon name="megaphone" /></IconChip>
@@ -548,30 +540,6 @@ export default function MyPage() {
           >
             {appShareCopied ? "リンクをコピーしました" : "アプリを紹介する"}
           </button>
-        </Card>
-
-        <Card>
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <IconChip tone="blue"><Icon name="checklist" /></IconChip>
-              <span className="text-sm font-medium">はじめの2週間ガイド</span>
-            </div>
-            <NavLinkButton href="/onboarding" tone="blue">開く</NavLinkButton>
-          </div>
-          <p className="text-xs text-gray-400">入学・進級直後にやっておくと良いことをチェックリストで確認できます。</p>
-        </Card>
-
-        <Card>
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <IconChip tone="rose"><Icon name="chart" /></IconChip>
-              <span className="text-sm font-medium">今学期の負荷</span>
-            </div>
-            <NavLinkButton href="/workload" tone="rose">開く</NavLinkButton>
-          </div>
-          <p className="text-xs text-gray-400">
-            時間割全体の出席の厳しさ・課題の多さを、授業カルテのデータから1画面に集約します。
-          </p>
         </Card>
 
         {/* UI/UX見直し：お金の記録・奨学金・教科書譲渡は下部タブ「くらし」
@@ -895,21 +863,9 @@ export default function MyPage() {
           )}
         </Card>
 
+        {/* IA見直し（ユーザー要望）：地元とつながる・求人はホーム画面上部の
+            ショートカットに移設したため、マイページ下部には法務系リンクのみ残す。 */}
         <div className="flex flex-wrap justify-center gap-2 pt-2">
-          <Link
-            href="/sponsors"
-            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium px-3 py-1.5"
-          >
-            <Icon name="coin" size={14} />
-            地元とつながる
-          </Link>
-          <Link
-            href="/jobs"
-            className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 text-cyan-700 text-xs font-medium px-3 py-1.5"
-          >
-            <Icon name="briefcase" size={14} />
-            求人・説明会
-          </Link>
           <Link
             href="/privacy"
             className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 text-gray-500 text-xs font-medium px-3 py-1.5"

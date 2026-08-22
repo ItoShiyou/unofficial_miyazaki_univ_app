@@ -6,8 +6,21 @@ import { db, WEEKDAYS } from "@/lib/db";
 import { addDaysLocalDate, todayLocalDate } from "@/lib/date";
 import { periodLabel } from "@/lib/periods";
 import { useAccount } from "@/lib/useAccount";
-import { PageHeader } from "@/components/ui";
+import { PageHeader, IconChip, Icon, type Tone, type IconName } from "@/components/ui";
 import AdUnit from "@/components/AdUnit";
+
+// IA見直し（ユーザー要望）：友達と比較・今学期の負荷・はじめの2週間ガイド・
+// 地元とつながる・求人説明会は、以前はマイページの奥までタップしないと
+// 辿り着けなかった。「ホーム画面からもっといろんなところに飛べるといい」
+// という指摘を受け、利用頻度の高いこれらの機能をホーム最上部の
+// ショートカットとして昇格させた（マイページからは重複カードを削除）。
+const SHORTCUTS: { href: string; label: string; icon: IconName; tone: Tone }[] = [
+  { href: "/onboarding", label: "はじめの2週間", icon: "checklist", tone: "blue" },
+  { href: "/friends", label: "友達と比較", icon: "users", tone: "violet" },
+  { href: "/workload", label: "今学期の負荷", icon: "chart", tone: "rose" },
+  { href: "/sponsors", label: "地元とつながる", icon: "coin", tone: "emerald" },
+  { href: "/jobs", label: "求人・説明会", icon: "briefcase", tone: "cyan" },
+];
 
 function todayWeekday() {
   const map = [6, 0, 1, 2, 3, 4, 5];
@@ -74,6 +87,19 @@ export default function Home() {
       <p className="px-4 text-sm text-gray-400 -mt-1 mb-4">
         {new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" })}
       </p>
+
+      <section className="px-4 mb-5">
+        <div className="grid grid-cols-5 gap-1.5">
+          {SHORTCUTS.map((s) => (
+            <Link key={s.href} href={s.href} className="flex flex-col items-center gap-1.5">
+              <IconChip tone={s.tone}>
+                <Icon name={s.icon} />
+              </IconChip>
+              <span className="text-[10px] text-gray-500 text-center leading-tight">{s.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <section className="px-4 mb-5">
         <h2 className="text-sm font-medium text-gray-500 mb-2">今日の予定</h2>
