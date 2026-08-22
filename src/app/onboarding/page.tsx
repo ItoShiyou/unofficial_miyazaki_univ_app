@@ -403,6 +403,17 @@ export default function OnboardingPage() {
           >
             宮崎大学生協 推奨パソコン案内 →
           </a>
+          <p className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-100">
+            パソコンの使い方講座（生成AI活用つき）を探している場合、本アプリ開発者が個人で開催する有料講座もあります。生協主催ではありません。
+          </p>
+          <a
+            href="https://claude.ai/code/artifact/bc7ec4a6-bbdb-472e-8b66-e9f2c4512388"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-blue-600 mt-1"
+          >
+            開発者主催のPC×生成AI講座（案内） →
+          </a>
         </Card>
       </div>
     </main>
