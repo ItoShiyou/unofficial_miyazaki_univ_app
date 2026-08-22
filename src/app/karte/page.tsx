@@ -7,7 +7,7 @@ import { semesterLabel } from "@/lib/semester";
 import { useCurrentSemester } from "@/lib/useSemester";
 import { PERIODS, periodLabel } from "@/lib/periods";
 import { useAccount } from "@/lib/useAccount";
-import { PageHeader, StarRating } from "@/components/ui";
+import { PageHeader, StarRating, IconChip, Icon } from "@/components/ui";
 
 interface SyllabusCourse {
   id: string;
@@ -98,7 +98,7 @@ export default function KartePage() {
         <button
           onClick={() => setWeekday("")}
           className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium ${
-            weekday === "" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+            weekday === "" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500"
           }`}
         >
           曜日: すべて
@@ -108,7 +108,7 @@ export default function KartePage() {
             key={w}
             onClick={() => setWeekday(weekday === w ? "" : w)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium ${
-              weekday === w ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+              weekday === w ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500"
             }`}
           >
             {w}
@@ -120,7 +120,7 @@ export default function KartePage() {
         <button
           onClick={() => setPeriod("")}
           className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium ${
-            period === "" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+            period === "" ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500"
           }`}
         >
           時限: すべて
@@ -130,7 +130,7 @@ export default function KartePage() {
             key={p}
             onClick={() => setPeriod(period === p ? "" : p)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium ${
-              period === p ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+              period === p ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500"
             }`}
           >
             {p}限
@@ -160,23 +160,28 @@ export default function KartePage() {
           <Link
             key={c.id}
             href={`/karte/${c.id}`}
-            className="block rounded-2xl border border-gray-200 p-4"
+            className="flex gap-3 rounded-2xl border border-gray-200 p-4"
           >
-            <div className="flex items-center justify-between">
-              <span className="font-medium">{c.name}</span>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <StarRating value={c.overall} />
-                {c.karteCount > 0 && (
-                  <span className="text-[10px] text-gray-400">({c.karteCount})</span>
-                )}
+            <IconChip tone="blue"><Icon name="cap" /></IconChip>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium truncate">{c.name}</span>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <StarRating value={c.overall} />
+                  {c.karteCount > 0 && (
+                    <span className="text-[10px] text-gray-400">({c.karteCount})</span>
+                  )}
+                </div>
               </div>
+              <p className="text-xs text-gray-400 mt-1">
+                {c.teacher} {c.room && `・${c.room}`} {c.weekday && c.period && `・${c.weekday}${periodLabel(c.period, account?.university)}`}
+              </p>
+              {c.easiness !== null && (
+                <span className="inline-block text-[11px] font-medium text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5 mt-1.5">
+                  楽単度 {c.easiness.toFixed(1)}
+                </span>
+              )}
             </div>
-            <p className="text-xs text-gray-400 mt-1">
-              {c.teacher} {c.room && `・${c.room}`} {c.weekday && c.period && `・${c.weekday}${periodLabel(c.period, account?.university)}`}
-            </p>
-            {c.easiness !== null && (
-              <p className="text-xs text-emerald-600 mt-1">楽単度 {c.easiness.toFixed(1)}</p>
-            )}
           </Link>
         ))}
         {searched && sortedCourses.length === 0 && (

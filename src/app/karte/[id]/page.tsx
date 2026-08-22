@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCurrentSemester } from "@/lib/useSemester";
 import { periodLabel } from "@/lib/periods";
 import { useAccount } from "@/lib/useAccount";
-import { StarRating } from "@/components/ui";
+import { StarRating, IconChip, Icon } from "@/components/ui";
 import KarteFormModal from "@/components/KarteFormModal";
 import { universityName } from "@/lib/universities";
 
@@ -156,7 +156,7 @@ export default function KarteDetailPage() {
             key={t.key}
             onClick={() => setTab(t.key as typeof tab)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium ${
-              tab === t.key ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
+              tab === t.key ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-500"
             }`}
           >
             {t.label}
@@ -166,12 +166,12 @@ export default function KarteDetailPage() {
 
       {tab === "summary" && (
         <section className="px-4">
-          <div className="rounded-2xl border border-gray-200 p-4 mb-3">
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 mb-3">
             <p className="text-xs text-gray-400 mb-1">
               みんなの評価（{course.year}年度{course.semester}・{summary.count}件の評価）
             </p>
             <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-bold">{overall ?? "-"}</span>
+              <span className="text-3xl font-bold text-indigo-700">{overall ?? "-"}</span>
               <StarRating value={overall} size={18} />
             </div>
             <RatingRow label="出席の厳しさ" value={summary.attendanceStrictness} />
@@ -181,9 +181,12 @@ export default function KarteDetailPage() {
             <RatingRow label="総合的な楽単度（単位の取りやすさ）" value={summary.overallEasiness} />
           </div>
           {latest && (
-            <div className="rounded-2xl border border-gray-200 p-4">
-              <p className="text-xs text-gray-400 mb-2">出席確認方法</p>
-              <p className="text-sm">{latest.attendanceMethod || "情報なし"}</p>
+            <div className="flex gap-3 rounded-2xl border border-gray-200 p-4">
+              <IconChip tone="blue"><Icon name="calendar" /></IconChip>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-gray-400 mb-2">出席確認方法</p>
+                <p className="text-sm">{latest.attendanceMethod || "情報なし"}</p>
+              </div>
             </div>
           )}
         </section>
@@ -196,27 +199,39 @@ export default function KarteDetailPage() {
           )}
           {latest && (
             <>
-              <div className="rounded-2xl border border-gray-200 p-4">
-                <p className="text-xs text-gray-400 mb-1 font-medium">課題</p>
-                <p className="text-sm">{latest.assignmentVolume ? `課題量の目安：★${latest.assignmentVolume}` : "情報なし"}</p>
+              <div className="flex gap-3 rounded-2xl border border-gray-200 p-4">
+                <IconChip tone="amber"><Icon name="checklist" /></IconChip>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-gray-400 mb-1 font-medium">課題</p>
+                  <p className="text-sm">{latest.assignmentVolume ? `課題量の目安：★${latest.assignmentVolume}` : "情報なし"}</p>
+                </div>
               </div>
-              <div className="rounded-2xl border border-gray-200 p-4">
-                <p className="text-xs text-gray-400 mb-1 font-medium">試験</p>
-                <p className="text-sm">{latest.examFormat || "情報なし"}</p>
+              <div className="flex gap-3 rounded-2xl border border-gray-200 p-4">
+                <IconChip tone="rose"><Icon name="flag" /></IconChip>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-gray-400 mb-1 font-medium">試験</p>
+                  <p className="text-sm">{latest.examFormat || "情報なし"}</p>
+                </div>
               </div>
-              <div className="rounded-2xl border border-gray-200 p-4">
-                <p className="text-xs text-gray-400 mb-1 font-medium">授業の特徴</p>
-                <p className="text-sm">
-                  {[latest.atmosphere, latest.pace].filter(Boolean).join(" ／ ") || "情報なし"}
-                </p>
+              <div className="flex gap-3 rounded-2xl border border-gray-200 p-4">
+                <IconChip tone="violet"><Icon name="chart" /></IconChip>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-gray-400 mb-1 font-medium">授業の特徴</p>
+                  <p className="text-sm">
+                    {[latest.atmosphere, latest.pace].filter(Boolean).join(" ／ ") || "情報なし"}
+                  </p>
+                </div>
               </div>
-              <div className="rounded-2xl border border-gray-200 p-4">
-                <p className="text-xs text-gray-400 mb-1 font-medium">受講生のアドバイス</p>
-                <p className="text-sm">
-                  {data.freeTextHidden
-                    ? "投稿件数が少なく個人が特定されるおそれがあるため、非表示にしています"
-                    : latest.advice || "情報なし"}
-                </p>
+              <div className="flex gap-3 rounded-2xl border border-gray-200 p-4">
+                <IconChip tone="emerald"><Icon name="megaphone" /></IconChip>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-gray-400 mb-1 font-medium">受講生のアドバイス</p>
+                  <p className="text-sm">
+                    {data.freeTextHidden
+                      ? "投稿件数が少なく個人が特定されるおそれがあるため、非表示にしています"
+                      : latest.advice || "情報なし"}
+                  </p>
+                </div>
               </div>
             </>
           )}
@@ -240,7 +255,9 @@ export default function KarteDetailPage() {
           {kartes
             .filter((k) => k.comment)
             .map((k) => (
-              <div key={k.id} className="rounded-2xl border border-gray-200 p-4">
+              <div key={k.id} className="flex gap-3 rounded-2xl border border-gray-200 p-4">
+                <IconChip tone="cyan"><Icon name="users" /></IconChip>
+                <div className="min-w-0 flex-1">
                 <p className="text-sm whitespace-pre-wrap">{k.comment}</p>
                 <div className="flex items-center justify-between mt-2">
                   <p className="text-[10px] text-gray-300">
@@ -288,6 +305,7 @@ export default function KarteDetailPage() {
                     </div>
                   )}
                 </div>
+                </div>
               </div>
             ))}
         </section>
@@ -296,7 +314,7 @@ export default function KarteDetailPage() {
       <div className="px-4 mt-5">
         <button
           onClick={() => setPosting(true)}
-          className="w-full rounded-xl bg-gray-900 text-white text-sm py-3 font-medium"
+          className="w-full rounded-xl bg-indigo-600 text-white text-sm py-3 font-medium"
         >
           自分の感想を投稿
         </button>
